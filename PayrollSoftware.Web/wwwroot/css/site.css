@@ -1,31 +1,80 @@
+.main-header .navbar-nav.ml-auto .nav-link:hover {
+    color: #ffffff !important; /* Forces the text color to be white on hover */
+}
+
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+    color: var(--bs-secondary-color);
+    text-align: end;
 }
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+    text-align: start;
+}
+
+/* ---------- UI/UX fixes: readable inputs and DataTable dropdowns ---------- */
+/* Ensure regular form inputs keep readable text/background (exclude account page inputs) */
+.form-control:not(.account-input),
+.form-select,
+input[type="text"]:not(.account-input),
+input[type="number"]:not(.account-input),
+input[type="date"]:not(.account-input),
+input[type="email"]:not(.account-input),
+input[type="password"]:not(.account-input),
+input[type="tel"]:not(.account-input),
+textarea:not(.account-input) {
+    background-color: #ffffff !important;
+    color: #212529 !important; /* Bootstrap default text */
+}
+
+    .form-control:focus:not(.account-input),
+    .form-select:focus,
+    textarea:focus:not(.account-input) {
+        background-color: #ffffff !important;
+        color: #212529 !important;
+    }
+
+    /* Placeholder color for readability on white bg */
+    .form-control:not(.account-input)::placeholder,
+    textarea:not(.account-input)::placeholder {
+        color: #6c757d;
+    }
+
+    /* Fix for browser autofill turning text invisible */
+    input:not(.account-input):-webkit-autofill,
+    textarea:not(.account-input):-webkit-autofill,
+    select:not(.account-input):-webkit-autofill {
+        -webkit-box-shadow: 000px 1000px #ffffff inset !important;
+        -webkit-text-fill-color: #212529 !important;
+        caret-color: #212529;
+    }
+
+/* DataTables page length dropdown (remove transparency and enforce readable colors) */
+div.dt-container select.dt-input,
+div.dt-container .dt-input {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    border-color: #ced4da !important; /* match Bootstrap */
 }

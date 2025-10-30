@@ -21,8 +21,4 @@
     <ProjectReference Include="..\PayrollSoftware.Infrastructure\PayrollSoftware.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Areas\Identity\Data\" />
-  </ItemGroup>
-
 </Project>
