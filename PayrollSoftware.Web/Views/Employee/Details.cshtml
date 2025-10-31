@@ -1,0 +1,51 @@
+﻿@model PayrollSoftware.Infrastructure.Domain.Entities.Employee
+
+@{
+    ViewData["Title"] = "Employee Details";
+}
+
+<h1>Employee Details</h1>
+
+<div>
+    <h4>@Model.FullName</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Employee Code</dt>
+        <dd class="col-sm-10">@Model.EmployeeCode</dd>
+
+        <dt class="col-sm-2">Full Name</dt>
+        <dd class="col-sm-10">@Model.FullName</dd>
+
+        <dt class="col-sm-2">Gender</dt>
+        <dd class="col-sm-10">@Model.Gender</dd>
+
+        <dt class="col-sm-2">Date of Birth</dt>
+        <dd class="col-sm-10">@Model.DateOfBirth.ToString("yyyy-MM-dd")</dd>
+
+        <dt class="col-sm-2">Designation</dt>
+        <dd class="col-sm-10">@Model.Designation</dd>
+
+        <dt class="col-sm-2">Department</dt>
+        <dd class="col-sm-10">@Model.DepartmentId</dd>
+
+        <dt class="col-sm-2">Joining Date</dt>
+        <dd class="col-sm-10">@Model.JoiningDate.ToString("yyyy-MM-dd")</dd>
+
+        <dt class="col-sm-2">Basic Salary</dt>
+        <dd class="col-sm-10">@Model.BasicSalary.ToString("C")</dd>
+
+        <dt class="col-sm-2">Employment Type</dt>
+        <dd class="col-sm-10">@Model.EmploymentType</dd>
+
+        <dt class="col-sm-2">Payment System</dt>
+        <dd class="col-sm-10">@Model.PaymentSystem</dd>
+
+        <dt class="col-sm-2">Status</dt>
+        <dd class="col-sm-10">@Model.Status</dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.EmployeeId" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>
