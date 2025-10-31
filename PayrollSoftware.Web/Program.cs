@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PayrollSoftware.Data;
 using PayrollSoftware.Infrastructure.Identity;
+using PayrollSoftware.Infrastructure.Services;
+using PayrollSoftware.Infrastructure.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,10 +22,15 @@ builder.Services.AddDefaultIdentity<PayrollUser>(options =>
  options.Password.RequireNonAlphanumeric = false;
  options.Password.RequireUppercase = false;
  options.Password.RequireLowercase = false;
+
+options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
+options.Lockout.MaxFailedAccessAttempts = 5;
+options.Lockout.AllowedForNewUsers = true;
 })
  .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IEmailService, EmailService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
