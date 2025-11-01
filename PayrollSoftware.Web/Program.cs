@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PayrollSoftware.Data;
+using PayrollSoftware.Infrastructure.Application.Interfaces;
 using PayrollSoftware.Infrastructure.Identity;
+using PayrollSoftware.Infrastructure.Repositories;
 using PayrollSoftware.Infrastructure.Services;
 using PayrollSoftware.Infrastructure.Services.Interfaces;
 
@@ -31,6 +33,8 @@ options.Lockout.AllowedForNewUsers = true;
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IDesignationRepository, DesignationRepository>();
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -1,0 +1,40 @@
+﻿@model PayrollSoftware.Infrastructure.Application.DTOs.DepartmentDto
+@{
+    Layout = null;
+    ViewData["Title"] = ViewBag?.Title ?? "Department";
+    var formAction = ViewBag?.FormAction as string ?? Url.Action("Create", "Department");
+}
+
+<div class="p-3">
+    <form id="departmentForm" method="post" action="@formAction">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="DepartmentId" />
+
+        <div class="card mb-0">
+            <div class="card-body">
+                <div class="row">
+                    <div class="form-group col-md-8">
+                        <label asp-for="DepartmentName" class="control-label"></label>
+                        <input asp-for="DepartmentName" class="form-control" />
+                        <span asp-validation-for="DepartmentName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group col-md-4 d-flex align-items-center pt-4">
+                        <div class="form-check">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label">Active</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-right">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
