@@ -26,7 +26,7 @@ builder.Services.AddDefaultIdentity<PayrollUser>(options =>
  options.Password.RequireLowercase = false;
 
 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
-options.Lockout.MaxFailedAccessAttempts = 5;
+options.Lockout.MaxFailedAccessAttempts =5;
 options.Lockout.AllowedForNewUsers = true;
 })
  .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -35,6 +35,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IDesignationRepository, DesignationRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

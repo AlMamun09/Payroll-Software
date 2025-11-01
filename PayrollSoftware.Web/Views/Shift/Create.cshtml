@@ -1,0 +1,48 @@
+@model PayrollSoftware.Infrastructure.Application.DTOs.ShiftDto
+@{
+    Layout = null;
+    ViewData["Title"] = ViewBag?.Title ?? "Shift";
+    var formAction = ViewBag?.FormAction as string ?? Url.Action("Create", "Shift");
+}
+
+<div class="p-3">
+    <form id="shiftForm" method="post" action="@formAction">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ShiftId" />
+
+        <div class="card mb-0">
+            <div class="card-body">
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label asp-for="ShiftName" class="control-label"></label>
+                        <input asp-for="ShiftName" class="form-control" />
+                        <span asp-validation-for="ShiftName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label asp-for="StartTime" class="control-label"></label>
+                        <input asp-for="StartTime" class="form-control" type="time" />
+                        <span asp-validation-for="StartTime" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label asp-for="EndTime" class="control-label"></label>
+                        <input asp-for="EndTime" class="form-control" type="time" />
+                        <span asp-validation-for="EndTime" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-md-4 d-flex align-items-center pt-4">
+                        <div class="form-check">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label">Active</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
