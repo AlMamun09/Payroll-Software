@@ -1,0 +1,97 @@
+@{
+    ViewData["Title"] = "Employees";
+}
+
+<link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
+
+<div class="card" id="employeeCard"
+     data-list-url="@Url.Action("GetEmployeesJson", "Employee")"
+     data-create-get="@Url.Action("Create", "Employee")"
+     data-edit-url-template="@Url.Action("Edit", "Employee")/"
+     data-details-url-template="@Url.Action("Details", "Employee")/"
+     data-delete-template="@Url.Action("Delete", "Employee")/">
+
+    <div class="card-header">
+        <h3 class="card-title m-0">
+            <i class="fas fa-users mr-2"></i>Employees
+        </h3>
+        <div class="card-tools">
+            <a class="btn btn-primary" href="@Url.Action("Create", "Employee")">
+                <i class="fas fa-plus"></i> Add Employee
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <table id="employeeTable" class="table table-bordered table-hover w-100">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>DOB</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                    <th>Status</th>
+                    <th style="width:160px;" class="text-center">Actions</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+<form id="__afForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+    <script src="~/js/crud-datatable.js"></script>
+    <script>
+        $(function () {
+            const $card = $('#employeeCard');
+            const listUrl = $card.data('list-url');
+            const editUrlTemplate = $card.data('edit-url-template');
+            const detailsUrlTemplate = $card.data('details-url-template');
+            const deleteTemplate = $card.data('delete-template');
+
+            const dt = CrudTable.init({
+                tableSelector: '#employeeTable',
+                listUrl: listUrl,
+                idField: 'employeeId',
+                columns: [
+                    { data: 'employeeCode' },
+                    { data: 'fullName' },
+                    { data: 'gender' },
+                    { data: 'dateOfBirth', render: d => d ? d.substring(0, 10) : '' },
+                    { data: 'departmentName', defaultContent: '' },
+                    { data: 'designationName', defaultContent: '' },
+                    {
+                        data: 'status',
+                        render: d =>
+                            d === 'Currently Active'
+                                ? '<span class="badge badge-success">Active</span>'
+                                : '<span class="badge badge-secondary">Resigned</span>'
+                    }
+                ],
+                actions: {
+                    editSelector: '.js-edit',
+                    deleteSelector: '.js-delete',
+                    renderButtons: (id, row) => `
+                        <a class="btn btn-sm btn-info mr-1" href="${detailsUrlTemplate}${id}">
+                            <i class="fas fa-info-circle"></i>
+                        </a>
+                        <a class="btn btn-sm btn-warning mr-1" href="${editUrlTemplate}${id}">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn btn-sm btn-danger js-delete" data-id="${id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `,
+                    deleteUrl: (id) => `${deleteTemplate}${id}`
+                }
+            });
+        });
+    </script>
+}
+
