@@ -1,0 +1,131 @@
+﻿@{
+    ViewData["Title"] = "Departments";
+}
+
+<link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
+
+<div class="card" id="departmentCard"
+     data-list-url="@Url.Action("GetDepartmentsJson", "Department")"
+     data-create-get="@Url.Action("Create", "Department")"
+     data-edit-get-template="@Url.Action("Edit", "Department")/"
+     data-delete-template="@Url.Action("Delete", "Department")/">
+
+    <div class="card-header">
+        <h3 class="card-title m-0">
+            <i class="fas fa-building mr-2"></i>Departments
+        </h3>
+        <div class="card-tools">
+            <button id="btnAddDepartment" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Department
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <table id="departmentTable" class="table table-bordered table-hover w-100">
+            <thead>
+                <tr>
+                    <th>Department Name</th>
+                    <th>Status</th>
+                    <th style="width:120px;" class="text-center">Actions</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+<!-- Hidden anti-forgery form to extract token for AJAX -->
+<form id="__afForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+<!-- Modal -->
+<div class="modal fade" id="departmentModal" tabindex="-1" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Department</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- dynamic form content loads here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+    <script src="~/js/crud-datatable.js"></script>
+    @* These two scripts are now in _Layout.cshtml, but including them here is fine too *@
+    @* <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> *@
+    @* <script src="~/js/common-ajax.js"></script> *@
+    <script src="~/js/crud-modal.js"></script>
+
+    <script>
+        window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
+
+        $(function () {
+            const $card = $('#departmentCard');
+            const listUrl = $card.data('list-url');
+
+            // Routes for the modal and delete actions
+            const routes = {
+                createGet: $card.data('create-get'),
+                editGet: (id) => $card.data('edit-get-template') + id,
+                delete: (id) => $card.data('delete-template') + id
+            };
+
+            // Initialize the modal
+            const departmentModal = CrudModal.init({
+                modalSelector: '#departmentModal',
+                addBtnSelector: '#btnAddDepartment',
+                routes,
+                createTitle: 'Create Department',
+                editTitle: 'Edit Department',
+                onSaved: () => departmentTable.reload()
+            });
+
+            // Initialize the DataTable
+            const departmentTable = CrudTable.init({
+                tableSelector: '#departmentTable',
+                listUrl: listUrl,
+                idField: 'departmentId',
+                columns: [
+                    { data: 'departmentName' },
+                    {
+                        data: 'isActive',
+                        render: function (d) {
+                            return d
+                                ? '<span class="badge badge-success">Active</span>'
+                                : '<span class="badge badge-secondary">Inactive</span>';
+                        }
+                    }
+                ],
+                // Pass DataTables-specific options here
+                dataTables: {
+                  columnDefs: [
+                    { className: "text-center align-middle", targets: [1] }
+                  ]
+                },
+                // Define the buttons for the 'actions' column
+                actions: {
+                    editSelector: '.js-edit',
+                    deleteSelector: '.js-delete',
+                    renderButtons: (id, row) => `
+                        <button class="btn btn-sm btn-warning mr-1 js-edit" data-id="${id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger js-delete" data-id="${id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `,
+                    onEdit: (id) => departmentModal.openEdit(id),
+                    deleteUrl: (id) => routes.delete(id)
+                }
+            });
+        });
+    </script>
+}
