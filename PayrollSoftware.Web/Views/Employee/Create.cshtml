@@ -1,0 +1,215 @@
+@model PayrollSoftware.Infrastructure.Application.DTOs.EmployeeDto
+@{
+    ViewData["Title"] = ViewBag?.Title ?? "Employee";
+    var formAction = ViewBag?.FormAction as string ?? Url.Action("Create", "Employee");
+}
+
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title m-0">
+            <i class="fas fa-user mr-2"></i>@ViewData["Title"]
+        </h3>
+    </div>
+    <div class="card-body">
+        <form id="employeeForm" method="post" action="@formAction">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="EmployeeId" />
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label asp-for="FullName"></label>
+                    <input asp-for="FullName" class="form-control" />
+                </div>
+                <div class="form-group col-md-3">
+                    <label asp-for="Gender"></label>
+                    <select asp-for="Gender" class="form-control select2" data-placeholder="Select Gender" style="width:100%;">
+                        <option value="">-- select --</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label asp-for="Status"></label>
+                    <select asp-for="Status" class="form-control select2" data-placeholder="Select Status" style="width:100%;">
+                        <option>Currently Active</option>
+                        <option>Resigned</option>
+                    </select>
+                </div>
+
+                <div class="form-group col-md-3">
+                    <label asp-for="DateOfBirth"></label>
+                    <input asp-for="DateOfBirth" type="date" class="form-control" />
+                </div>
+                <div class="form-group col-md-2">
+                    <label>Age</label>
+                    <input id="Age" class="form-control" readonly />
+                </div>
+                <div class="form-group col-md-3">
+                    <label asp-for="JoiningDate"></label>
+                    <input asp-for="JoiningDate" type="date" class="form-control" />
+                </div>
+                <div class="form-group col-md-4">
+                    <label asp-for="BasicSalary"></label>
+                    <input asp-for="BasicSalary" type="number" step="0.01" class="form-control" />
+                </div>
+
+                <div class="form-group col-md-4">
+                    <label asp-for="DepartmentId">Department</label>
+                    <select asp-for="DepartmentId" class="form-control select2" style="width:100%;" data-placeholder="Select Department" asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Department>)ViewBag.Departments, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Department.DepartmentId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Department.DepartmentName))">
+                        <option value="">-- select --</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label asp-for="DesignationId">Designation</label>
+                    <select asp-for="DesignationId" class="form-control select2" style="width:100%;" data-placeholder="Select Designation" asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Designation>)ViewBag.Designations, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Designation.DesignationId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Designation.DesignationName))">
+                        <option value="">-- select --</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label asp-for="ShiftId">Shift</label>
+                    <select asp-for="ShiftId" class="form-control select2" style="width:100%;" data-placeholder="Select Shift" asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Shift>)ViewBag.Shifts, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Shift.ShiftId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Shift.ShiftName))">
+                        <option value="">-- Select --</option>
+                    </select>
+                </div>
+
+                <!-- Updated Employment Type with Select2 -->
+                <div class="form-group col-md-4">
+                    <label asp-for="EmploymentType">Employment Type</label>
+                    <select asp-for="EmploymentType" class="form-control select2" data-placeholder="Select Employment Type" style="width:100%;">
+                        <option value="">-- select --</option>
+                        <option value="Permanent">Permanent</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Intern">Intern</option>
+                    </select>
+                </div>
+
+                <div class="form-group col-md-4">
+                    <label asp-for="PaymentSystem"></label>
+                    <select asp-for="PaymentSystem" class="form-control select2" id="PaymentSystem" data-placeholder="Select Payment System" style="width:100%;">
+                        <option value="">-- select --</option>
+                        <option>Bank Transfer</option>
+                        <option>Mobile Banking</option>
+                        <option>Cash Payment</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-4" id="MobileNumberGroup">
+                    <label asp-for="MobileNumber"></label>
+                    <input asp-for="MobileNumber" class="form-control" id="MobileNumber" />
+                </div>
+
+                <div class="form-group col-md-4 bank-only">
+                    <label asp-for="AccountHolderName"></label>
+                    <input asp-for="AccountHolderName" class="form-control" />
+                </div>
+                <div class="form-group col-md-4 bank-only">
+                    <label asp-for="BankAndBranchName"></label>
+                    <input asp-for="BankAndBranchName" class="form-control" />
+                </div>
+                <div class="form-group col-md-4 bank-only">
+                    <label asp-for="BankAccountNumber"></label>
+                    <input asp-for="BankAccountNumber" class="form-control" />
+                </div>
+            </div>
+            <div class="text-right">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save</button>
+                <a class="btn btn-secondary" href="@Url.Action("Index", "Employee")">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            // Initialize select2 dropdowns
+            $('.select2').each(function () {
+                $(this).select2({
+                    theme: 'bootstrap4',
+                    width: '100%',
+                    placeholder: $(this).data('placeholder'),
+                    allowClear: true
+                });
+            });
+
+            // Payment system conditional fields
+            function togglePayment() {
+                const v = $('#PaymentSystem').val();
+                const showBank = v === 'Bank Transfer';
+                const showMobile = v === 'Mobile Banking';
+                $('.bank-only').toggleClass('d-none', !showBank);
+                $('#MobileNumberGroup').toggleClass('d-none', !showMobile);
+            }
+
+            $('#PaymentSystem').on('change select2:select', togglePayment);
+            togglePayment();
+        });
+    </script>
+
+    <script>
+        const dobEl = document.getElementById('DateOfBirth');
+        const ageEl = document.getElementById('Age');
+
+        function calcAge() {
+            const v = dobEl?.value;
+            if (!v) {
+                ageEl.value = '';
+                return;
+            }
+
+            const dob = new Date(v);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+            ageEl.value = isNaN(age) ? '' : age;
+        }
+
+        dobEl?.addEventListener('change', calcAge);
+        calcAge();
+
+        // Ajax submit to show SweetAlert then redirect
+        const form = document.getElementById('employeeForm');
+        form?.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const token = form.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'RequestVerificationToken': token }
+            })
+                .then(r => (r.ok ? r.json() : r.json().then(j => Promise.reject(j))))
+                .then(j => {
+                    if (j.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: j.message
+                        }).then(() => {
+                            window.location.href = '@Url.Action("Index", "Employee")';
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: j.message || 'Save failed'
+                        });
+                    }
+                })
+                .catch(err => {
+                    const msg = err?.message || err?.error || 'Save failed';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: msg
+                    });
+                });
+        });
+    </script>
+}
+

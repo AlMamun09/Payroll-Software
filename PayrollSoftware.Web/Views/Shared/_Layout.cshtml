@@ -19,6 +19,48 @@
     <link rel="stylesheet" href="~/adminlte/dist/css/adminlte.min.css">
     <!-- overlayScrollbars -->
     <link rel="stylesheet" href="~/adminlte/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+    <!-- Select2 (local + bootstrap4 theme for borders) -->
+    <link rel="stylesheet" href="~/adminlte/plugins/select2/css/select2.css">
+    <link rel="stylesheet" href="~/adminlte/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+
+    <style>
+        /* Dark-mode Select2 styling to match AdminLTE form controls */
+        .dark-mode .select2-container--bootstrap4 .select2-selection--single,
+        .dark-mode .select2-container--bootstrap4 .select2-selection--multiple {
+            background-color: #343a40; /* same as .form-control bg in dark */
+            border:1px solid #6c757d; /* same as .form-control border */
+            color: #e9ecef;
+            min-height: calc(2.25rem +2px);
+        }
+        .dark-mode .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered,
+        .dark-mode .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__rendered {
+            color: #e9ecef;
+            line-height:2.25rem;
+        }
+        .dark-mode .select2-container--bootstrap4 .select2-selection__placeholder {
+            color: #adb5bd;
+        }
+        .dark-mode .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow b {
+            border-color: #e9ecef transparent transparent transparent;
+        }
+        .dark-mode .select2-container--bootstrap4 .select2-dropdown {
+            background-color: #343a40;
+            border-color: #6c757d;
+        }
+        .dark-mode .select2-container--bootstrap4 .select2-search__field {
+            background-color: #343a40;
+            border:1px solid #6c757d;
+            color: #e9ecef;
+        }
+        .dark-mode .select2-results__option {
+            color: #e9ecef;
+        }
+        .dark-mode .select2-results__option--highlighted {
+            background-color: #495057;
+            color: #fff;
+        }
+    </style>
+
 </head>
 <body class="hold-transition sidebar-mini layout-fixed dark-mode" data-panel-auto-height-mode="height">
     <div class="wrapper">
@@ -198,6 +240,9 @@
     <script src="~/adminlte/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
     <!-- AdminLTE App -->
     <script src="~/adminlte/dist/js/adminlte.js"></script>
+
+    <!-- Select2 JS -->
+    <script src="~/adminlte/plugins/select2/js/select2.full.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/common-ajax.js"></script>
