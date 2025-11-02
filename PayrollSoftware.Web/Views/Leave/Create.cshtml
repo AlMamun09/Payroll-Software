@@ -1,0 +1,250 @@
+﻿@model PayrollSoftware.Infrastructure.Application.DTOs.LeaveDto
+@{
+    Layout = null;
+    ViewData["Title"] = ViewBag?.Title ?? "Leave Application";
+    var formAction = ViewBag?.FormAction as string ?? Url.Action("Create", "Leave");
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-3">
+        <form id="leaveForm" method="post" action="@formAction">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="LeaveId" />
+
+            <div class="card mb-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt mr-2"></i>@ViewData["Title"]
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label asp-for="EmployeeId" class="control-label">Employee ID</label>
+                            <input asp-for="EmployeeId" class="form-control" />
+                            <span asp-validation-for="EmployeeId" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group col-md-6">
+                            <label asp-for="LeaveType" class="control-label">Leave Type</label>
+                            <select asp-for="LeaveType" class="form-control">
+                                <option value="">Select Leave Type</option>
+                                <option value="Casual">Casual</option>
+                                <option value="Sick">Sick</option>
+                                <option value="Earned">Earned</option>
+                                <option value="Unpaid">Unpaid</option>
+                            </select>
+                            <span asp-validation-for="LeaveType" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label asp-for="StartDate" class="control-label">Start Date</label>
+                            <input asp-for="StartDate" type="date" class="form-control" id="StartDate" />
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group col-md-6">
+                            <label asp-for="EndDate" class="control-label">End Date</label>
+                            <input asp-for="EndDate" type="date" class="form-control" id="EndDate" />
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label asp-for="TotalDays" class="control-label">Total Days</label>
+                            <input asp-for="TotalDays" class="form-control" id="TotalDays" readonly />
+                            <small id="totalDaysMessage" class="form-text text-muted">Select start and end dates to calculate total working days</small>
+                            <span asp-validation-for="TotalDays" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group col-md-6">
+                            <label asp-for="LeaveStatus" class="control-label">Status</label>
+                            <select asp-for="LeaveStatus" class="form-control">
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                            <span asp-validation-for="LeaveStatus" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Remarks" class="control-label"></label>
+                        <textarea asp-for="Remarks" class="form-control" rows="3" placeholder="Enter remarks (optional)"></textarea>
+                        <span asp-validation-for="Remarks" class="text-danger"></span>
+                    </div>
+
+                    <div class="text-right">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save</button>
+                        <button type="button" class="btn btn-secondary" onclick="window.close()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Include jQuery and Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Validation Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <!-- Total Days Calculation Script -->
+    <script>
+        // Wait for the document to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Document loaded - initializing date calculation');
+
+            // Get elements
+            const startDateInput = document.getElementById('StartDate');
+            const endDateInput = document.getElementById('EndDate');
+            const totalDaysInput = document.getElementById('TotalDays');
+            const totalDaysMessage = document.getElementById('totalDaysMessage');
+
+            // Set minimum date to today
+            const today = new Date();
+            const todayFormatted = today.toISOString().split('T')[0];
+            if (startDateInput) startDateInput.setAttribute('min', todayFormatted);
+            if (endDateInput) endDateInput.setAttribute('min', todayFormatted);
+
+            console.log('Minimum date set to:', todayFormatted);
+
+            // Add event listeners
+            if (startDateInput) {
+                startDateInput.addEventListener('change', function() {
+                    console.log('Start date changed:', this.value);
+                    updateEndDateMin();
+                    calculateTotalDays();
+                });
+            }
+
+            if (endDateInput) {
+                endDateInput.addEventListener('change', function() {
+                    console.log('End date changed:', this.value);
+                    calculateTotalDays();
+                });
+            }
+
+            function updateEndDateMin() {
+                const startDate = startDateInput.value;
+                if (startDate && endDateInput) {
+                    endDateInput.setAttribute('min', startDate);
+                    console.log('End date min updated to:', startDate);
+
+                    // Clear end date if it's now invalid
+                    if (endDateInput.value && endDateInput.value < startDate) {
+                        endDateInput.value = '';
+                        console.log('End date cleared due to min date change');
+                    }
+                }
+            }
+
+            function calculateTotalDays() {
+                if (!startDateInput || !endDateInput || !totalDaysInput || !totalDaysMessage) {
+                    console.log('Required elements not found');
+                    return;
+                }
+
+                const startDateStr = startDateInput.value;
+                const endDateStr = endDateInput.value;
+
+                console.log('Calculating total days - Start:', startDateStr, 'End:', endDateStr);
+
+                if (!startDateStr || !endDateStr) {
+                    totalDaysInput.value = '';
+                    totalDaysMessage.textContent = 'Select start and end dates to calculate total working days';
+                    totalDaysMessage.className = 'form-text text-muted';
+                    console.log('Missing dates - calculation skipped');
+                    return;
+                }
+
+                const startDate = new Date(startDateStr);
+                const endDate = new Date(endDateStr);
+
+                console.log('Parsed dates - Start:', startDate, 'End:', endDate);
+
+                if (startDate > endDate) {
+                    totalDaysInput.value = '';
+                    totalDaysMessage.textContent = 'End date cannot be before start date!';
+                    totalDaysMessage.className = 'form-text text-danger';
+                    console.log('Invalid dates - end date before start date');
+                    return;
+                }
+
+                let totalDays = 0;
+                let current = new Date(startDate);
+                const end = new Date(endDate);
+
+                // Reset time part
+                current.setHours(0, 0, 0, 0);
+                end.setHours(0, 0, 0, 0);
+
+                console.log('Starting calculation from:', current, 'to:', end);
+
+                while (current <= end) {
+                    const day = current.getDay();
+                    console.log('Checking date:', current, 'Day:', day);
+
+                    // Exclude weekends (Saturday = 6, Sunday = 0)
+                    if (day !== 0 && day !== 6) {
+                        totalDays++;
+                        console.log('Working day found - total:', totalDays);
+                    }
+                    current.setDate(current.getDate() + 1);
+                }
+
+                console.log('Final total days:', totalDays);
+                totalDaysInput.value = totalDays;
+
+                if (totalDays > 0) {
+                    totalDaysMessage.textContent = `Total: ${totalDays} working days (excluding weekends)`;
+                    totalDaysMessage.className = 'form-text text-success';
+                } else {
+                    totalDaysMessage.textContent = 'No working days selected (only weekends)';
+                    totalDaysMessage.className = 'form-text text-warning';
+                }
+            }
+
+            // Initial calculation if dates are pre-filled
+            calculateTotalDays();
+            console.log('Initial calculation completed');
+
+            // Test: Force a calculation after 1 second to see if it works
+            setTimeout(function() {
+                console.log('Test calculation after timeout');
+                calculateTotalDays();
+            }, 1000);
+        });
+
+        // Alternative: If DOMContentLoaded doesn't fire, try this
+        setTimeout(function() {
+            if (document.getElementById('TotalDays') && document.getElementById('TotalDays').value === '') {
+                console.log('Fallback calculation');
+                document.dispatchEvent(new Event('DOMContentLoaded'));
+            }
+        }, 500);
+    </script>
+</body>
+</html>
