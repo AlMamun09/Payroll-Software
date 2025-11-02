@@ -36,7 +36,11 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IDesignationRepository, DesignationRepository>();
 builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
+
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+
+builder.Services.AddScoped<ILeaveRepository, LeaveRepository>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
