@@ -1,167 +1,216 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using PayrollSoftware.Infrastructure.Application.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PayrollSoftware.Data;
+using PayrollSoftware.Infrastructure.Application.DTOs;
 using PayrollSoftware.Infrastructure.Domain.Entities;
+using PayrollSoftware.Infrastructure.Application.Interfaces;
 
 namespace PayrollSoftware.Web.Controllers
 {
     public class EmployeeController : Controller
     {
         private readonly IEmployeeRepository _employeeRepository;
-        private readonly ILogger<EmployeeController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public EmployeeController(IEmployeeRepository employeeRepository, ILogger<EmployeeController> logger)
+        public EmployeeController(IEmployeeRepository employeeRepository, ApplicationDbContext context)
         {
             _employeeRepository = employeeRepository;
-            _logger = logger;
+            _context = context;
         }
 
-        // GET: /Employee
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetEmployeesJson()
         {
             try
             {
-                var employees = await _employeeRepository.GetAllAsync();
-                return View(employees);
+                // Load related names for listing
+                var deptLookup = await _context.Departments.AsNoTracking().ToDictionaryAsync(d => d.DepartmentId, d => d.DepartmentName);
+                var desigLookup = await _context.Designations.AsNoTracking().ToDictionaryAsync(d => d.DesignationId, d => d.DesignationName);
+
+                var employees = await _employeeRepository.GetAllEmployeesAsync();
+                var dtos = employees.Select(e => new EmployeeDto
+                {
+                    EmployeeId = e.EmployeeId,
+                    EmployeeNumericId = e.EmployeeNumericId,
+                    EmployeeCode = e.EmployeeCode,
+                    FullName = e.FullName,
+                    Gender = e.Gender,
+                    DateOfBirth = e.DateOfBirth,
+                    JoiningDate = e.JoiningDate,
+                    BasicSalary = e.BasicSalary,
+                    EmploymentType = e.EmploymentType,
+                    PaymentSystem = e.PaymentSystem,
+                    AccountHolderName = e.AccountHolderName,
+                    BankAndBranchName = e.BankAndBranchName,
+                    BankAccountNumber = e.BankAccountNumber,
+                    MobileNumber = e.MobileNumber,
+                    Status = e.Status,
+                    DepartmentId = e.DepartmentId,
+                    DesignationId = e.DesignationId,
+                    ShiftId = e.ShiftId,
+                    DepartmentName = deptLookup.TryGetValue(e.DepartmentId, out var dn) ? dn : null,
+                    DesignationName = desigLookup.TryGetValue(e.DesignationId, out var en) ? en : null
+                }).ToList();
+
+                return Json(new { data = dtos });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error retrieving employees for index page");
-                TempData["Error"] = "Error loading employees. Please try again.";
-                return View(new List<Employee>());
+                return StatusCode(500, "Internal server error");
             }
         }
 
-        // GET: /Employee/Create
-        public IActionResult Create()
+        [HttpGet]
+        public async Task<IActionResult> Create()
         {
-            var employee = new Employee
-            {
-                Status = "Currently Active" // Default value
-            };
-            return View(employee);
+            await PopulateDropdownsAsync();
+            ViewBag.Title = "Create Employee";
+            ViewBag.FormAction = Url.Action("Create");
+            return View("Create", new EmployeeDto { DateOfBirth = DateTime.Today, JoiningDate = DateTime.Today });
         }
 
-        // POST: /Employee/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Employee employee)
+        public async Task<IActionResult> Create([FromForm] EmployeeDto dto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (ModelState.IsValid)
-                {
-                    var createdEmployee = await _employeeRepository.CreateAsync(employee);
-                    TempData["Success"] = $"Employee {createdEmployee.EmployeeCode} created successfully!";
-                    return RedirectToAction(nameof(Index));
-                }
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
+                return BadRequest(new { success = false, message = string.Join("\n", errors) });
+            }
 
-                // If we got this far, something failed, redisplay form
-                return View(employee);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating employee");
-                ModelState.AddModelError("", ex.Message);
-                return View(employee);
-            }
+            var entity = MapToEntity(dto);
+            entity.EmployeeId = Guid.NewGuid();
+            await _employeeRepository.AddEmployeeAsync(entity);
+            return Json(new { success = true, message = "Employee created successfully." });
         }
 
-        // GET: /Employee/Edit/{id}
+        [HttpGet]
         public async Task<IActionResult> Edit(Guid id)
         {
-            try
+            var entity = await _employeeRepository.GetEmployeeByIdAsync(id);
+            if (entity == null)
             {
-                var employee = await _employeeRepository.GetByIdAsync(id);
-                if (employee == null)
-                {
-                    TempData["Error"] = "Employee not found.";
-                    return RedirectToAction(nameof(Index));
-                }
-                return View("Create", employee); // Reuse the Create view for editing
+                return NotFound();
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving employee for edit with ID {EmployeeId}", id);
-                TempData["Error"] = "Error loading employee for editing.";
-                return RedirectToAction(nameof(Index));
-            }
+
+            await PopulateDropdownsAsync();
+            var dto = MapToDto(entity);
+            ViewBag.Title = "Edit Employee";
+            ViewBag.FormAction = Url.Action("Edit");
+            return View("Create", dto);
         }
 
-        // POST: /Employee/Edit/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, Employee employee)
+        public async Task<IActionResult> Edit([FromForm] EmployeeDto dto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (id != employee.EmployeeId)
-                {
-                    TempData["Error"] = "Employee ID mismatch.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                if (ModelState.IsValid)
-                {
-                    var updatedEmployee = await _employeeRepository.UpdateAsync(employee);
-                    TempData["Success"] = $"Employee {updatedEmployee.EmployeeCode} updated successfully!";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                return View("Create", employee);
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
+                return BadRequest(new { success = false, message = string.Join("\n", errors) });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating employee with ID {EmployeeId}", id);
-                ModelState.AddModelError("", ex.Message);
-                return View("Create", employee);
-            }
+
+            var entity = MapToEntity(dto);
+            await _employeeRepository.UpdateEmployeeAsync(entity);
+            return Json(new { success = true, message = "Employee updated successfully." });
         }
 
-        // POST: /Employee/Delete/{id}
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            try
-            {
-                var result = await _employeeRepository.DeleteAsync(id);
-                if (result)
-                {
-                    TempData["Success"] = "Employee deleted successfully!";
-                }
-                else
-                {
-                    TempData["Error"] = "Employee not found.";
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting employee with ID {EmployeeId}", id);
-                TempData["Error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        // GET: /Employee/Details/{id}
+        [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
-            try
+            var e = await _employeeRepository.GetEmployeeByIdAsync(id);
+            if (e == null) return NotFound();
+
+            var dept = await _context.Departments.AsNoTracking().FirstOrDefaultAsync(d => d.DepartmentId == e.DepartmentId);
+            var desig = await _context.Designations.AsNoTracking().FirstOrDefaultAsync(d => d.DesignationId == e.DesignationId);
+            var shift = e.ShiftId.HasValue
+                ? await _context.Shifts.AsNoTracking().FirstOrDefaultAsync(s => s.ShiftId == e.ShiftId.Value)
+                : null;
+
+            var dto = MapToDto(e);
+            dto.DepartmentName = dept?.DepartmentName;
+            dto.DesignationName = desig?.DesignationName;
+            dto.ShiftName = shift?.ShiftName;
+            return View("Details", dto);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var entity = await _employeeRepository.GetEmployeeByIdAsync(id);
+            if (entity == null)
             {
-                var employee = await _employeeRepository.GetByIdAsync(id);
-                if (employee == null)
-                {
-                    TempData["Error"] = "Employee not found.";
-                    return RedirectToAction(nameof(Index));
-                }
-                return View(employee);
+                return NotFound();
             }
-            catch (Exception ex)
+
+            await _employeeRepository.DeleteEmployeeAsync(id);
+            return Json(new { success = true, message = "Employee deleted successfully." });
+        }
+
+        private Employee MapToEntity(EmployeeDto dto)
+        {
+            return new Employee
             {
-                _logger.LogError(ex, "Error retrieving employee details with ID {EmployeeId}", id);
-                TempData["Error"] = "Error loading employee details.";
-                return RedirectToAction(nameof(Index));
-            }
+                EmployeeId = dto.EmployeeId,
+                DesignationId = dto.DesignationId,
+                DepartmentId = dto.DepartmentId,
+                ShiftId = dto.ShiftId,
+                EmployeeNumericId = dto.EmployeeNumericId,
+                EmployeeCode = dto.EmployeeCode,
+                FullName = dto.FullName,
+                Gender = dto.Gender,
+                DateOfBirth = dto.DateOfBirth,
+                JoiningDate = dto.JoiningDate,
+                BasicSalary = dto.BasicSalary,
+                EmploymentType = dto.EmploymentType,
+                PaymentSystem = dto.PaymentSystem,
+                AccountHolderName = dto.AccountHolderName,
+                BankAndBranchName = dto.BankAndBranchName,
+                BankAccountNumber = dto.BankAccountNumber,
+                MobileNumber = dto.MobileNumber,
+                Status = dto.Status
+            };
+        }
+
+        private EmployeeDto MapToDto(Employee entity)
+        {
+            return new EmployeeDto
+            {
+                EmployeeId = entity.EmployeeId,
+                DesignationId = entity.DesignationId,
+                DepartmentId = entity.DepartmentId,
+                ShiftId = entity.ShiftId,
+                EmployeeNumericId = entity.EmployeeNumericId,
+                EmployeeCode = entity.EmployeeCode,
+                FullName = entity.FullName,
+                Gender = entity.Gender,
+                DateOfBirth = entity.DateOfBirth,
+                JoiningDate = entity.JoiningDate,
+                BasicSalary = entity.BasicSalary,
+                EmploymentType = entity.EmploymentType,
+                PaymentSystem = entity.PaymentSystem,
+                AccountHolderName = entity.AccountHolderName,
+                BankAndBranchName = entity.BankAndBranchName,
+                BankAccountNumber = entity.BankAccountNumber,
+                MobileNumber = entity.MobileNumber,
+                Status = entity.Status
+            };
+        }
+
+        private async Task PopulateDropdownsAsync()
+        {
+            ViewBag.Departments = await _context.Departments.AsNoTracking()
+                .OrderBy(d => d.DepartmentName).ToListAsync();
+            ViewBag.Designations = await _context.Designations.AsNoTracking()
+                .OrderBy(d => d.DesignationName).ToListAsync();
+            ViewBag.Shifts = await _context.Shifts.AsNoTracking()
+                .OrderBy(s => s.ShiftName).ToListAsync();
         }
     }
 }
