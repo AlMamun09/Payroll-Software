@@ -2,11 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using PayrollSoftware.Infrastructure.Application.DTOs;
 using PayrollSoftware.Infrastructure.Domain.Entities;
-using PayrollSoftware.Infrastructure.Identity;
 
 namespace PayrollSoftware.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<PayrollUser>
+    public class ApplicationDbContext : IdentityDbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

@@ -1,48 +1,36 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PayrollSoftware.Data;
-using PayrollSoftware.Infrastructure.Identity;
-using PayrollSoftware.Infrastructure.Services;
-using PayrollSoftware.Infrastructure.Services.Interfaces;
+using PayrollSoftware.Infrastructure.Application.Interfaces;
+using PayrollSoftware.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
- options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDefaultIdentity<PayrollUser>(options =>
-{
- options.SignIn.RequireConfirmedAccount = false;
- // Turn off all password validation rules
- options.Password.RequireDigit = false;
- options.Password.RequiredLength =1;
- options.Password.RequireNonAlphanumeric = false;
- options.Password.RequireUppercase = false;
- options.Password.RequireLowercase = false;
+// Add Repository Dependency Injection
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
-options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
-options.Lockout.MaxFailedAccessAttempts = 5;
-options.Lockout.AllowedForNewUsers = true;
-})
- .AddEntityFrameworkStores<ApplicationDbContext>();
-
+builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
-builder.Services.AddScoped<IEmailService, EmailService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
- app.UseMigrationsEndPoint();
+    app.UseMigrationsEndPoint();
 }
 else
 {
- app.UseExceptionHandler("/Home/Error");
- // The default HSTS value is30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
- app.UseHsts();
+    app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
@@ -53,11 +41,11 @@ app.UseAuthorization();
 app.MapStaticAssets();
 
 app.MapControllerRoute(
- name: "default",
- pattern: "{controller=Home}/{action=Index}/{id?}")
- .WithStaticAssets();
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}")
+    .WithStaticAssets();
 
 app.MapRazorPages()
- .WithStaticAssets();
+   .WithStaticAssets();
 
 app.Run();
