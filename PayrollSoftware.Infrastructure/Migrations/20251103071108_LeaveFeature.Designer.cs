@@ -12,8 +12,8 @@ using PayrollSoftware.Data;
 namespace PayrollSoftware.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251102050130_leave")]
-    partial class leave
+    [Migration("20251103071108_LeaveFeature")]
+    partial class LeaveFeature
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
