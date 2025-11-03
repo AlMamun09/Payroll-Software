@@ -266,14 +266,15 @@ namespace PayrollSoftware.Infrastructure.Repositories
             ValidateRemarks(leave.Remarks);
 
             // Validate that TotalDays is provided and reasonable
-            if (leave.TotalDays <= 0)
-                throw new ArgumentException("Total days must be greater than zero.");
+            //if (leave.TotalDays <= 0)
+            //    throw new ArgumentException("Total days must be greater than zero.");
 
             if (leave.TotalDays > MaxLeaveDurationDays)
                 throw new ArgumentException($"Leave cannot exceed {MaxLeaveDurationDays} working days.");
 
-            if (leave.StartDate.Date == DateTime.Today && leave.LeaveType != "Sick")
-                throw new InvalidOperationException("Non-sick leaves must be applied at least one day in advance.");
+            // Only non-sick leaves must be applied in advance
+            if (leave.StartDate.Date == DateTime.Today && !string.Equals(leave.LeaveType, "Sick", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException($"Non-sick leaves must be applied at least {MinAdvanceNoticeDays} day in advance.");
         }
 
         private void ValidateLeaveDates(DateTime startDate, DateTime endDate)
@@ -287,14 +288,11 @@ namespace PayrollSoftware.Infrastructure.Repositories
             if (endDate < startDate)
                 throw new ArgumentException("End date cannot be before start date.");
 
-            // We don't calculate total days here anymore - it comes from the client
-            // But we can validate that the dates make sense
             var maxEndDate = startDate.AddDays(MaxLeaveDurationDays * 2); // Allow for weekends
             if (endDate > maxEndDate)
                 throw new ArgumentException($"Leave duration is too long. Maximum allowed duration is {MaxLeaveDurationDays} working days.");
 
-            if (startDate.Date == DateTime.Today.AddDays(MinAdvanceNoticeDays - 1))
-                throw new ArgumentException($"Leave must be applied at least {MinAdvanceNoticeDays} day(s) in advance.");
+            // Removed generic advance notice rule from here to allow same-day Sick leave
         }
 
         private void ValidateLeaveType(string leaveType)
@@ -361,12 +359,10 @@ namespace PayrollSoftware.Infrastructure.Repositories
 
         private async Task ValidateEmployeeExistsAsync(Guid employeeId)
         {
-            // This would typically check against your Employee entity
-            // For now, this is a placeholder - implement based on your Employee model
-            var employeeExists = await _context.Set<object>("Employees")
-                .AnyAsync(e => EF.Property<Guid>(e, "EmployeeId") == employeeId);
+            var exists = await _context.Employees.AsNoTracking()
+                .AnyAsync(e => e.EmployeeId == employeeId);
 
-            if (!employeeExists)
+            if (!exists)
                 throw new ArgumentException($"Employee with ID {employeeId} does not exist.");
         }
 
