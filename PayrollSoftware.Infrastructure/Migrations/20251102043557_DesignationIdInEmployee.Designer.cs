@@ -12,8 +12,8 @@ using PayrollSoftware.Data;
 namespace PayrollSoftware.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251104051601_attendancedb")]
-    partial class attendancedb
+    [Migration("20251102043557_DesignationIdInEmployee")]
+    partial class DesignationIdInEmployee
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -200,16 +200,10 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<DateTime>("AttendanceDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<TimeSpan?>("EarlyLeave")
-                        .HasColumnType("time");
-
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<TimeSpan?>("InTime")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan?>("LateEntry")
                         .HasColumnType("time");
 
                     b.Property<TimeSpan?>("OutTime")

@@ -15,7 +15,5 @@ namespace PayrollSoftware.Infrastructure.Application.DTOs
         public TimeSpan? OutTime { get; set; }
         public string? Status { get; set; }
         public decimal WorkingHours { get; set; }
-        public TimeSpan? LateEntry { get; set; }      // optional
-        public TimeSpan? EarlyLeave { get; set; }    // optional
     }
 }

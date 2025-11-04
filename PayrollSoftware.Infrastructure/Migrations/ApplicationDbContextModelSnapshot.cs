@@ -197,16 +197,10 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<DateTime>("AttendanceDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<TimeSpan?>("EarlyLeave")
-                        .HasColumnType("time");
-
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<TimeSpan?>("InTime")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan?>("LateEntry")
                         .HasColumnType("time");
 
                     b.Property<TimeSpan?>("OutTime")
