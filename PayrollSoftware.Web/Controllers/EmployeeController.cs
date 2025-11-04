@@ -229,12 +229,24 @@ namespace PayrollSoftware.Web.Controllers
 
         private async Task PopulateDropdownsAsync()
         {
-            ViewBag.Departments = await _context.Departments.AsNoTracking()
-                .OrderBy(d => d.DepartmentName).ToListAsync();
-            ViewBag.Designations = await _context.Designations.AsNoTracking()
-                .OrderBy(d => d.DesignationName).ToListAsync();
-            ViewBag.Shifts = await _context.Shifts.AsNoTracking()
-                .OrderBy(s => s.ShiftName).ToListAsync();
+            ViewBag.Departments = await _context.Departments
+                .AsNoTracking()
+                .Where(d => d.IsActive)
+                .OrderBy(d => d.DepartmentName)
+                .ToListAsync();
+
+            ViewBag.Designations = await _context.Designations
+                .AsNoTracking()
+                .Where(d => d.IsActive)
+                .OrderBy(d => d.DesignationName)
+                .ToListAsync();
+
+            ViewBag.Shifts = await _context.Shifts
+                .AsNoTracking()
+                .Where(s => s.IsActive)
+                .OrderBy(s => s.ShiftName)
+                .ToListAsync();
         }
+
     }
 }
