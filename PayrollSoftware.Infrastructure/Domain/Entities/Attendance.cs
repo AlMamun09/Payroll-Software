@@ -17,5 +17,8 @@ namespace PayrollSoftware.Infrastructure.Domain.Entities
         public TimeSpan? OutTime { get; set; }
         public string? Status { get; set; }
         public decimal WorkingHours { get; set; }
+        public TimeSpan? LateEntry { get; set; }
+        public TimeSpan? EarlyLeave { get; set; }
+
     }
 }
