@@ -33,7 +33,9 @@
                 <div class="form-group col-md-3">
                     <label asp-for="Status"></label>
                     <select asp-for="Status" class="form-control select2" data-placeholder="Select Status" style="width:100%;">
-                        <option>Currently Active</option>
+                        <option value="">-- select --</option>
+                        <option>Active</option>
+                        <option>On Leave</option>
                         <option>Resigned</option>
                     </select>
                 </div>

@@ -79,7 +79,8 @@ namespace PayrollSoftware.Infrastructure.Repositories
         // --- Validation and business rules ---
         private static readonly string[] AllowedStatuses = new[]
         {
-            "Currently Active",
+            "Active",
+            "On Leave",
             "Resigned"
         };
 

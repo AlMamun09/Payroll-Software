@@ -66,13 +66,21 @@
                     { data: 'dateOfBirth', render: d => d ? d.substring(0, 10) : '' },
                     { data: 'departmentName', defaultContent: '' },
                     { data: 'designationName', defaultContent: '' },
-                    {
+                            {
                         data: 'status',
-                        render: d =>
-                            d === 'Currently Active'
-                                ? '<span class="badge badge-success">Active</span>'
-                                : '<span class="badge badge-secondary">Resigned</span>'
+                        render: d => {
+                            if (d === 'Active') {
+                                return '<span class="badge badge-success">Active</span>';
+                            } else if (d === 'On Leave') {
+                                return '<span class="badge badge-info">On Leave</span>';
+                            } else if (d === 'Resigned') {
+                                return '<span class="badge badge-secondary">Resigned</span>';
+                            } else {
+                                return '<span class="badge badge-light">Unknown</span>';
+                            }
+                        }
                     }
+
                 ],
                 actions: {
                     editSelector: '.js-edit',
