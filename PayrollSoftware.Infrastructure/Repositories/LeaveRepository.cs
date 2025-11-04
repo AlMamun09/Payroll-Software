@@ -250,58 +250,86 @@ namespace PayrollSoftware.Infrastructure.Repositories
             if (leave == null)
                 throw new ArgumentNullException(nameof(leave));
 
+            // Collect all validation errors
+            var errors = new List<string>();
+
             if (leave.EmployeeId == Guid.Empty)
-                throw new ArgumentException("Employee ID is required.");
+                errors.Add("Employee ID is required.");
 
             if (string.IsNullOrWhiteSpace(leave.LeaveType))
-                throw new ArgumentException("Leave type is required.");
+                errors.Add("Leave type is required.");
+            else if (!_validLeaveTypes.Contains(leave.LeaveType))
+                errors.Add($"Invalid leave type '{leave.LeaveType}'. Valid types: {string.Join(", ", _validLeaveTypes)}");
 
-            ValidateLeaveType(leave.LeaveType);
-            ValidateLeaveDates(leave.StartDate, leave.EndDate);
-            await ValidateEmployeeExistsAsync(leave.EmployeeId);
+            // Validate dates
+            if (leave.StartDate < DateTime.Today)
+                errors.Add("Start date cannot be in the past.");
+            else if (leave.StartDate > DateTime.Today.AddDays(MaxFutureLeaveDays))
+                errors.Add($"Leave cannot be applied more than {MaxFutureLeaveDays} days in advance.");
 
-            if (await HasLeaveOverlapAsync(leave.EmployeeId, leave.StartDate, leave.EndDate))
-                throw new InvalidOperationException("Employee already has an approved or pending leave application for this date range.");
+            if (leave.EndDate < leave.StartDate)
+                errors.Add("End date cannot be before start date.");
+            else
+            {
+                var maxEndDate = leave.StartDate.AddDays(MaxLeaveDurationDays * 2);
+                if (leave.EndDate > maxEndDate)
+                    errors.Add($"Leave duration is too long. Maximum allowed duration is {MaxLeaveDurationDays} working days.");
+            }
 
-            ValidateRemarks(leave.Remarks);
+            // Check employee exists
+            if (leave.EmployeeId != Guid.Empty)
+            {
+                var employeeExists = await _context.Employees.AsNoTracking()
+                    .AnyAsync(e => e.EmployeeId == leave.EmployeeId);
+                if (!employeeExists)
+                    errors.Add($"Employee with ID {leave.EmployeeId} does not exist.");
+            }
 
-            // Validate that TotalDays is provided and reasonable
-            //if (leave.TotalDays <= 0)
-            //    throw new ArgumentException("Total days must be greater than zero.");
+            // Check overlap only if dates are valid
+            if (leave.EmployeeId != Guid.Empty && leave.StartDate >= DateTime.Today && leave.EndDate >= leave.StartDate)
+            {
+                if (await HasLeaveOverlapAsync(leave.EmployeeId, leave.StartDate, leave.EndDate))
+                    errors.Add("Employee already has an approved or pending leave application for this date range.");
+            }
 
+            // Validate remarks
+            if (!string.IsNullOrWhiteSpace(leave.Remarks))
+            {
+                if (leave.Remarks.Length > RemarksMaxLength)
+                    errors.Add($"Remarks cannot exceed {RemarksMaxLength} characters.");
+                else if (!_remarksRegex.IsMatch(leave.Remarks))
+                    errors.Add("Remarks contain invalid characters. Only letters, numbers, spaces, and basic punctuation are allowed.");
+            }
+
+            // Validate total days
             if (leave.TotalDays > MaxLeaveDurationDays)
-                throw new ArgumentException($"Leave cannot exceed {MaxLeaveDurationDays} working days.");
+                errors.Add($"Leave cannot exceed {MaxLeaveDurationDays} working days.");
 
             // Only non-sick leaves must be applied in advance
-            if (leave.StartDate.Date == DateTime.Today && !string.Equals(leave.LeaveType, "Sick", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException($"Non-sick leaves must be applied at least {MinAdvanceNoticeDays} day in advance.");
+            if (leave.StartDate.Date == DateTime.Today &&
+                !string.IsNullOrWhiteSpace(leave.LeaveType) &&
+                !string.Equals(leave.LeaveType, "Sick", StringComparison.OrdinalIgnoreCase))
+            {
+                errors.Add($"Non-sick leaves must be applied at least {MinAdvanceNoticeDays} day in advance.");
+            }
+
+            // Throw all errors together
+            if (errors.Any())
+            {
+                throw new ArgumentException(string.Join("\n", errors));
+            }
         }
 
         private void ValidateLeaveDates(DateTime startDate, DateTime endDate)
         {
-            if (startDate < DateTime.Today)
-                throw new ArgumentException("Start date cannot be in the past.");
-
-            if (startDate > DateTime.Today.AddDays(MaxFutureLeaveDays))
-                throw new ArgumentException($"Leave cannot be applied more than {MaxFutureLeaveDays} days in advance.");
-
-            if (endDate < startDate)
-                throw new ArgumentException("End date cannot be before start date.");
-
-            var maxEndDate = startDate.AddDays(MaxLeaveDurationDays * 2); // Allow for weekends
-            if (endDate > maxEndDate)
-                throw new ArgumentException($"Leave duration is too long. Maximum allowed duration is {MaxLeaveDurationDays} working days.");
-
-            // Removed generic advance notice rule from here to allow same-day Sick leave
+            // This method is now integrated into ValidateLeaveApplicationAsync
+            // Kept for backward compatibility but not used
         }
 
         private void ValidateLeaveType(string leaveType)
         {
-            if (string.IsNullOrWhiteSpace(leaveType))
-                throw new ArgumentException("Leave type is required.");
-
-            if (!_validLeaveTypes.Contains(leaveType))
-                throw new ArgumentException($"Invalid leave type '{leaveType}'. Valid types: {string.Join(", ", _validLeaveTypes)}");
+            // This method is now integrated into ValidateLeaveApplicationAsync
+            // Kept for backward compatibility but not used
         }
 
         private void ValidateLeaveStatus(string leaveStatus)

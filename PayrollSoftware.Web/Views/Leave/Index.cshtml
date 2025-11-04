@@ -110,8 +110,13 @@
                 routes,
                 createTitle: 'Apply for Leave',
                 editTitle: 'Edit Leave Application',
-                onSaved: () => dataTable.ajax.reload() // reload table when saved
+                onSaved: () => dataTable.ajax.reload() // Reload the table when saved
             });
+
+            // Make table reload function available globally for form callback
+            window.leaveTableReload = function () {
+                dataTable.ajax.reload();
+            };
 
             // Initialize DataTable
             const dataTable = $('#leaveTable').DataTable({

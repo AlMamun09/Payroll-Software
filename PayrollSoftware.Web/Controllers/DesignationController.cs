@@ -55,16 +55,25 @@ namespace PayrollSoftware.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([FromForm] DesignationDto dto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
-                return BadRequest(new { success = false, message = string.Join("\n", errors) });
+                var entity = MapToEntity(dto);
+                entity.DesignationId = Guid.NewGuid();
+                await _designationRepository.AddDesignationAsync(entity);
+                return Json(new { success = true, message = "Designation created successfully." });
             }
-
-            var entity = MapToEntity(dto);
-            entity.DesignationId = Guid.NewGuid();
-            await _designationRepository.AddDesignationAsync(entity);
-            return Json(new { success = true, message = "Designation created successfully." });
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error creating designation: {ex.Message}" });
+            }
         }
 
         [HttpGet]
@@ -86,15 +95,24 @@ namespace PayrollSoftware.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit([FromForm] DesignationDto dto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
-                return BadRequest(new { success = false, message = string.Join("\n", errors) });
+                var entity = MapToEntity(dto);
+                await _designationRepository.UpdateDesignationAsync(entity);
+                return Json(new { success = true, message = "Designation updated successfully." });
             }
-
-            var entity = MapToEntity(dto);
-            await _designationRepository.UpdateDesignationAsync(entity);
-            return Json(new { success = true, message = "Designation updated successfully." });
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error updating designation: {ex.Message}" });
+            }
         }
 
         [HttpPost]

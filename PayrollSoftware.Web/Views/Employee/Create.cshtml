@@ -52,7 +52,7 @@
                 </div>
                 <div class="form-group col-md-4">
                     <label asp-for="BasicSalary"></label>
-                    <input asp-for="BasicSalary" type="number" step="0.01" class="form-control" />
+                    <input asp-for="BasicSalary" type="number" min="0" class="form-control" />
                 </div>
 
                 <div class="form-group col-md-4">
@@ -122,29 +122,20 @@
 
 @section Scripts {
     <script>
-        $(function () {
-            // Initialize select2 dropdowns
-            $('.select2').each(function () {
-                $(this).select2({
-                    theme: 'bootstrap4',
-                    width: '100%',
-                    placeholder: $(this).data('placeholder'),
-                    allowClear: true
-                });
-            });
+        // Initialize all Select2 dropdowns using common function
+        CommonAjax.initSelect2('.select2');
 
-            // Payment system conditional fields
-            function togglePayment() {
-                const v = $('#PaymentSystem').val();
-                const showBank = v === 'Bank Transfer';
-                const showMobile = v === 'Mobile Banking';
-                $('.bank-only').toggleClass('d-none', !showBank);
-                $('#MobileNumberGroup').toggleClass('d-none', !showMobile);
-            }
+        // Payment system conditional fields
+        function togglePayment() {
+            const v = $('#PaymentSystem').val();
+            const showBank = v === 'Bank Transfer';
+            const showMobile = v === 'Mobile Banking';
+            $('.bank-only').toggleClass('d-none', !showBank);
+            $('#MobileNumberGroup').toggleClass('d-none', !showMobile);
+        }
 
-            $('#PaymentSystem').on('change select2:select', togglePayment);
-            togglePayment();
-        });
+        $('#PaymentSystem').on('change select2:select', togglePayment);
+        togglePayment();
     </script>
 
     <script>
@@ -158,57 +149,22 @@
                 return;
             }
 
-            const dob = new Date(v);
-            const today = new Date();
-            let age = today.getFullYear() - dob.getFullYear();
-            const m = today.getMonth() - dob.getMonth();
-
-            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+            // Use common age calculation function
+            const age = CommonAjax.calculateAge(v);
             ageEl.value = isNaN(age) ? '' : age;
         }
 
         dobEl?.addEventListener('change', calcAge);
         calcAge();
 
-        // Ajax submit to show SweetAlert then redirect
+        // Use common form submission handler
         const form = document.getElementById('employeeForm');
-        form?.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const formData = new FormData(form);
-            const token = form.querySelector('input[name="__RequestVerificationToken"]').value;
-
-            fetch(form.action, {
-                method: 'POST',
-                body: formData,
-                headers: { 'RequestVerificationToken': token }
-            })
-                .then(r => (r.ok ? r.json() : r.json().then(j => Promise.reject(j))))
-                .then(j => {
-                    if (j.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: j.message
-                        }).then(() => {
-                            window.location.href = '@Url.Action("Index", "Employee")';
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: j.message || 'Save failed'
-                        });
-                    }
-                })
-                .catch(err => {
-                    const msg = err?.message || err?.error || 'Save failed';
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: msg
-                    });
-                });
+        CommonAjax.submitForm(form, {
+            successTitle: 'Success',
+            errorTitle: 'Validation Error',
+            onSuccess: function(data) {
+                window.location.href = '@Url.Action("Index", "Employee")';
+            }
         });
     </script>
 }

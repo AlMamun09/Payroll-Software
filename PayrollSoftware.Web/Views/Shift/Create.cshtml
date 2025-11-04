@@ -33,7 +33,7 @@
                         <label asp-for="EndTime" class="control-label"></label>
                         <input asp-for="EndTime" class="form-control" type="time" />
                         <span asp-validation-for="EndTime" class="text-danger"></span>
-                    </div>  
+                    </div>
                 </div>
                 <div class="text-right">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save</button>
@@ -45,4 +45,25 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+         const form = document.getElementById('shiftForm');
+
+          // Use common form submission handler
+         CommonAjax.submitForm(form, {
+           successTitle: 'Success',
+           errorTitle: 'Validation Error',
+          onSuccess: function(data) {
+               // Close modal if in modal context, otherwise reload
+              if (typeof $('#shiftModal')?.modal === 'function') {
+                 $('#shiftModal').modal('hide');
+                 if (window.shiftTableReload) {
+           window.shiftTableReload();
+             }
+             } else {
+            window.location.reload();
+                   }
+        }
+                });
+    </script>
 }

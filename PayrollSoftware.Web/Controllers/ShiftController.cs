@@ -57,16 +57,25 @@ namespace PayrollSoftware.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([FromForm] ShiftDto dto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
-                return BadRequest(new { success = false, message = string.Join("\n", errors) });
+                var entity = MapToEntity(dto);
+                entity.ShiftId = Guid.NewGuid();
+                await _shiftRepository.AddShiftAsync(entity);
+                return Json(new { success = true, message = "Shift created successfully." });
             }
-
-            var entity = MapToEntity(dto);
-            entity.ShiftId = Guid.NewGuid();
-            await _shiftRepository.AddShiftAsync(entity);
-            return Json(new { success = true, message = "Shift created successfully." });
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error creating shift: {ex.Message}" });
+            }
         }
 
         [HttpGet]
@@ -88,15 +97,24 @@ namespace PayrollSoftware.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit([FromForm] ShiftDto dto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
-                return BadRequest(new { success = false, message = string.Join("\n", errors) });
+                var entity = MapToEntity(dto);
+                await _shiftRepository.UpdateShiftAsync(entity);
+                return Json(new { success = true, message = "Shift updated successfully." });
             }
-
-            var entity = MapToEntity(dto);
-            await _shiftRepository.UpdateShiftAsync(entity);
-            return Json(new { success = true, message = "Shift updated successfully." });
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error updating shift: {ex.Message}" });
+            }
         }
 
         [HttpPost]

@@ -69,34 +69,45 @@ namespace PayrollSoftware.Infrastructure.Repositories
             if (shift == null)
                 throw new ArgumentNullException(nameof(shift));
 
+            // Collect all validation errors
+            var errors = new List<string>();
+
             // Name validations
             var name = shift.ShiftName?.Trim();
             if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Shift name is required.", nameof(shift.ShiftName));
+                errors.Add("Shift name is required.");
+            else
+            {
+                if (name.Length < ShiftNameMinLength || name.Length > ShiftNameMaxLength)
+                    errors.Add($"Shift name must be between {ShiftNameMinLength} and {ShiftNameMaxLength} characters.");
 
-            if (name.Length < ShiftNameMinLength || name.Length > ShiftNameMaxLength)
-                throw new ArgumentException($"Shift name must be between {ShiftNameMinLength} and {ShiftNameMaxLength} characters.", nameof(shift.ShiftName));
+                if (!name.All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+                    errors.Add("Shift name must contain only letters and spaces.");
 
-            if (!name.All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
-                throw new ArgumentException("Shift name must contain only letters and spaces.", nameof(shift.ShiftName));
+                // Duplicate check (case-insensitive, excluding self on update)
+                var normalized = name.ToLower();
+                var exists = await _context.Shifts
+                    .AsNoTracking()
+                    .AnyAsync(s => s.ShiftId != shift.ShiftId &&
+                                   s.ShiftName != null &&
+                                   s.ShiftName.ToLower() == normalized);
+                if (exists)
+                    errors.Add("A shift with the same name already exists.");
 
-            // Duplicate check (case-insensitive, excluding self on update)
-            var normalized = name.ToLower();
-            var exists = await _context.Shifts
-                .AsNoTracking()
-                .AnyAsync(s => s.ShiftId != shift.ShiftId &&
-                               s.ShiftName != null &&
-                               s.ShiftName.ToLower() == normalized);
-            if (exists)
-                throw new InvalidOperationException("A shift with the same name already exists.");
+                // Normalize persisted values
+                shift.ShiftName = name;
+            }
 
             // Time validations
             // zero-length shifts
             if (shift.StartTime == shift.EndTime)
-                throw new ArgumentException("Start and end times can't be the same.", nameof(shift.EndTime));
+                errors.Add("Start and end times can't be the same.");
 
-            // Normalize persisted values
-            shift.ShiftName = name;
+            // Throw all errors together
+            if (errors.Any())
+            {
+                throw new ArgumentException(string.Join("\n", errors));
+            }
         }
     }
 }

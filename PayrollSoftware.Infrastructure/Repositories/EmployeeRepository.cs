@@ -94,6 +94,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
         {
             if (e == null) throw new ArgumentNullException(nameof(e));
 
+            // Collect all validation errors instead of throwing on first error
+            var errors = new List<string>();
+
             // Normalize strings (trim)
             e.FullName = e.FullName?.Trim();
             e.Gender = e.Gender?.Trim();
@@ -105,118 +108,130 @@ namespace PayrollSoftware.Infrastructure.Repositories
             e.MobileNumber = e.MobileNumber?.Trim();
             e.Status = string.IsNullOrWhiteSpace(e.Status) ? "Currently Active" : e.Status.Trim();
 
-            // Employee Code uniqueness (if provided)
-            if (!string.IsNullOrWhiteSpace(e.EmployeeCode))
-            {
-                var codeExists = await _context.Employees
-                    .AsNoTracking()
-                    .AnyAsync(x => x.EmployeeId != e.EmployeeId && x.EmployeeCode != null && x.EmployeeCode == e.EmployeeCode);
-                if (codeExists)
-                    throw new InvalidOperationException("Employee Code already exists.");
-            }
+            
 
             // FullName required and length
             if (string.IsNullOrWhiteSpace(e.FullName))
-                throw new ArgumentException("Full Name is required.", nameof(e.FullName));
-            if (e.FullName.Length >100)
-                throw new ArgumentException("Full Name cannot exceed100 characters.", nameof(e.FullName));
+                errors.Add("Full Name is required.");
+            else if (e.FullName.Length > 100)
+                errors.Add("Full Name cannot exceed 100 characters.");
 
             // Gender required
             if (string.IsNullOrWhiteSpace(e.Gender))
-                throw new ArgumentException("Gender is required.", nameof(e.Gender));
+                errors.Add("Gender is required.");
 
             // DateOfBirth required; ensure date-only normalization
             if (e.DateOfBirth == default)
-                throw new ArgumentException("Date of Birth is required.", nameof(e.DateOfBirth));
-            e.DateOfBirth = e.DateOfBirth.Date;
+                errors.Add("Date of Birth is required.");
+            else
+            {
+                e.DateOfBirth = e.DateOfBirth.Date;
+
+                // Age >=18 at joining
+                if (e.JoiningDate != default)
+                {
+                    var ageAtJoining = GetAgeOn(e.DateOfBirth, e.JoiningDate);
+                    if (ageAtJoining < 18)
+                        errors.Add("Employee must be 18 years or older at the time of joining.");
+                }
+            }
 
             // JoiningDate required and date-only
             if (e.JoiningDate == default)
-                throw new ArgumentException("Joining Date is required.", nameof(e.JoiningDate));
-            e.JoiningDate = e.JoiningDate.Date;
-
-            // Age >=18 at joining
-            var ageAtJoining = GetAgeOn(e.DateOfBirth, e.JoiningDate);
-            if (ageAtJoining <18)
-                throw new ArgumentException("Employee must be18 years or older at the time of joining.", nameof(e.JoiningDate));
+                errors.Add("Joining Date is required.");
+            else
+                e.JoiningDate = e.JoiningDate.Date;
 
             // Designation required and must exist
             if (e.DesignationId == Guid.Empty)
-                throw new ArgumentException("Designation is required.", nameof(e.DesignationId));
-            var designationExists = await _context.Designations.AsNoTracking().AnyAsync(d => d.DesignationId == e.DesignationId);
-            if (!designationExists)
-                throw new ArgumentException("Invalid designation selected.", nameof(e.DesignationId));
+                errors.Add("Designation is required.");
+            else
+            {
+                var designationExists = await _context.Designations.AsNoTracking().AnyAsync(d => d.DesignationId == e.DesignationId);
+                if (!designationExists)
+                    errors.Add("Invalid designation selected.");
+            }
 
             // Department required and must exist
             if (e.DepartmentId == Guid.Empty)
-                throw new ArgumentException("Department is required.", nameof(e.DepartmentId));
-            var deptExists = await _context.Departments.AsNoTracking().AnyAsync(d => d.DepartmentId == e.DepartmentId);
-            if (!deptExists)
-                throw new ArgumentException("Invalid department selected.", nameof(e.DepartmentId));
+                errors.Add("Department is required.");
+            else
+            {
+                var deptExists = await _context.Departments.AsNoTracking().AnyAsync(d => d.DepartmentId == e.DepartmentId);
+                if (!deptExists)
+                    errors.Add("Invalid department selected.");
+            }
 
             // Optional Shift - if provided, must exist
             if (e.ShiftId.HasValue)
             {
                 var shiftExists = await _context.Shifts.AsNoTracking().AnyAsync(s => s.ShiftId == e.ShiftId.Value);
                 if (!shiftExists)
-                    throw new ArgumentException("Invalid shift selected.", nameof(e.ShiftId));
+                    errors.Add("Invalid shift selected.");
             }
 
             // BasicSalary required and >=0
-            if (e.BasicSalary <0)
-                throw new ArgumentException("Basic Salary is required and cannot be negative.", nameof(e.BasicSalary));
+            if (e.BasicSalary < 0)
+                errors.Add("Basic Salary cannot be negative.");
 
             // EmploymentType required
             if (string.IsNullOrWhiteSpace(e.EmploymentType))
-                throw new ArgumentException("Employment Type is required.", nameof(e.EmploymentType));
+                errors.Add("Employment Type is required.");
 
             // PaymentSystem validation and conditional fields
             if (string.IsNullOrWhiteSpace(e.PaymentSystem))
-                throw new ArgumentException("Payment System is required.", nameof(e.PaymentSystem));
-
-            if (!AllowedPaymentSystems.Contains(e.PaymentSystem))
-                throw new ArgumentException("Invalid payment system.", nameof(e.PaymentSystem));
-
-            switch (e.PaymentSystem)
+                errors.Add("Payment System is required.");
+            else if (!AllowedPaymentSystems.Contains(e.PaymentSystem))
+                errors.Add("Invalid payment system.");
+            else
             {
-                case "Bank Transfer":
-                    if (string.IsNullOrWhiteSpace(e.AccountHolderName))
-                        throw new ArgumentException("Account Holder Name is required for Bank Transfer.", nameof(e.AccountHolderName));
-                    if (string.IsNullOrWhiteSpace(e.BankAndBranchName))
-                        throw new ArgumentException("Bank & Branch Name is required for Bank Transfer.", nameof(e.BankAndBranchName));
-                    if (string.IsNullOrWhiteSpace(e.BankAccountNumber))
-                        throw new ArgumentException("Bank Account Number is required for Bank Transfer.", nameof(e.BankAccountNumber));
-                    if (e.BankAccountNumber.Length >50)
-                        throw new ArgumentException("Bank Account Number cannot exceed50 characters.", nameof(e.BankAccountNumber));
-                    // When bank transfer, mobile number should be empty or ignored
-                    e.MobileNumber = null;
-                    break;
+                switch (e.PaymentSystem)
+                {
+                    case "Bank Transfer":
+                        if (string.IsNullOrWhiteSpace(e.AccountHolderName))
+                            errors.Add("Account Holder Name is required for Bank Transfer.");
+                        if (string.IsNullOrWhiteSpace(e.BankAndBranchName))
+                            errors.Add("Bank & Branch Name is required for Bank Transfer.");
+                        if (string.IsNullOrWhiteSpace(e.BankAccountNumber))
+                            errors.Add("Bank Account Number is required for Bank Transfer.");
+                        else if (e.BankAccountNumber.Length > 50)
+                            errors.Add("Bank Account Number cannot exceed 50 characters.");
+                        // When bank transfer, mobile number should be empty or ignored
+                        e.MobileNumber = null;
+                        break;
 
-                case "Mobile Banking":
-                    if (string.IsNullOrWhiteSpace(e.MobileNumber))
-                        throw new ArgumentException("Mobile Number is required for Mobile Banking.", nameof(e.MobileNumber));
-                    if (!IsValidPhoneNumber(e.MobileNumber))
-                        throw new ArgumentException("Mobile Number is not in a valid format.", nameof(e.MobileNumber));
-                    // Bank-related fields should be empty or ignored
-                    e.AccountHolderName = null;
-                    e.BankAndBranchName = null;
-                    e.BankAccountNumber = null;
-                    break;
+                    case "Mobile Banking":
+                        if (string.IsNullOrWhiteSpace(e.MobileNumber))
+                            errors.Add("Mobile Number is required for Mobile Banking.");
+                        else if (!IsValidPhoneNumber(e.MobileNumber))
+                            errors.Add("Mobile Number is not in a valid format.");
+                        // Bank-related fields should be empty or ignored
+                        e.AccountHolderName = null;
+                        e.BankAndBranchName = null;
+                        e.BankAccountNumber = null;
+                        break;
 
-                case "Cash Payment":
-                    // Hide/clear all payment-related fields
-                    e.AccountHolderName = null;
-                    e.BankAndBranchName = null;
-                    e.BankAccountNumber = null;
-                    e.MobileNumber = null;
-                    break;
+                    case "Cash Payment":
+                        // Hide/clear all payment-related fields
+                        e.AccountHolderName = null;
+                        e.BankAndBranchName = null;
+                        e.BankAccountNumber = null;
+                        e.MobileNumber = null;
+                        break;
+                }
             }
 
             // Status required and allowed values
             if (string.IsNullOrWhiteSpace(e.Status))
                 e.Status = "Currently Active";
-            if (!AllowedStatuses.Contains(e.Status))
-                throw new ArgumentException("Invalid status.", nameof(e.Status));
+            else if (!AllowedStatuses.Contains(e.Status))
+                errors.Add("Invalid status.");
+
+            // If there are any validation errors, throw with all messages
+            if (errors.Any())
+            {
+                throw new ArgumentException(string.Join("\n", errors));
+            }
         }
 
         private static int GetAgeOn(DateTime dob, DateTime onDate)

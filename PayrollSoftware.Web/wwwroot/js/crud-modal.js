@@ -25,10 +25,17 @@ window.CrudModal = (function () {
                 .on('click.crud.add', addBtnSelector, openCreate);
         }
 
-        // Intercept any form submission inside the modal
+        // Intercept any form submission inside the modal (only if no custom handler)
         $modal.off('submit.crud').on('submit.crud', 'form', function (e) {
-            e.preventDefault();
             const $form = $(this);
+            
+            // Check if form has custom AJAX handling (by checking for data attribute)
+            if ($form.data('custom-submit') || $form.attr('id') === 'leaveForm') {
+                // Let the form's own handler deal with it
+                return;
+            }
+            
+            e.preventDefault();
             const url = $form.attr('action');
             const data = $form.serialize();
             CommonAjax.ajaxPost(url, data)

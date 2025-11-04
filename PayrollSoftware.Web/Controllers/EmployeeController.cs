@@ -78,16 +78,28 @@ namespace PayrollSoftware.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([FromForm] EmployeeDto dto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
-                return BadRequest(new { success = false, message = string.Join("\n", errors) });
+                var entity = MapToEntity(dto);
+                entity.EmployeeId = Guid.NewGuid();
+                await _employeeRepository.AddEmployeeAsync(entity);
+                return Json(new { success = true, message = "Employee created successfully." });
             }
-
-            var entity = MapToEntity(dto);
-            entity.EmployeeId = Guid.NewGuid();
-            await _employeeRepository.AddEmployeeAsync(entity);
-            return Json(new { success = true, message = "Employee created successfully." });
+            catch (ArgumentException ex)
+            {
+                // Validation errors from repository
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Business rule violations (e.g., duplicate employee code)
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Unexpected errors
+                return StatusCode(500, new { success = false, message = $"Error creating employee: {ex.Message}" });
+            }
         }
 
         [HttpGet]
@@ -110,15 +122,27 @@ namespace PayrollSoftware.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit([FromForm] EmployeeDto dto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
-                return BadRequest(new { success = false, message = string.Join("\n", errors) });
+                var entity = MapToEntity(dto);
+                await _employeeRepository.UpdateEmployeeAsync(entity);
+                return Json(new { success = true, message = "Employee updated successfully." });
             }
-
-            var entity = MapToEntity(dto);
-            await _employeeRepository.UpdateEmployeeAsync(entity);
-            return Json(new { success = true, message = "Employee updated successfully." });
+            catch (ArgumentException ex)
+            {
+                // Validation errors from repository
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Business rule violations
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Unexpected errors
+                return StatusCode(500, new { success = false, message = $"Error updating employee: {ex.Message}" });
+            }
         }
 
         [HttpGet]

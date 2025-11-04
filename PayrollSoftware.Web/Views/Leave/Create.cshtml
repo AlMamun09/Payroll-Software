@@ -110,138 +110,117 @@
 
 <script>
     (function () {
-        // Initialize Select2 for EmployeeId dropdown
-        $('#EmployeeId').select2({
-            theme: 'bootstrap4',
-            width: '100%',
-            placeholder: 'Select Employee ID',
-            allowClear: true,
-            dropdownParent: $('#leaveModal')
-        });
+          // Initialize all Select2 dropdowns using common function
+          CommonAjax.initSelect2('#EmployeeId, #LeaveType, #LeaveStatus', {
+              dropdownParent: $('#leaveModal')
+          });
 
-        // Initialize Select2 for LeaveType dropdown
-        $('#LeaveType').select2({
-            theme: 'bootstrap4',
-            width: '100%',
-            placeholder: 'Select Leave Type',
-            allowClear: true,
-            dropdownParent: $('#leaveModal')
-        });
+          // Handle Employee selection – populate name
+          const empNameEl = document.getElementById('EmployeeName');
 
-        // Initialize Select2 for LeaveStatus dropdown
-        $('#LeaveStatus').select2({
-            theme: 'bootstrap4',
-            width: '100%',
-            placeholder: 'Select Status',
-            allowClear: false,
-            dropdownParent: $('#leaveModal')
-        });
+          $('#EmployeeId').on('select2:select', function (e) {
+              const selectedOption = e.params.data.element;
+              const empName = selectedOption.getAttribute('data-name') || '';
+              if (empNameEl) empNameEl.value = empName;
+              calcAndPreview();
+          });
 
-        // Handle Employee selection – populate name
-        const empNameEl = document.getElementById('EmployeeName');
+          $('#EmployeeId').on('select2:clear', function () {
+              if (empNameEl) empNameEl.value = '';
+          });
 
-        $('#EmployeeId').on('select2:select', function (e) {
-            const selectedOption = e.params.data.element;
-            const empName = selectedOption.getAttribute('data-name') || '';
-            if (empNameEl) empNameEl.value = empName;
-            calcAndPreview();
-        });
+          // Set initial employee name if editing
+          const selectedEmp = $('#EmployeeId option:selected');
+          if (selectedEmp.length && selectedEmp.val()) {
+              const empName = selectedEmp.attr('data-name') || '';
+              if (empNameEl) empNameEl.value = empName;
+          }
 
-        $('#EmployeeId').on('select2:clear', function () {
-            if (empNameEl) empNameEl.value = '';
-        });
+          // Date and calculation elements
+          const form = document.getElementById('leaveForm');
+          const startEl = document.getElementById('StartDate');
+          const endEl = document.getElementById('EndDate');
+          const totalHidden = document.getElementById('TotalDays');
+          const totalPreview = document.getElementById('TotalDaysPreview');
+          const hint = document.getElementById('TotalDaysHint');
 
-        // Set initial employee name if editing
-        const selectedEmp = $('#EmployeeId option:selected');
-        if (selectedEmp.length && selectedEmp.val()) {
-            const empName = selectedEmp.attr('data-name') || '';
-            if (empNameEl) empNameEl.value = empName;
-        }
+          // Ensure EndDate is not before StartDate
+          function updateMinEnd() {
+              if (!startEl?.value || !endEl) return;
+              endEl.min = startEl.value;
+              if (endEl.value && endEl.value < startEl.value) {
+                  endEl.value = startEl.value;
+              }
+          }
 
-        // Date and calculation elements
-        const form = document.getElementById('leaveForm');
-        const startEl = document.getElementById('StartDate');
-        const endEl = document.getElementById('EndDate');
-        const totalHidden = document.getElementById('TotalDays');
-        const totalPreview = document.getElementById('TotalDaysPreview');
-        const hint = document.getElementById('TotalDaysHint');
-        const leaveTypeEl = document.getElementById('LeaveType');
+          // Set total days and hint message
+          function setTotals(val, message, isError) {
+              if (totalHidden) totalHidden.value = (val || val === 0) ? val : '';
+              if (totalPreview) totalPreview.value = (val || val === 0) ? val : '';
+              if (hint) {
+                  hint.textContent = message || '';
+                  hint.className = 'form-text ' + (
+                      isError
+                          ? 'text-danger'
+                          : (val > 0 ? 'text-success' : 'text-muted')
+                  );
+              }
+          }
 
-        // Calculate business days (Sunday–Thursday)
-        function businessDaysInclusive(s, e) {
-            const sd = new Date(s), ed = new Date(e);
-            sd.setHours(0, 0, 0, 0);
-            ed.setHours(0, 0, 0, 0);
-            if (ed < sd) return -1;
+          // Calculate and preview total business days using common function
+          function calcAndPreview() {
+              const s = startEl?.value, e = endEl?.value;
+              if (!s || !e) {
+                  setTotals('', 'Select start and end dates to calculate.');
+                  return;
+              }
 
-            let days = 0;
-            for (let d = new Date(sd); d <= ed; d.setDate(d.getDate() + 1)) {
-                const dow = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-                // Business days: Sunday(0) through Thursday(4)
-                if (dow !== 5 && dow !== 6) days++; // exclude Friday(5) & Saturday(6)
-            }
-            return days;
-        }
+              // Use common business days calculation
+              const days = CommonAjax.calculateBusinessDays(s, e);
+              if (days < 0) {
+                  setTotals('', 'End date cannot be before start date.', true);
+                  return;
+              }
+              setTotals(days, days > 0 ? 'Business days (Sun–Thu).' : 'No business days in range.');
+          }
 
-        // Ensure EndDate is not before StartDate
-        function updateMinEnd() {
-            if (!startEl?.value || !endEl) return;
-            endEl.min = startEl.value;
-            if (endEl.value && endEl.value < startEl.value) {
-                endEl.value = startEl.value;
-            }
-        }
+          // Event listeners
+          startEl?.addEventListener('change', () => {
+              updateMinEnd();
+              calcAndPreview();
+          });
 
-        // Set total days and hint message
-        function setTotals(val, message, isError) {
-            if (totalHidden) totalHidden.value = (val || val === 0) ? val : '';
-            if (totalPreview) totalPreview.value = (val || val === 0) ? val : '';
-            if (hint) {
-                hint.textContent = message || '';
-                hint.className = 'form-text ' + (
-                    isError
-                        ? 'text-danger'
-                        : (val > 0 ? 'text-success' : 'text-muted')
-                );
-            }
-        }
+          endEl?.addEventListener('change', () => {
+              calcAndPreview();
+          });
 
-        // Calculate and preview total business days
-        function calcAndPreview() {
-            const s = startEl?.value, e = endEl?.value;
-            if (!s || !e) {
-                setTotals('', 'Select start and end dates to calculate.');
-                return;
-            }
-            const days = businessDaysInclusive(s, e);
-            if (days < 0) {
-                setTotals('', 'End date cannot be before start date.', true);
-                return;
-            }
-            setTotals(days, days > 0 ? 'Business days (Sun–Thu).' : 'No business days in range.');
-        }
+          $('#LeaveType').on('select2:select', () => {
+              calcAndPreview();
+          });
 
-        // Event listeners
-        startEl?.addEventListener('change', () => {
-            updateMinEnd();
-            calcAndPreview();
-        });
+          // Use common form submission handler
+          CommonAjax.submitForm(form, {
+              successTitle: 'Success',
+              errorTitle: 'Validation Error',
+              beforeSubmit: function() {
+                  // Ensure calculation is done before submit
+                  calcAndPreview();
+              },
+              onSuccess: function(data) {
+                  // Close modal and reload table
+                  if (typeof $('#leaveModal')?.modal === 'function') {
+                      $('#leaveModal').modal('hide');
+                      if (window.leaveTableReload) {
+                          window.leaveTableReload();
+                      }
+                  } else {
+                      window.location.reload();
+                  }
+              }
+          });
 
-        endEl?.addEventListener('change', () => {
-            calcAndPreview();
-        });
-
-        $('#LeaveType').on('select2:select', () => {
-            calcAndPreview();
-        });
-
-        // Ensure calculation before submit
-        form?.addEventListener('submit', function () {
-            calcAndPreview();
-        });
-
-        // Initial setup
-        updateMinEnd();
-        calcAndPreview();
-    })();
+          // Initial setup
+          updateMinEnd();
+          calcAndPreview();
+      })();
 </script>

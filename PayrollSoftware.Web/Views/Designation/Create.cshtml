@@ -35,4 +35,25 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+          const form = document.getElementById('designationForm');
+
+           // Use common form submission handler
+        CommonAjax.submitForm(form, {
+           successTitle: 'Success',
+             errorTitle: 'Validation Error',
+           onSuccess: function(data) {
+                        // Close modal if in modal context, otherwise reload
+                  if (typeof $('#designationModal')?.modal === 'function') {
+                   $('#designationModal').modal('hide');
+         if (window.designationTableReload) {
+               window.designationTableReload();
+          }
+            } else {
+            window.location.reload();
+            }
+         }
+           });
+    </script>
 }

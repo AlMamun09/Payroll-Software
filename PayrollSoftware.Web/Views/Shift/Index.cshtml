@@ -126,6 +126,11 @@
               deleteUrl: (id) => routes.delete(id)
             }
           });
+
+          // Make table reload function available globally for form callback
+          window.shiftTableReload = function () {
+            shiftTable.reload();
+          };
         });
     </script>
 }

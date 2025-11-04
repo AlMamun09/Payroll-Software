@@ -65,67 +65,72 @@
     <script src="~/js/crud-modal.js"></script>
 
     <script>
-        window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
+                window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
 
-        $(function () {
-            const $card = $('#departmentCard');
-            const listUrl = $card.data('list-url');
+             $(function () {
+              const $card = $('#departmentCard');
+           const listUrl = $card.data('list-url');
 
-            // Routes for the modal and delete actions
-            const routes = {
-                createGet: $card.data('create-get'),
-                editGet: (id) => $card.data('edit-get-template') + id,
-                delete: (id) => $card.data('delete-template') + id
-            };
+           // Routes for the modal and delete actions
+        const routes = {
+                 createGet: $card.data('create-get'),
+               editGet: (id) => $card.data('edit-get-template') + id,
+           delete: (id) => $card.data('delete-template') + id
+         };
 
-            // Initialize the modal
-            const departmentModal = CrudModal.init({
-                modalSelector: '#departmentModal',
-                addBtnSelector: '#btnAddDepartment',
-                routes,
-                createTitle: 'Create Department',
-                editTitle: 'Edit Department',
-                onSaved: () => departmentTable.reload()
-            });
+              // Initialize the modal
+          const departmentModal = CrudModal.init({
+           modalSelector: '#departmentModal',
+           addBtnSelector: '#btnAddDepartment',
+            routes,
+              createTitle: 'Create Department',
+           editTitle: 'Edit Department',
+           onSaved: () => departmentTable.reload()
+         });
 
-            // Initialize the DataTable
-            const departmentTable = CrudTable.init({
-                tableSelector: '#departmentTable',
-                listUrl: listUrl,
-                idField: 'departmentId',
-                columns: [
-                    { data: 'departmentName' },
-                    {
-                        data: 'isActive',
-                        render: function (d) {
-                            return d
-                                ? '<span class="badge badge-success">Active</span>'
-                                : '<span class="badge badge-secondary">Inactive</span>';
-                        }
-                    }
-                ],
-                // Pass DataTables-specific options here
-                dataTables: {
-                  columnDefs: [
-                    { className: "text-center align-middle", targets: [1] }
-                  ]
-                },
-                // Define the buttons for the 'actions' column
-                actions: {
-                    editSelector: '.js-edit',
-                    deleteSelector: '.js-delete',
-                    renderButtons: (id, row) => `
-                        <button class="btn btn-sm btn-warning mr-1 js-edit" data-id="${id}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger js-delete" data-id="${id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    `,
-                    onEdit: (id) => departmentModal.openEdit(id),
-                    deleteUrl: (id) => routes.delete(id)
-                }
-            });
+         // Initialize the DataTable
+        const departmentTable = CrudTable.init({
+           tableSelector: '#departmentTable',
+             listUrl: listUrl,
+            idField: 'departmentId',
+           columns: [
+           { data: 'departmentName' },
+           {
+             data: 'isActive',
+              render: function (d) {
+          return d
+            ? '<span class="badge badge-success">Active</span>'
+              : '<span class="badge badge-secondary">Inactive</span>';
+              }
+              }
+         ],
+          // Pass DataTables-specific options here
+          dataTables: {
+              columnDefs: [
+              { className: "text-center align-middle", targets: [1] }
+           ]
+              },
+         // Define the buttons for the 'actions' column
+          actions: {
+           editSelector: '.js-edit',
+              deleteSelector: '.js-delete',
+           renderButtons: (id, row) => `
+           <button class="btn btn-sm btn-warning mr-1 js-edit" data-id="${id}">
+        <i class="fas fa-edit"></i>
+         </button>
+        <button class="btn btn-sm btn-danger js-delete" data-id="${id}">
+               <i class="fas fa-trash"></i>
+         </button>
+            `,
+           onEdit: (id) => departmentModal.openEdit(id),
+              deleteUrl: (id) => routes.delete(id)
+           }
+         });
+
+             // Make table reload function available globally for form callback
+             window.departmentTableReload = function () {
+                        departmentTable.reload();
+                    };
         });
     </script>
 }

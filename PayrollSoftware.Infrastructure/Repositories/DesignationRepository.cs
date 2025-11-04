@@ -62,34 +62,46 @@ namespace PayrollSoftware.Infrastructure.Repositories
             }
         }
 
-        // Centralized validation logic for Department entity
-        public async Task ValidateDesignationAsync (Designation designation)
+        // Centralized validation logic for Designation entity
+        public async Task ValidateDesignationAsync(Designation designation)
         {
             if (designation == null)
                 throw new ArgumentNullException(nameof(designation), "Designation cannot be null.");
 
+            // Collect all validation errors
+            var errors = new List<string>();
+
             var name = designation.DesignationName?.Trim();
 
             if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Designation name cannot be null or empty.", nameof(designation.DesignationName));
+                errors.Add("Designation name cannot be null or empty.");
+            else
+            {
+                if (name.Length < DesignationNameMinLength || name.Length > DesignationNameMaxLength)
+                    errors.Add($"Designation name must be between {DesignationNameMinLength} and {DesignationNameMaxLength} characters.");
 
-            if(name.Length<DesignationNameMinLength || name.Length>DesignationNameMaxLength)
-                throw new ArgumentException($"Designation name must be between {DesignationNameMinLength} and {DesignationNameMaxLength} characters.", nameof(designation.DesignationName));
+                if (!name.All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+                    errors.Add("Designation name can only contain alphabetic characters and spaces.");
 
-            if(!name.All(c=>char.IsLetter(c) || char.IsWhiteSpace(c)))
-                throw new ArgumentException("Designation name can only contain alphabetic characters and spaces.", nameof(designation.DesignationName));
+                // Check for duplicates
+                var normalized = name.ToLower();
+                var exists = await _context.Designations
+                    .AsNoTracking()
+                    .AnyAsync(d => d.DesignationId != designation.DesignationId &&
+                                   d.DesignationName != null &&
+                                   d.DesignationName.ToLower() == normalized);
 
-            var normalized = name.ToLower();
-            var exists = await _context.Designations
-                .AsNoTracking()
-                .AnyAsync(d => d.DesignationId != designation.DesignationId &&
-                               d.DesignationName != null &&
-                               d.DesignationName.ToLower() == normalized);
+                if (exists)
+                    errors.Add("Designation name already exists.");
 
-            if (exists)
-                throw new ArgumentException("Designation name already exists.", nameof(designation.DesignationName));
+                designation.DesignationName = name;
+            }
 
-            designation.DesignationName = name;
+            // Throw all errors together
+            if (errors.Any())
+            {
+                throw new ArgumentException(string.Join("\n", errors));
+            }
         }
     }
 }

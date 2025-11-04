@@ -53,16 +53,25 @@ namespace PayrollSoftware.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([FromForm] DepartmentDto departmentDto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
-                return BadRequest(new { success = false, message = string.Join("\n", errors) });
+                var entity = MapToEntity(departmentDto);
+                entity.DepartmentId = Guid.NewGuid();
+                await _departmentRepository.AddDepartmentAsync(entity);
+                return Json(new { success = true, message = "Department created successfully." });
             }
-
-            var entity = MapToEntity(departmentDto);
-            entity.DepartmentId = Guid.NewGuid();
-            await _departmentRepository.AddDepartmentAsync(entity);
-            return Json(new { success = true, message = "Department created successfully." });
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error creating department: {ex.Message}" });
+            }
         }
 
         [HttpGet]
@@ -83,14 +92,24 @@ namespace PayrollSoftware.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit([FromForm] DepartmentDto departmentDto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToArray();
-                return BadRequest(new { success = false, message = string.Join("\n", errors) });
+                var entity = MapToEntity(departmentDto);
+                await _departmentRepository.UpdateDepartmentAsync(entity);
+                return Json(new { success = true, message = "Department updated successfully." });
             }
-            var entity = MapToEntity(departmentDto);
-            await _departmentRepository.UpdateDepartmentAsync(entity);
-            return Json(new { success = true, message = "Department updated successfully." });
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error updating department: {ex.Message}" });
+            }
         }
 
         [HttpPost]
