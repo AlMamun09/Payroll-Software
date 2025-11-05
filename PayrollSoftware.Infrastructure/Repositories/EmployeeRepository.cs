@@ -2,17 +2,13 @@
 using PayrollSoftware.Data;
 using PayrollSoftware.Infrastructure.Application.Interfaces;
 using PayrollSoftware.Infrastructure.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace PayrollSoftware.Infrastructure.Repositories
 {
     public class EmployeeRepository : IEmployeeRepository
     {
-        public readonly ApplicationDbContext _context; 
+        public readonly ApplicationDbContext _context;
         public EmployeeRepository(ApplicationDbContext context)
         {
             _context = context;
@@ -33,7 +29,7 @@ namespace PayrollSoftware.Infrastructure.Repositories
             await ValidateEmployeeAsync(employee, isNew: true);
 
             // Auto-generate numeric id and human readable EmployeeCode if needed
-            if (employee.EmployeeNumericId <=0)
+            if (employee.EmployeeNumericId <= 0)
             {
                 employee.EmployeeNumericId = await GetNextEmployeeNumericIdAsync();
             }
@@ -51,15 +47,25 @@ namespace PayrollSoftware.Infrastructure.Repositories
         {
             await ValidateEmployeeAsync(employee, isNew: false);
 
-            // Keep existing numeric id if set; otherwise, set one
-            if (employee.EmployeeNumericId <=0)
+            // Retrieve the existing employee from database to preserve EmployeeNumericId and EmployeeCode
+            var existingEmployee = await _context.Employees
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.EmployeeId == employee.EmployeeId);
+
+            if (existingEmployee == null)
             {
-                employee.EmployeeNumericId = await GetNextEmployeeNumericIdAsync();
+                throw new InvalidOperationException("Employee not found.");
+            }
+
+            // Preserve the original EmployeeNumericId and EmployeeCode from database
+            if (employee.EmployeeNumericId <= 0)
+            {
+                employee.EmployeeNumericId = existingEmployee.EmployeeNumericId;
             }
 
             if (string.IsNullOrWhiteSpace(employee.EmployeeCode))
             {
-                employee.EmployeeCode = FormatEmployeeCode(employee.EmployeeNumericId);
+                employee.EmployeeCode = existingEmployee.EmployeeCode;
             }
 
             _context.Employees.Update(employee);
@@ -109,7 +115,7 @@ namespace PayrollSoftware.Infrastructure.Repositories
             e.MobileNumber = e.MobileNumber?.Trim();
             e.Status = string.IsNullOrWhiteSpace(e.Status) ? "Currently Active" : e.Status.Trim();
 
-            
+
 
             // FullName required and length
             if (string.IsNullOrWhiteSpace(e.FullName))
@@ -245,7 +251,7 @@ namespace PayrollSoftware.Infrastructure.Repositories
         private async Task<int> GetNextEmployeeNumericIdAsync()
         {
             var currentMax = await _context.Employees.AsNoTracking().Select(x => (int?)x.EmployeeNumericId).MaxAsync();
-            return (currentMax ??0) +1;
+            return (currentMax ?? 0) + 1;
         }
 
         private static string FormatEmployeeCode(int numericId)

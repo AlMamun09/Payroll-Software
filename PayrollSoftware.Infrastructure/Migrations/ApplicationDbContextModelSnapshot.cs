@@ -185,7 +185,7 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.HasKey("AllowanceDeductionId");
 
-                    b.ToTable("AllowanceDeductions");
+                    b.ToTable("AllowanceDeductions", (string)null);
                 });
 
             modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Attendance", b =>
@@ -223,7 +223,7 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.HasKey("AttendanceId");
 
-                    b.ToTable("Attendances");
+                    b.ToTable("Attendances", (string)null);
                 });
 
             modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Department", b =>
@@ -240,7 +240,7 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.HasKey("DepartmentId");
 
-                    b.ToTable("Departments");
+                    b.ToTable("Departments", (string)null);
                 });
 
             modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Designation", b =>
@@ -257,7 +257,7 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.HasKey("DesignationId");
 
-                    b.ToTable("Designations");
+                    b.ToTable("Designations", (string)null);
                 });
 
             modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Employee", b =>
@@ -319,7 +319,7 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.HasKey("EmployeeId");
 
-                    b.ToTable("Employees");
+                    b.ToTable("Employees", (string)null);
                 });
 
             modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Leave", b =>
@@ -351,7 +351,7 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.HasKey("LeaveId");
 
-                    b.ToTable("Leaves");
+                    b.ToTable("Leaves", (string)null);
                 });
 
             modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Payroll", b =>
@@ -389,7 +389,7 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.HasKey("PayrollId");
 
-                    b.ToTable("Payrolls");
+                    b.ToTable("Payrolls", (string)null);
                 });
 
             modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.SalarySlip", b =>
@@ -424,7 +424,7 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.HasKey("SalarySlipId");
 
-                    b.ToTable("SalarySlips");
+                    b.ToTable("SalarySlips", (string)null);
                 });
 
             modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Shift", b =>
@@ -447,7 +447,7 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.HasKey("ShiftId");
 
-                    b.ToTable("Shifts");
+                    b.ToTable("Shifts", (string)null);
                 });
 
             modelBuilder.Entity("PayrollSoftware.Infrastructure.Identity.PayrollUser", b =>

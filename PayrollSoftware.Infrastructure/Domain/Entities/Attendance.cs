@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace PayrollSoftware.Infrastructure.Domain.Entities
 {
@@ -13,6 +8,7 @@ namespace PayrollSoftware.Infrastructure.Domain.Entities
         public Guid AttendanceId { get; set; }
         public Guid EmployeeId { get; set; }
         public Guid ShiftId { get; set; }
+
         public DateTime AttendanceDate { get; set; }
         public TimeSpan? InTime { get; set; }
         public TimeSpan? OutTime { get; set; }
