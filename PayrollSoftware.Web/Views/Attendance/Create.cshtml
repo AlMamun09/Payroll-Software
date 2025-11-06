@@ -1,13 +1,14 @@
 ﻿@model PayrollSoftware.Infrastructure.Application.DTOs.AttendanceDto
 @{
-    ViewData["Title"] = ViewBag?.Title ?? "Attendance";
-    var formAction = ViewBag?.FormAction as string ?? Url.Action("Create", "Attendance");
+  ViewData["Title"] = ViewBag?.Title ?? "Attendance";
+  var formAction = ViewBag?.FormAction as string ?? Url.Action("Create", "Attendance");
 }
 
 <!-- Select2 CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
 
 <div class="card">
+<<<<<<< Updated upstream
     <div class="card-header">
         <h3 class="card-title m-0">
             <i class="fas fa-user-check mr-2"></i>@ViewData["Title"]
@@ -460,3 +461,376 @@ return parseInt(parts[0]) * 60 + parseInt(parts[1]);
   })();
     </script>
 }
+=======
+  <div class="card-header">
+    <h3 class="card-title m-0">
+      <i class="fas fa-user-check mr-2"></i>@ViewData["Title"]
+    </h3>
+  </div>
+  <div class="card-body">
+    <form id="attendanceForm" method="post" action="@formAction">
+      @Html.AntiForgeryToken()
+      <input type="hidden" asp-for="AttendanceId" />
+
+      <div class="row">
+        <div class="form-group col-md-6">
+          <label asp-for="EmployeeId">Employee <span class="text-danger">*</span></label>
+          <select asp-for="EmployeeId" class="form-control select2" id="EmployeeId" data-placeholder="Select Employee"
+            style="width:100%;">
+            <option value="">-- Select Employee --</option>
+            @if (ViewBag.Employees != null)
+            {
+              foreach (var e in (IEnumerable<dynamic>)ViewBag.Employees)
+              {
+                <option value="@e.EmployeeId" data-name="@e.FullName" data-shift-id="@e.ShiftId"
+                  data-joining-date="@e.JoiningDate.ToString("yyyy-MM-dd")" data-status="@e.Status"
+                  selected="@(Model?.EmployeeId == (Guid)e.EmployeeId)">
+                  @e.EmployeeCode - @e.FullName
+                </option>
+              }
+            }
+          </select>
+          <span asp-validation-for="EmployeeId" class="text-danger"></span>
+        </div>
+
+        <div class="form-group col-md-3">
+          <label>Employee Status</label>
+          <input id="EmployeeStatusDisplay" class="form-control" readonly placeholder="Select employee first" />
+          <small id="EmployeeWarning" class="form-text text-danger" style="display:none;"></small>
+        </div>
+
+        <div class="form-group col-md-3">
+          <label asp-for="AttendanceDate">Date <span class="text-danger">*</span></label>
+          <input asp-for="AttendanceDate" type="date" class="form-control" id="AttendanceDate"
+            max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+          <span asp-validation-for="AttendanceDate" class="text-danger"></span>
+          <small id="DateWarning" class="form-text text-danger" style="display:none;"></small>
+        </div>
+
+        <div class="form-group col-md-6">
+          <label asp-for="ShiftId">Shift <span class="text-danger">*</span></label>
+          <select asp-for="ShiftId" class="form-control select2" id="ShiftId"
+            data-placeholder="Auto-assigned from employee" style="width:100%;">
+            <option value="">-- Auto-assigned --</option>
+            @if (ViewBag.Shifts != null)
+            {
+              foreach (var s in (IEnumerable<dynamic>)ViewBag.Shifts)
+              {
+                <option value="@s.ShiftId" data-start-time="@s.StartTime.ToString(@"hh\:mm")"
+                  data-end-time="@s.EndTime.ToString(@"hh\:mm")" selected="@(Model?.ShiftId == (Guid)s.ShiftId)">
+                  @s.ShiftName (@s.StartTime.ToString(@"hh\:mm") - @s.EndTime.ToString(@"hh\:mm"))
+                </option>
+              }
+            }
+          </select>
+          <span asp-validation-for="ShiftId" class="text-danger"></span>
+          <small class="form-text text-muted">Auto-assigned based on employee's shift</small>
+        </div>
+
+        <div class="form-group col-md-6">
+          <label>Shift Timings</label>
+          <input id="ShiftTimingsDisplay" class="form-control" readonly placeholder="Select shift first" />
+        </div>
+
+        <div class="form-group col-md-3">
+          <label asp-for="InTime">In Time</label>
+          <input asp-for="InTime" type="time" class="form-control" id="InTime" />
+          <span asp-validation-for="InTime" class="text-danger"></span>
+          <small class="form-text text-muted">Leave empty for Absent</small>
+        </div>
+
+        <div class="form-group col-md-3">
+          <label asp-for="OutTime">Out Time</label>
+          <input asp-for="OutTime" type="time" class="form-control" id="OutTime" />
+          <span asp-validation-for="OutTime" class="text-danger"></span>
+          <small class="form-text text-muted">Leave empty for Absent</small>
+        </div>
+
+        <div class="form-group col-md-2">
+          <label>Working Hours</label>
+          <input id="WorkingHoursDisplay" class="form-control" readonly placeholder="0.00 hrs" />
+        </div>
+
+        <div class="form-group col-md-2">
+          <label>Late Entry</label>
+          <input id="LateEntryDisplay" class="form-control" readonly placeholder="-" />
+        </div>
+
+        <div class="form-group col-md-2">
+          <label>Early Leave</label>
+          <input id="EarlyLeaveDisplay" class="form-control" readonly placeholder="-" />
+        </div>
+
+        <div class="col-md-12">
+          <div id="AttendanceStatusCard" class="alert alert-secondary" role="alert">
+            <strong>Status:</strong> <span id="AttendanceStatusDisplay">-</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-right">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save</button>
+        <a class="btn btn-secondary" href="@Url.Action("Index", "Attendance")">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+@section Scripts {
+  <script>
+    // Initialize all Select2 dropdowns
+    CommonAjax.initSelect2('.select2');
+
+    const empIdEl = $('#EmployeeId');
+    const shiftIdEl = $('#ShiftId');
+    const attendanceDateEl = document.getElementById('AttendanceDate');
+    const inTimeEl = document.getElementById('InTime');
+    const outTimeEl = document.getElementById('OutTime');
+
+    // Display elements
+    const empStatusDisplay = document.getElementById('EmployeeStatusDisplay');
+    const empWarning = document.getElementById('EmployeeWarning');
+    const dateWarning = document.getElementById('DateWarning');
+    const shiftTimingsDisplay = document.getElementById('ShiftTimingsDisplay');
+    const workingHoursDisplay = document.getElementById('WorkingHoursDisplay');
+    const lateEntryDisplay = document.getElementById('LateEntryDisplay');
+    const earlyLeaveDisplay = document.getElementById('EarlyLeaveDisplay');
+    const statusDisplay = document.getElementById('AttendanceStatusDisplay');
+    const statusCard = document.getElementById('AttendanceStatusCard');
+
+    // Handle Employee selection
+    empIdEl.on('select2:select', function (e) {
+      const selectedOption = e.params.data.element;
+      const empStatus = selectedOption.getAttribute('data-status') || '';
+      const shiftId = selectedOption.getAttribute('data-shift-id') || '';
+      const joiningDate = selectedOption.getAttribute('data-joining-date') || '';
+
+      // Display employee status
+      if (empStatusDisplay) empStatusDisplay.value = empStatus || 'Unknown';
+
+      // Show warning if resigned or on leave
+      const isResigned = empStatus.toLowerCase() === 'resigned';
+      const isOnLeave = empStatus.toLowerCase() === 'on leave';
+
+      if (empWarning) {
+        if (isResigned) {
+          empWarning.textContent = '?? This employee is resigned';
+          empWarning.style.display = 'block';
+        } else if (isOnLeave) {
+          empWarning.textContent = '?? This employee is on leave';
+          empWarning.style.display = 'block';
+        } else {
+          empWarning.style.display = 'none';
+        }
+      }
+
+      // Validate joining date
+      validateJoiningDate(joiningDate);
+
+      // Auto-assign shift
+      if (shiftId && shiftId !== '00000000-0000-0000-0000-000000000000') {
+        shiftIdEl.val(shiftId).trigger('change');
+      }
+
+      calculateAttendance();
+    });
+
+    empIdEl.on('select2:clear', function () {
+      if (empStatusDisplay) empStatusDisplay.value = '';
+      if (empWarning) empWarning.style.display = 'none';
+      shiftIdEl.val('').trigger('change');
+      calculateAttendance();
+    });
+
+    // Set initial employee status if editing
+    const selectedEmp = empIdEl.find('option:selected');
+    if (selectedEmp.length && selectedEmp.val()) {
+      const empStatus = selectedEmp.attr('data-status') || '';
+      if (empStatusDisplay) empStatusDisplay.value = empStatus;
+
+      const joiningDate = selectedEmp.attr('data-joining-date') || '';
+      validateJoiningDate(joiningDate);
+    }
+
+    // Handle Shift selection
+    shiftIdEl.on('select2:select', function (e) {
+      const selectedOption = e.params.data.element;
+      const startTime = selectedOption.getAttribute('data-start-time') || '';
+      const endTime = selectedOption.getAttribute('data-end-time') || '';
+
+      if (shiftTimingsDisplay) {
+        shiftTimingsDisplay.value = startTime && endTime ? `${startTime} - ${endTime}` : '';
+      }
+
+      calculateAttendance();
+    });
+
+    shiftIdEl.on('select2:clear', function () {
+      if (shiftTimingsDisplay) shiftTimingsDisplay.value = '';
+      calculateAttendance();
+    });
+
+    // Set initial shift timings if editing
+    const selectedShift = shiftIdEl.find('option:selected');
+    if (selectedShift.length && selectedShift.val()) {
+      const startTime = selectedShift.attr('data-start-time') || '';
+      const endTime = selectedShift.attr('data-end-time') || '';
+      if (shiftTimingsDisplay) {
+        shiftTimingsDisplay.value = startTime && endTime ? `${startTime} - ${endTime}` : '';
+      }
+    }
+
+    // Validate joining date
+    function validateJoiningDate(joiningDate) {
+      if (!joiningDate || !attendanceDateEl?.value) {
+        if (dateWarning) dateWarning.style.display = 'none';
+        return;
+      }
+
+      const jDate = new Date(joiningDate);
+      const aDate = new Date(attendanceDateEl.value);
+
+      if (aDate < jDate) {
+        if (dateWarning) {
+          dateWarning.textContent = `?? Date cannot be before joining date (${jDate.toLocaleDateString()})`;
+          dateWarning.style.display = 'block';
+        }
+      } else {
+        if (dateWarning) dateWarning.style.display = 'none';
+      }
+    }
+
+    // Attendance date change handler
+    if (attendanceDateEl) {
+      attendanceDateEl.addEventListener('change', function () {
+        const selectedEmp = empIdEl.find('option:selected');
+        if (selectedEmp.length && selectedEmp.val()) {
+          const joiningDate = selectedEmp.attr('data-joining-date') || '';
+          validateJoiningDate(joiningDate);
+        }
+      });
+    }
+
+    // Calculate attendance details
+    function calculateAttendance() {
+      const inTime = inTimeEl?.value;
+      const outTime = outTimeEl?.value;
+      const shiftId = shiftIdEl?.val();
+
+      // Reset displays
+      if (workingHoursDisplay) workingHoursDisplay.value = '0.00 hrs';
+      if (lateEntryDisplay) lateEntryDisplay.value = '-';
+      if (earlyLeaveDisplay) earlyLeaveDisplay.value = '-';
+
+      // Determine status
+      if (!inTime && !outTime) {
+        setStatus('Absent', 'danger');
+        return;
+      }
+
+      if (!inTime || !outTime) {
+        setStatus('Incomplete', 'warning');
+        return;
+      }
+
+      setStatus('Present', 'success');
+
+      // Calculate working hours
+      const inMinutes = timeToMinutes(inTime);
+      const outMinutes = timeToMinutes(outTime);
+      let workingMinutes = outMinutes - inMinutes;
+
+      // Handle overnight shifts
+      if (workingMinutes < 0) {
+        workingMinutes += 24 * 60;
+      }
+
+      const workingHours = workingMinutes / 60;
+      if (workingHoursDisplay) {
+        workingHoursDisplay.value = workingHours.toFixed(2) + ' hrs';
+      }
+
+      // Calculate late entry and early leave if shift is selected
+      if (shiftId) {
+        const selectedShift = shiftIdEl.find('option:selected');
+        const startTime = selectedShift.attr('data-start-time');
+        const endTime = selectedShift.attr('data-end-time');
+
+        if (startTime && endTime) {
+          const shiftStartMinutes = timeToMinutes(startTime);
+          const shiftEndMinutes = timeToMinutes(endTime);
+
+          // Calculate late entry
+          if (inMinutes > shiftStartMinutes) {
+            const lateMinutes = inMinutes - shiftStartMinutes;
+            if (lateEntryDisplay) {
+              lateEntryDisplay.value = minutesToTimeString(lateMinutes);
+            }
+          }
+
+          // Calculate early leave
+          let actualOutMinutes = outMinutes;
+          let expectedEndMinutes = shiftEndMinutes;
+
+          // Handle overnight shifts
+          if (shiftEndMinutes < shiftStartMinutes) {
+            if (actualOutMinutes < shiftStartMinutes) {
+              actualOutMinutes += 24 * 60;
+            }
+            expectedEndMinutes += 24 * 60;
+          }
+
+          if (actualOutMinutes < expectedEndMinutes) {
+            const earlyMinutes = expectedEndMinutes - actualOutMinutes;
+            if (earlyLeaveDisplay) {
+              earlyLeaveDisplay.value = minutesToTimeString(earlyMinutes);
+            }
+          }
+        }
+      }
+    }
+
+    // Helper: Convert time string (HH:mm) to minutes
+    function timeToMinutes(timeStr) {
+      if (!timeStr) return 0;
+      const parts = timeStr.split(':');
+      return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    }
+
+    // Helper: Convert minutes to time string (HH:mm)
+    function minutesToTimeString(minutes) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    }
+
+    // Helper: Set status display
+    function setStatus(status, type) {
+      if (statusDisplay) statusDisplay.textContent = status;
+      if (statusCard) {
+        statusCard.className = 'alert alert-' + type;
+      }
+    }
+
+    // Event listeners for time inputs
+    if (inTimeEl) inTimeEl.addEventListener('change', calculateAttendance);
+    if (outTimeEl) outTimeEl.addEventListener('change', calculateAttendance);
+
+    // Use common form submission handler
+    const form = document.getElementById('attendanceForm');
+    CommonAjax.submitForm(form, {
+      successTitle: 'Success',
+      errorTitle: 'Validation Error',
+      beforeSubmit: function () {
+        calculateAttendance();
+      },
+      onSuccess: function (data) {
+        window.location.href = '@Url.Action("Index", "Attendance")';
+      }
+    });
+
+    // Initial calculation
+    calculateAttendance();
+  </script>
+}
+>>>>>>> Stashed changes

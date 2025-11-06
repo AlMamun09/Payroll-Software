@@ -6,13 +6,15 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Payroll App | @ViewData["Title"]</title>
 
     <!-- Google Font: Source Sans Pro -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="~/adminlte/plugins/fontawesome-free/css/all.min.css">
     <!-- Theme style -->
@@ -27,34 +29,43 @@
         /* Dark-mode Select2 styling to match AdminLTE form controls */
         .dark-mode .select2-container--bootstrap4 .select2-selection--single,
         .dark-mode .select2-container--bootstrap4 .select2-selection--multiple {
-            background-color: #343a40; /* same as .form-control bg in dark */
-            border:1px solid #6c757d; /* same as .form-control border */
+            background-color: #343a40;
+            /* same as .form-control bg in dark */
+            border: 1px solid #6c757d;
+            /* same as .form-control border */
             color: #e9ecef;
             min-height: calc(2.25rem +2px);
         }
+
         .dark-mode .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered,
         .dark-mode .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__rendered {
             color: #e9ecef;
-            line-height:2.25rem;
+            line-height: 2.25rem;
         }
+
         .dark-mode .select2-container--bootstrap4 .select2-selection__placeholder {
             color: #adb5bd;
         }
+
         .dark-mode .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow b {
             border-color: #e9ecef transparent transparent transparent;
         }
+
         .dark-mode .select2-container--bootstrap4 .select2-dropdown {
             background-color: #343a40;
             border-color: #6c757d;
         }
+
         .dark-mode .select2-container--bootstrap4 .select2-search__field {
             background-color: #343a40;
-            border:1px solid #6c757d;
+            border: 1px solid #6c757d;
             color: #e9ecef;
         }
+
         .dark-mode .select2-results__option {
             color: #e9ecef;
         }
+
         .dark-mode .select2-results__option--highlighted {
             background-color: #495057;
             color: #fff;
@@ -62,6 +73,7 @@
     </style>
 
 </head>
+
 <body class="hold-transition sidebar-mini layout-fixed dark-mode" data-panel-auto-height-mode="height">
     <div class="wrapper">
 
@@ -94,7 +106,8 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a asp-controller="Home" asp-action="Index" class="brand-link">
-                <img src="~/adminlte/dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+                <img src="~/adminlte/dist/img/AdminLTELogo.png" alt="AdminLTE Logo"
+                    class="brand-image img-circle elevation-3" style="opacity: .8">
                 <span class="brand-text font-weight-light">DevMates Solution</span>
             </a>
 
@@ -106,9 +119,11 @@
                     var user = await UserManager.GetUserAsync(User);
 
                     // The entire user panel is now a single, clickable link
-                    <a asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage" class="user-panel mt-3 pb-3 mb-3 d-flex">
+                    <a asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage"
+                        class="user-panel mt-3 pb-3 mb-3 d-flex">
                         <div class="image">
-                            <img src="~/adminlte/dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
+                            <img src="~/adminlte/dist/img/user2-160x160.jpg" class="img-circle elevation-2"
+                                alt="User Image">
                         </div>
                         <div class="info">
                             @* We remove the inner 'a' tag, since the parent is now the link *@
@@ -130,7 +145,8 @@
 
                 <!-- Sidebar Menu -->
                 <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+                        data-accordion="false">
                         <li class="nav-item">
                             <a asp-controller="Home" asp-action="Index" class="nav-link">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
@@ -249,4 +265,5 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>
