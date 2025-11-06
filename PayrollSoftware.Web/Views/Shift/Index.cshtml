@@ -1,136 +1,134 @@
 ﻿@{
-    ViewData["Title"] = "Shifts";
+  ViewData["Title"] = "Shifts";
 }
 
 <link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
 
-<div class="card" id="shiftCard"
-     data-list-url="@Url.Action("GetShiftsJson", "Shift")"
-     data-create-get="@Url.Action("Create", "Shift")"
-     data-edit-get-template="@Url.Action("Edit", "Shift")/"
-     data-delete-template="@Url.Action("Delete", "Shift")/">
+<div class="card" id="shiftCard" data-list-url="@Url.Action("GetShiftsJson", "Shift")"
+  data-create-get="@Url.Action("Create", "Shift")" data-edit-get-template="@Url.Action("Edit", "Shift")/"
+  data-delete-template="@Url.Action("Delete", "Shift")/">
 
-    <div class="card-header">
-        <h3 class="card-title m-0">
-            <i class="fas fa-clock mr-2"></i>Shifts
-        </h3>
-        <div class="card-tools">
-            <button id="btnAddShift" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add Shift
-            </button>
-        </div>
+  <div class="card-header">
+    <h3 class="card-title m-0">
+      <i class="fas fa-clock mr-2"></i>Shifts
+    </h3>
+    <div class="card-tools">
+      <button id="btnAddShift" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Shift
+      </button>
     </div>
+  </div>
 
-    <div class="card-body">
-        <table id="shiftTable" class="table table-bordered table-hover w-100">
-            <thead>
-                <tr>
-                    <th>Shift Name</th>
-                    <th>Start Time</th>
-                    <th>End Time</th>
-                    <th>Status</th>
-                    <th style="width:120px;" class="text-center">Actions</th>
-                </tr>
-            </thead>
-        </table>
-    </div>
+  <div class="card-body">
+    <table id="shiftTable" class="table table-bordered table-hover w-100">
+      <thead>
+        <tr>
+          <th>Shift Name</th>
+          <th>Start Time</th>
+          <th>End Time</th>
+          <th>Status</th>
+          <th style="width:120px;" class="text-center">Actions</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
 </div>
 
 <form id="__afForm" method="post" style="display:none;">
-    @Html.AntiForgeryToken()
+  @Html.AntiForgeryToken()
 </form>
 
 <div class="modal fade" id="shiftModal" tabindex="-1" aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Shift</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body p-0">
-            </div>
-        </div>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Shift</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body p-0">
+      </div>
     </div>
+  </div>
 </div>
 
 @section Scripts {
-    <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
-    <script src="~/js/crud-datatable.js"></script>
-    <script src="~/js/crud-modal.js"></script>
-    <script>
-        window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
+  <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+  <script src="~/js/crud-datatable.js"></script>
+  <script src="~/js/crud-modal.js"></script>
+  <script>
+    window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
 
-        $(function () {
-          const $card = $('#shiftCard');
-          const listUrl = $card.data('list-url');
+    $(function () {
+      const $card = $('#shiftCard');
+      const listUrl = $card.data('list-url');
 
-          const routes = {
-            createGet: $card.data('create-get'),
-            editGet: (id) => $card.data('edit-get-template') + id,
-            delete: (id) => $card.data('delete-template') + id
-          };
+      const routes = {
+        createGet: $card.data('create-get'),
+        editGet: (id) => $card.data('edit-get-template') + id,
+        delete: (id) => $card.data('delete-template') + id
+      };
 
-          const shiftModal = CrudModal.init({
-            modalSelector: '#shiftModal',
-            addBtnSelector: '#btnAddShift',
-            routes,
-            createTitle: 'Create Shift',
-            editTitle: 'Edit Shift',
-            onSaved: () => shiftTable.reload()
-          });
+      const shiftModal = CrudModal.init({
+        modalSelector: '#shiftModal',
+        addBtnSelector: '#btnAddShift',
+        routes,
+        createTitle: 'Create Shift',
+        editTitle: 'Edit Shift',
+        onSaved: () => shiftTable.reload()
+      });
 
-          // Convert "HH:mm" or "HH:mm:ss" to "h:mm AM/PM"
-          const to12h = (t) => {
-            if (!t || typeof t !== 'string') return '';
-            const parts = t.split(':'); // ["HH","mm","ss?"]
-            if (parts.length < 2) return t;
-            let h = parseInt(parts[0], 10);
-            const m = parseInt(parts[1], 10);
-            if (Number.isNaN(h) || Number.isNaN(m)) return t;
-            const ampm = h >= 12 ? 'PM' : 'AM';
-            h = h % 12;
-            if (h === 0) h = 12;
-            const mm = m.toString().padStart(2, '0');
-            return `${h}:${mm} ${ampm}`;
-          };
+      // Convert "HH:mm" or "HH:mm:ss" to "h:mm AM/PM"
+      const to12h = (t) => {
+        if (!t || typeof t !== 'string') return '';
+        const parts = t.split(':'); // ["HH","mm","ss?"]
+        if (parts.length < 2) return t;
+        let h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (Number.isNaN(h) || Number.isNaN(m)) return t;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        if (h === 0) h = 12;
+        const mm = m.toString().padStart(2, '0');
+        return `${h}:${mm} ${ampm}`;
+      };
 
-          const shiftTable = CrudTable.init({
-            tableSelector: '#shiftTable',
-            listUrl: listUrl,
-            idField: 'shiftId',
-            columns: [
-              { data: 'shiftName' },
-              { data: 'startTime', render: d => to12h(d) },
-              { data: 'endTime', render: d => to12h(d) },
-              { data: 'isActive', render: d => d ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-secondary">Inactive</span>' }
-            ],
-            dataTables: {
-              columnDefs: [
-                { className: "text-center align-middle", targets: [3] }
-              ]
-            },
-            actions: {
-              editSelector: '.js-edit',
-              deleteSelector: '.js-delete',
-              renderButtons: (id, row) => `
-                <button class="btn btn-sm btn-warning mr-1 js-edit" data-id="${id}">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-sm btn-danger js-delete" data-id="${id}">
-                  <i class="fas fa-trash"></i>
-                </button>
-              `,
-              onEdit: (id) => shiftModal.openEdit(id),
-              deleteUrl: (id) => routes.delete(id)
-            }
-          });
+      const shiftTable = CrudTable.init({
+        tableSelector: '#shiftTable',
+        listUrl: listUrl,
+        idField: 'shiftId',
+        columns: [
+          { data: 'shiftName' },
+          { data: 'startTime', render: d => to12h(d) },
+          { data: 'endTime', render: d => to12h(d) },
+          { data: 'isActive', render: d => d ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-secondary">Inactive</span>' }
+        ],
+        dataTables: {
+          columnDefs: [
+            { className: "text-center align-middle", targets: [3] }
+          ]
+        },
+        actions: {
+          editSelector: '.js-edit',
+          deleteSelector: '.js-delete',
+          renderButtons: (id, row) => `
+                  <button class="btn btn-sm btn-warning mr-1 js-edit" data-id="${id}">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn btn-sm btn-danger js-delete" data-id="${id}">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                `,
+          onEdit: (id) => shiftModal.openEdit(id),
+          deleteUrl: (id) => routes.delete(id)
+        }
+      });
 
-          // Make table reload function available globally for form callback
-          window.shiftTableReload = function () {
-            shiftTable.reload();
-          };
-        });
-    </script>
+      // Make table reload function available globally for form callback
+      window.shiftTableReload = function () {
+        shiftTable.reload();
+      };
+    });
+  </script>
 }
