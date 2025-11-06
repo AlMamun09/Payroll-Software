@@ -17,17 +17,17 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<PayrollUser>(options =>
 {
- options.SignIn.RequireConfirmedAccount = false;
- // Turn off all password validation rules
- options.Password.RequireDigit = false;
- options.Password.RequiredLength =1;
- options.Password.RequireNonAlphanumeric = false;
- options.Password.RequireUppercase = false;
- options.Password.RequireLowercase = false;
+    options.SignIn.RequireConfirmedAccount = false;
+    // Turn off all password validation rules
+    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 1;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = false;
 
-options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
-options.Lockout.MaxFailedAccessAttempts =5;
-options.Lockout.AllowedForNewUsers = true;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
 })
  .AddEntityFrameworkStores<ApplicationDbContext>();
 
@@ -48,13 +48,13 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
- app.UseMigrationsEndPoint();
+    app.UseMigrationsEndPoint();
 }
 else
 {
- app.UseExceptionHandler("/Home/Error");
- // The default HSTS value is30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
- app.UseHsts();
+    app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();

@@ -24,7 +24,8 @@
                 </div>
                 <div class="form-group col-md-3">
                     <label asp-for="Gender"></label>
-                    <select asp-for="Gender" class="form-control select2" data-placeholder="Select Gender" style="width:100%;">
+                    <select asp-for="Gender" class="form-control select2" data-placeholder="Select Gender"
+                        style="width:100%;">
                         <option value="">-- select --</option>
                         <option>Male</option>
                         <option>Female</option>
@@ -32,7 +33,8 @@
                 </div>
                 <div class="form-group col-md-3">
                     <label asp-for="Status"></label>
-                    <select asp-for="Status" class="form-control select2" data-placeholder="Select Status" style="width:100%;">
+                    <select asp-for="Status" class="form-control select2" data-placeholder="Select Status"
+                        style="width:100%;">
                         <option value="">-- select --</option>
                         <option>Active</option>
                         <option>On Leave</option>
@@ -59,19 +61,25 @@
 
                 <div class="form-group col-md-4">
                     <label asp-for="DepartmentId">Department</label>
-                    <select asp-for="DepartmentId" class="form-control select2" style="width:100%;" data-placeholder="Select Department" asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Department>)ViewBag.Departments, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Department.DepartmentId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Department.DepartmentName))">
+                    <select asp-for="DepartmentId" class="form-control select2" style="width:100%;"
+                        data-placeholder="Select Department"
+                        asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Department>)ViewBag.Departments, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Department.DepartmentId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Department.DepartmentName))">
                         <option value="">-- select --</option>
                     </select>
                 </div>
                 <div class="form-group col-md-4">
                     <label asp-for="DesignationId">Designation</label>
-                    <select asp-for="DesignationId" class="form-control select2" style="width:100%;" data-placeholder="Select Designation" asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Designation>)ViewBag.Designations, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Designation.DesignationId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Designation.DesignationName))">
+                    <select asp-for="DesignationId" class="form-control select2" style="width:100%;"
+                        data-placeholder="Select Designation"
+                        asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Designation>)ViewBag.Designations, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Designation.DesignationId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Designation.DesignationName))">
                         <option value="">-- select --</option>
                     </select>
                 </div>
                 <div class="form-group col-md-4">
                     <label asp-for="ShiftId">Shift</label>
-                    <select asp-for="ShiftId" class="form-control select2" style="width:100%;" data-placeholder="Select Shift" asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Shift>)ViewBag.Shifts, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Shift.ShiftId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Shift.ShiftName))">
+                    <select asp-for="ShiftId" class="form-control select2" style="width:100%;"
+                        data-placeholder="Select Shift"
+                        asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Shift>)ViewBag.Shifts, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Shift.ShiftId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Shift.ShiftName))">
                         <option value="">-- Select --</option>
                     </select>
                 </div>
@@ -79,7 +87,8 @@
                 <!-- Updated Employment Type with Select2 -->
                 <div class="form-group col-md-4">
                     <label asp-for="EmploymentType">Employment Type</label>
-                    <select asp-for="EmploymentType" class="form-control select2" data-placeholder="Select Employment Type" style="width:100%;">
+                    <select asp-for="EmploymentType" class="form-control select2"
+                        data-placeholder="Select Employment Type" style="width:100%;">
                         <option value="">-- select --</option>
                         <option value="Permanent">Permanent</option>
                         <option value="Contract">Contract</option>
@@ -89,7 +98,8 @@
 
                 <div class="form-group col-md-4">
                     <label asp-for="PaymentSystem"></label>
-                    <select asp-for="PaymentSystem" class="form-control select2" id="PaymentSystem" data-placeholder="Select Payment System" style="width:100%;">
+                    <select asp-for="PaymentSystem" class="form-control select2" id="PaymentSystem"
+                        data-placeholder="Select Payment System" style="width:100%;">
                         <option value="">-- select --</option>
                         <option>Bank Transfer</option>
                         <option>Mobile Banking</option>
@@ -164,10 +174,9 @@
         CommonAjax.submitForm(form, {
             successTitle: 'Success',
             errorTitle: 'Validation Error',
-            onSuccess: function(data) {
+            onSuccess: function (data) {
                 window.location.href = '@Url.Action("Index", "Employee")';
             }
         });
     </script>
 }
-
