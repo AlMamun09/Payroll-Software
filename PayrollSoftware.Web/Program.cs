@@ -43,6 +43,8 @@ builder.Services.AddScoped<ILeaveRepository, LeaveRepository>();
 
 builder.Services.AddScoped<IAttendanceRepository, AttendanceRepository>();
 
+builder.Services.AddScoped<IAllowanceDeductionRepository, AllowanceDeductionRepository>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

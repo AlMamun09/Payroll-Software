@@ -1,0 +1,182 @@
+@{
+  ViewData["Title"] = "Allowances & Deductions";
+}
+
+<link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
+
+<div class="card" id="allowanceDeductionCard"
+  data-list-url="@Url.Action("GetAllowanceDeductionsJson", "AllowanceDeduction")"
+  data-create-get="@Url.Action("Create", "AllowanceDeduction")"
+  data-edit-get-template="@Url.Action("Edit", "AllowanceDeduction")/"
+  data-delete-template="@Url.Action("Delete", "AllowanceDeduction")/">
+
+  <div class="card-header">
+    <h3 class="card-title m-0">
+      <i class="fas fa-cogs mr-2"></i>Allowances & Deductions
+    </h3>
+    <div class="card-tools">
+      <button id="btnAddAllowanceDeduction" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Allowance/Deduction
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <table id="allowanceDeductionTable" class="table table-bordered table-hover w-100">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Name</th>
+          <th>Calculation</th>
+          <th>Amount</th>
+          <th>Scope</th>
+          <th>Employee</th>
+          <th>Effective From</th>
+          <th>Effective To</th>
+          <th>Status</th>
+          <th style="width:120px;" class="text-center">Actions</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+</div>
+
+<form id="__afForm" method="post" style="display:none;">
+  @Html.AntiForgeryToken()
+</form>
+
+<div class="modal fade" id="allowanceDeductionModal" tabindex="-1" aria-hidden="true" data-backdrop="static">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Allowance/Deduction</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body p-0">
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+  <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+  <script src="~/js/crud-datatable.js"></script>
+  <script src="~/js/crud-modal.js"></script>
+
+  <script>
+    window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
+
+    $(function () {
+      const $card = $('#allowanceDeductionCard');
+      const listUrl = $card.data('list-url');
+
+      const routes = {
+        createGet: $card.data('create-get'),
+        editGet: (id) => $card.data('edit-get-template') + id,
+        delete: (id) => $card.data('delete-template') + id
+      };
+
+      const allowanceDeductionModal = CrudModal.init({
+        modalSelector: '#allowanceDeductionModal',
+        addBtnSelector: '#btnAddAllowanceDeduction',
+        routes,
+        createTitle: 'Create Allowance/Deduction',
+        editTitle: 'Edit Allowance/Deduction',
+        onSaved: () => allowanceDeductionTable.reload()
+      });
+
+      const allowanceDeductionTable = CrudTable.init({
+        tableSelector: '#allowanceDeductionTable',
+        listUrl: listUrl,
+        idField: 'allowanceDeductionId',
+        columns: [
+          {
+            data: 'allowanceDeductionType',
+            render: function (d) {
+              return d === 'Allowance'
+                ? '<span class="badge badge-success"><i class="fas fa-plus-circle"></i> Allowance</span>'
+                : '<span class="badge badge-danger"><i class="fas fa-minus-circle"></i> Deduction</span>';
+            }
+          },
+          { data: 'allowanceDeductionName' },
+          {
+            data: 'calculationType',
+            render: function (d) {
+              return d === 'Fixed'
+                ? '<span class="badge badge-info">Fixed</span>'
+                : '<span class="badge badge-warning">Percentage</span>';
+            }
+          },
+          {
+            data: null,
+            render: function (d, type, row) {
+              if (row.calculationType === 'Fixed') {
+                return 'Taka ' + parseFloat(row.fixedAmount).toFixed(2);
+              } else {
+                return row.percentage + '%';
+              }
+            }
+          },
+          {
+            data: 'isCompanyWide',
+            render: function (d) {
+              return d
+                ? '<span class="badge badge-primary"><i class="fas fa-building"></i> Company-Wide</span>'
+                : '<span class="badge badge-secondary"><i class="fas fa-user"></i> Employee-Specific</span>';
+            }
+          },
+          {
+            data: 'employeeName',
+            render: function (d) {
+              return d || '<span class="text-muted">N/A</span>';
+            }
+          },
+          { data: 'effectiveFrom' },
+          {
+            data: 'effectiveTo',
+            render: function (d) {
+              return d || '<span class="text-muted">Ongoing</span>';
+            }
+          },
+          {
+            data: 'isActive',
+            render: function (d) {
+              return d
+                ? '<span class="badge badge-success">Active</span>'
+                : '<span class="badge badge-secondary">Inactive</span>';
+            }
+          }
+        ],
+        dataTables: {
+          columnDefs: [
+            { className: "text-center align-middle", targets: [0, 2, 4, 8] },
+            { className: "text-right align-middle", targets: [3] },
+            { className: "align-middle", targets: '_all' }
+          ],
+          order: [[6, 'desc']] // Order by Effective From descending
+        },
+        actions: {
+          editSelector: '.js-edit',
+          deleteSelector: '.js-delete',
+          renderButtons: (id, row) => `
+          <button class="btn btn-sm btn-warning mr-1 js-edit" data-id="${id}" title="Edit">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn btn-sm btn-danger js-delete" data-id="${id}" title="Delete">
+            <i class="fas fa-trash"></i>
+          </button>
+          `,
+          onEdit: (id) => allowanceDeductionModal.openEdit(id),
+          deleteUrl: (id) => routes.delete(id)
+        }
+      });
+
+      // Make table reload function available globally for form callback
+      window.allowanceDeductionTableReload = function () {
+        allowanceDeductionTable.reload();
+      };
+    });
+  </script>
+}

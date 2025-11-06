@@ -1,14 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 using PayrollSoftware.Data;
 using PayrollSoftware.Infrastructure.Application.Interfaces;
 using PayrollSoftware.Infrastructure.Domain.Entities;
-using System.Text.RegularExpressions;
 
 namespace PayrollSoftware.Infrastructure.Repositories
 {
     public class EmployeeRepository : IEmployeeRepository
     {
         public readonly ApplicationDbContext _context;
+
         public EmployeeRepository(ApplicationDbContext context)
         {
             _context = context;
@@ -21,7 +22,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
 
         public async Task<Employee?> GetEmployeeByIdAsync(Guid employeeId)
         {
-            return await Task.FromResult(_context.Employees.FirstOrDefault(e => e.EmployeeId == employeeId));
+            return await Task.FromResult(
+                _context.Employees.FirstOrDefault(e => e.EmployeeId == employeeId)
+            );
         }
 
         public async Task AddEmployeeAsync(Employee employee)
@@ -48,8 +51,8 @@ namespace PayrollSoftware.Infrastructure.Repositories
             await ValidateEmployeeAsync(employee, isNew: false);
 
             // Retrieve the existing employee from database to preserve EmployeeNumericId and EmployeeCode
-            var existingEmployee = await _context.Employees
-                .AsNoTracking()
+            var existingEmployee = await _context
+                .Employees.AsNoTracking()
                 .FirstOrDefaultAsync(e => e.EmployeeId == employee.EmployeeId);
 
             if (existingEmployee == null)
@@ -83,23 +86,19 @@ namespace PayrollSoftware.Infrastructure.Repositories
         }
 
         // --- Validation and business rules ---
-        private static readonly string[] AllowedStatuses = new[]
-        {
-            "Active",
-            "On Leave",
-            "Resigned"
-        };
+        private static readonly string[] AllowedStatuses = new[] { "Active", "Resigned" };
 
         private static readonly string[] AllowedPaymentSystems = new[]
         {
             "Bank Transfer",
             "Mobile Banking",
-            "Cash Payment"
+            "Cash Payment",
         };
 
         private async Task ValidateEmployeeAsync(Employee e, bool isNew)
         {
-            if (e == null) throw new ArgumentNullException(nameof(e));
+            if (e == null)
+                throw new ArgumentNullException(nameof(e));
 
             // Collect all validation errors instead of throwing on first error
             var errors = new List<string>();
@@ -114,8 +113,6 @@ namespace PayrollSoftware.Infrastructure.Repositories
             e.BankAccountNumber = e.BankAccountNumber?.Trim();
             e.MobileNumber = e.MobileNumber?.Trim();
             e.Status = string.IsNullOrWhiteSpace(e.Status) ? "Currently Active" : e.Status.Trim();
-
-
 
             // FullName required and length
             if (string.IsNullOrWhiteSpace(e.FullName))
@@ -154,7 +151,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 errors.Add("Designation is required.");
             else
             {
-                var designationExists = await _context.Designations.AsNoTracking().AnyAsync(d => d.DesignationId == e.DesignationId);
+                var designationExists = await _context
+                    .Designations.AsNoTracking()
+                    .AnyAsync(d => d.DesignationId == e.DesignationId);
                 if (!designationExists)
                     errors.Add("Invalid designation selected.");
             }
@@ -164,7 +163,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 errors.Add("Department is required.");
             else
             {
-                var deptExists = await _context.Departments.AsNoTracking().AnyAsync(d => d.DepartmentId == e.DepartmentId);
+                var deptExists = await _context
+                    .Departments.AsNoTracking()
+                    .AnyAsync(d => d.DepartmentId == e.DepartmentId);
                 if (!deptExists)
                     errors.Add("Invalid department selected.");
             }
@@ -172,7 +173,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
             // Optional Shift - if provided, must exist
             if (e.ShiftId.HasValue)
             {
-                var shiftExists = await _context.Shifts.AsNoTracking().AnyAsync(s => s.ShiftId == e.ShiftId.Value);
+                var shiftExists = await _context
+                    .Shifts.AsNoTracking()
+                    .AnyAsync(s => s.ShiftId == e.ShiftId.Value);
                 if (!shiftExists)
                     errors.Add("Invalid shift selected.");
             }
@@ -244,13 +247,17 @@ namespace PayrollSoftware.Infrastructure.Repositories
         private static int GetAgeOn(DateTime dob, DateTime onDate)
         {
             int age = onDate.Year - dob.Year;
-            if (dob.Date > onDate.AddYears(-age)) age--;
+            if (dob.Date > onDate.AddYears(-age))
+                age--;
             return age;
         }
 
         private async Task<int> GetNextEmployeeNumericIdAsync()
         {
-            var currentMax = await _context.Employees.AsNoTracking().Select(x => (int?)x.EmployeeNumericId).MaxAsync();
+            var currentMax = await _context
+                .Employees.AsNoTracking()
+                .Select(x => (int?)x.EmployeeNumericId)
+                .MaxAsync();
             return (currentMax ?? 0) + 1;
         }
 
@@ -262,7 +269,8 @@ namespace PayrollSoftware.Infrastructure.Repositories
 
         private static bool IsValidPhoneNumber(string? phone)
         {
-            if (string.IsNullOrWhiteSpace(phone)) return false;
+            if (string.IsNullOrWhiteSpace(phone))
+                return false;
             // Simple international phone pattern: +, digits, spaces, dashes allowed,7-20 chars
             var re = new Regex(@"^\+?[0-9\s-]{7,20}$");
             return re.IsMatch(phone);
