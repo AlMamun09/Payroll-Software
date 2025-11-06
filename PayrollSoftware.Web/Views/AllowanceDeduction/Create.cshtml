@@ -1,0 +1,302 @@
+@model PayrollSoftware.Infrastructure.Application.DTOs.AllowanceDeductionDto
+@{
+   Layout = null;
+   ViewData["Title"] = ViewBag?.Title ?? "Allowance/Deduction";
+   var formAction = ViewBag?.FormAction as string ?? Url.Action("Create", "AllowanceDeduction");
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+
+<div class="p-3">
+   <form id="allowanceDeductionForm" method="post" action="@formAction">
+      @Html.AntiForgeryToken()
+      <input type="hidden" asp-for="AllowanceDeductionId" />
+
+      <div class="card mb-0">
+         <div class="card-body">
+            <div class="row">
+               <div class="form-group col-md-6">
+                  <label asp-for="AllowanceDeductionType" class="control-label">
+                     Type <span class="text-danger">*</span>
+                  </label>
+                  <select asp-for="AllowanceDeductionType" class="form-control" required>
+                     <option value="">-- Select Type --</option>
+                     <option value="Allowance">Allowance</option>
+                     <option value="Deduction">Deduction</option>
+                  </select>
+                  <span asp-validation-for="AllowanceDeductionType" class="text-danger"></span>
+               </div>
+
+               <div class="form-group col-md-6">
+                  <label asp-for="AllowanceDeductionName" class="control-label">
+                     Name <span class="text-danger">*</span>
+                  </label>
+                  <input asp-for="AllowanceDeductionName" class="form-control"
+                     placeholder="e.g., House Rent, Medical, Tax" required />
+                  <span asp-validation-for="AllowanceDeductionName" class="text-danger"></span>
+               </div>
+            </div>
+
+            <div class="row">
+               <div class="form-group col-md-6">
+                  <label asp-for="CalculationType" class="control-label">
+                     Calculation Type <span class="text-danger">*</span>
+                  </label>
+                  <select asp-for="CalculationType" id="CalculationType" class="form-control" required>
+                     <option value="">-- Select Calculation Type --</option>
+                     <option value="Fixed">Fixed Amount</option>
+                     <option value="Percentage">Percentage of Basic Salary</option>
+                  </select>
+                  <span asp-validation-for="CalculationType" class="text-danger"></span>
+               </div>
+
+               <div class="form-group col-md-6" id="percentageGroup" style="display:none;">
+                  <label asp-for="Percentage" class="control-label">
+                     Percentage (%) <span class="text-danger">*</span>
+                  </label>
+                  <input asp-for="Percentage" id="Percentage" type="number" step="0.01" min="0" max="100"
+                     class="form-control" placeholder="e.g., 10.50" />
+                  <span asp-validation-for="Percentage" class="text-danger"></span>
+                  <small class="form-text text-muted">Enter percentage value (0-100%)</small>
+               </div>
+
+               <div class="form-group col-md-6" id="fixedAmountGroup" style="display:none;">
+                  <label asp-for="FixedAmount" class="control-label">
+                     Fixed Amount <span class="text-danger">*</span>
+                  </label>
+                  <input asp-for="FixedAmount" id="FixedAmount" type="number" step="0.01" min="0" class="form-control"
+                     placeholder="e.g., 5000.00" />
+                  <span asp-validation-for="FixedAmount" class="text-danger"></span>
+               </div>
+            </div>
+
+            <div class="row">
+               <div class="form-group col-md-6">
+                  <label asp-for="EffectiveFrom" class="control-label">
+                     Effective From <span class="text-danger">*</span>
+                  </label>
+                  <input asp-for="EffectiveFrom" type="date" class="form-control" required />
+                  <span asp-validation-for="EffectiveFrom" class="text-danger"></span>
+               </div>
+
+               <div class="form-group col-md-6">
+                  <label asp-for="EffectiveTo" class="control-label">Effective To</label>
+                  <input asp-for="EffectiveTo" type="date" class="form-control" />
+                  <span asp-validation-for="EffectiveTo" class="text-danger"></span>
+                  <small class="form-text text-muted">Leave blank for ongoing</small>
+               </div>
+            </div>
+
+            <div class="row">
+               <div class="form-group col-md-6">
+                  <label class="control-label">Scope <span class="text-danger">*</span></label>
+                  <div class="form-check">
+                     <input asp-for="IsCompanyWide" type="radio" id="scopeCompany" name="IsCompanyWide" value="true"
+                        class="form-check-input" checked />
+                     <label class="form-check-label" for="scopeCompany">
+                        <i class="fas fa-building text-primary"></i> Company-Wide (Apply to all)
+                     </label>
+                  </div>
+                  <div class="form-check">
+                     <input asp-for="IsCompanyWide" type="radio" id="scopeEmployee" name="IsCompanyWide" value="false"
+                        class="form-check-input" />
+                     <label class="form-check-label" for="scopeEmployee">
+                        <i class="fas fa-user text-secondary"></i> Employee-Specific
+                     </label>
+                  </div>
+               </div>
+
+               <div class="form-group col-md-6" id="employeeGroup" style="display:none;">
+                  <label asp-for="EmployeeId" class="control-label">Employee <span class="text-danger">*</span></label>
+                  <select asp-for="EmployeeId" id="EmployeeId" class="form-control select2"
+                     asp-items="ViewBag.Employees" data-placeholder="-- Select Employee --" style="width:100%;">
+                     <option value="">-- Select Employee --</option>
+                  </select>
+                  <span asp-validation-for="EmployeeId" class="text-danger"></span>
+               </div>
+            </div>
+
+            <div class="row">
+               <div class="form-group col-md-6 d-flex align-items-center">
+                  <div class="form-check">
+                     <input asp-for="IsActive" class="form-check-input" />
+                     <label asp-for="IsActive" class="form-check-label">Active</label>
+                  </div>
+               </div>
+            </div>
+
+            <hr />
+
+            <div class="text-right">
+               <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save mr-1"></i> Save
+               </button>
+            </div>
+         </div>
+      </div>
+   </form>
+</div>
+
+<partial name="_ValidationScriptsPartial" />
+
+<script>
+   $(document).ready(function () {
+      // Initialize Select2
+      CommonAjax.initSelect2('.select2', {
+         dropdownParent: $('#allowanceDeductionModal')
+      });
+
+      // === Logic for Calculation Type ===
+      function toggleCalculationFields() {
+         const calcType = $('#CalculationType').val();
+
+         if (calcType === 'Fixed') {
+            $('#fixedAmountGroup').show().find('input').prop('required', true);
+            $('#percentageGroup').hide().find('input').prop('required', false).val('');
+         } else if (calcType === 'Percentage') {
+            $('#percentageGroup').show().find('input').prop('required', true);
+            $('#fixedAmountGroup').hide().find('input').prop('required', false).val('');
+         } else {
+            $('#fixedAmountGroup, #percentageGroup').hide().find('input').prop('required', false).val('');
+         }
+      }
+
+      // === Logic for Scope ===
+      function toggleEmployeeField() {
+         const isCompanyWide = $('input[name="IsCompanyWide"]:checked').val() === 'true';
+
+         if (isCompanyWide) {
+            $('#employeeGroup').hide().find('select').prop('required', false).val('').trigger('change');
+         } else {
+            $('#employeeGroup').show().find('select').prop('required', true);
+         }
+      }
+
+      // --- Initial state checks ---
+      toggleCalculationFields();
+      toggleEmployeeField();
+
+      // --- Event listeners ---
+      $('#CalculationType').on('change', toggleCalculationFields);
+      $('input[name="IsCompanyWide"]').on('change', toggleEmployeeField);
+
+      // --- Form submission ---
+      const form = document.getElementById('allowanceDeductionForm');
+      const $form = $(form);
+      const $submitButton = $form.find('button[type="submit"]');
+      const originalButtonHtml = $submitButton.html();
+      let isSubmitting = false; // Flag to prevent multiple submissions
+
+      // Remove any existing submit handlers to prevent duplicates
+      $form.off('submit');
+
+      // Add single submit handler
+      $form.on('submit', function (e) {
+         e.preventDefault();
+         e.stopPropagation();
+
+         // Prevent multiple submissions
+         if (isSubmitting) {
+            return false;
+         }
+
+         // Run client-side validation
+         const calcType = $('#CalculationType').val();
+         if (calcType === 'Fixed') {
+            const fixedAmount = parseFloat($('#FixedAmount').val());
+            if (isNaN(fixedAmount) || fixedAmount < 0) {
+               Swal.fire('Validation Error', 'Please enter a valid fixed amount.', 'error');
+               return false;
+            }
+         } else if (calcType === 'Percentage') {
+            const percentage = parseFloat($('#Percentage').val());
+            if (isNaN(percentage) || percentage < 0 || percentage > 100) {
+               Swal.fire('Validation Error', 'Please enter a valid percentage.', 'error');
+               return false;
+            }
+         }
+
+         const isCompanyWide = $('input[name="IsCompanyWide"]:checked').val() === 'true';
+         if (!isCompanyWide) {
+            const employeeId = $('#EmployeeId').val();
+            if (!employeeId) {
+               Swal.fire('Validation Error', 'Please select an employee.', 'error');
+               return false;
+            }
+         }
+
+         // Set submitting flag and disable button
+         isSubmitting = true;
+         $submitButton.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
+
+         // Prepare form data
+         const formData = new FormData(form);
+         const token = form.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+         // Submit via AJAX
+         fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: token ? { RequestVerificationToken: token } : {}
+         })
+            .then(async (response) => {
+               const data = await response.json();
+               if (!response.ok) {
+                  return Promise.reject(data);
+               }
+               return data;
+            })
+            .then((data) => {
+               if (data.success) {
+                  Swal.fire({
+                     icon: 'success',
+                     title: 'Success',
+                     text: data.message || 'Operation completed successfully!'
+                  }).then(() => {
+                     // Close modal and reload table
+                     if (typeof $('#allowanceDeductionModal')?.modal === 'function') {
+                        $('#allowanceDeductionModal').modal('hide');
+                        if (window.allowanceDeductionTableReload) {
+                           window.allowanceDeductionTableReload();
+                        }
+                     } else {
+                        window.location.reload();
+                     }
+                  });
+               } else {
+                  const errorMsg = data.message || 'Operation failed';
+                  Swal.fire({
+                     icon: 'error',
+                     title: 'Error',
+                     text: errorMsg
+                  });
+                  // Re-enable button
+                  isSubmitting = false;
+                  $submitButton.prop('disabled', false).html(originalButtonHtml);
+               }
+            })
+            .catch((err) => {
+               let msg = 'Operation failed';
+
+               if (err && typeof err === 'object') {
+                  if (err.message) msg = err.message;
+                  else if (err.error) msg = err.error;
+                  else if (err.title) msg = err.title;
+               }
+
+               Swal.fire({
+                  icon: 'error',
+                  title: 'Validation Error',
+                  html: msg.replace(/\n/g, '<br>'),
+                  width: '600px'
+               });
+
+               // Re-enable button
+               isSubmitting = false;
+               $submitButton.prop('disabled', false).html(originalButtonHtml);
+            });
+
+         return false;
+      });
+   });
+</script>
