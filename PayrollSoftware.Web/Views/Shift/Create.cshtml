@@ -47,23 +47,23 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        const form = document.getElementById('shiftForm');
+         const form = document.getElementById('shiftForm');
 
-        // Use common form submission handler
-        CommonAjax.submitForm(form, {
-            successTitle: 'Success',
-            errorTitle: 'Validation Error',
-            onSuccess: function (data) {
-                // Close modal if in modal context, otherwise reload
-                if (typeof $('#shiftModal')?.modal === 'function') {
-                    $('#shiftModal').modal('hide');
-                    if (window.shiftTableReload) {
-                        window.shiftTableReload();
-                    }
-                } else {
-                    window.location.reload();
-                }
-            }
-        });
+          // Use common form submission handler
+         CommonAjax.submitForm(form, {
+           successTitle: 'Success',
+           errorTitle: 'Validation Error',
+          onSuccess: function(data) {
+               // Close modal if in modal context, otherwise reload
+              if (typeof $('#shiftModal')?.modal === 'function') {
+                 $('#shiftModal').modal('hide');
+                 if (window.shiftTableReload) {
+           window.shiftTableReload();
+             }
+             } else {
+            window.location.reload();
+                   }
+        }
+                });
     </script>
 }

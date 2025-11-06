@@ -9,8 +9,7 @@
             <i class="fas fa-id-card mr-2"></i>Employee Details
         </h3>
         <div class="card-tools ml-auto">
-            <a accesskey="e" id="btnEdit" asp-action="Edit" asp-route-id="@Model.EmployeeId"
-                class="btn btn-warning mr-2">
+            <a accesskey="e" id="btnEdit" asp-action="Edit" asp-route-id="@Model.EmployeeId" class="btn btn-warning mr-2">
                 <i class="fas fa-edit"></i> Edit
             </a>
             <a accesskey="b" id="btnBack" asp-action="Index" class="btn btn-secondary">
@@ -23,13 +22,11 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="text-center mb-3">
-                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center"
-                        style="width:120px;height:120px;">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width:120px;height:120px;">
                         <i class="fas fa-user fa-4x text-muted"></i>
                     </div>
                     <h4 class="mt-3 mb-0">@Model.FullName</h4>
-                    <span
-                        class="badge badge-@((Model.Status == "Currently Active") ? "success" : "secondary")">@Model.Status</span>
+                    <span class="badge badge-@((Model.Status == "Currently Active") ? "success" : "secondary")">@Model.Status</span>
                 </div>
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item"><strong>Designation:</strong> @Model.DesignationName</li>
@@ -63,8 +60,7 @@
                             </tr>
                             <tr>
                                 <th>Basic Salary</th>
-                                <td>@Model.BasicSalary.ToString("C",
-                                                                        System.Globalization.CultureInfo.GetCultureInfo("bn-BD"))</td>
+                                <td>@Model.BasicSalary.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("bn-BD"))</td>
                             </tr>
                             <tr>
                                 <th>Bank Account Number</th>

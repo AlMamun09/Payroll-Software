@@ -4,9 +4,11 @@
 
 <link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
 
-<div class="card" id="designationCard" data-list-url="@Url.Action("GetDesignationsJson", "Designation")"
-    data-create-get="@Url.Action("Create", "Designation")" data-edit-get-template="@Url.Action("Edit", "Designation")/"
-    data-delete-template="@Url.Action("Delete", "Designation")/">
+<div class="card" id="designationCard"
+     data-list-url="@Url.Action("GetDesignationsJson", "Designation")"
+     data-create-get="@Url.Action("Create", "Designation")"
+     data-edit-get-template="@Url.Action("Edit", "Designation")/"
+     data-delete-template="@Url.Action("Delete", "Designation")/">
 
     <div class="card-header">
         <h3 class="card-title m-0">
@@ -57,67 +59,68 @@
     <script src="~/js/crud-modal.js"></script>
 
     <script>
-        window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
+              window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
 
-        $(function () {
-            const $card = $('#designationCard');
-            const listUrl = $card.data('list-url');
+              $(function () {
+                  const $card = $('#designationCard');
+                  const listUrl = $card.data('list-url');
 
-            const routes = {
-                createGet: $card.data('create-get'),
-                editGet: (id) => $card.data('edit-get-template') + id,
-                delete: (id) => $card.data('delete-template') + id
-            };
+                  const routes = {
+                      createGet: $card.data('create-get'),
+                      editGet: (id) => $card.data('edit-get-template') + id,
+                      delete: (id) => $card.data('delete-template') + id
+                  };
 
-            const designationModal = CrudModal.init({
-                modalSelector: '#designationModal',
-                addBtnSelector: '#btnAddDesignation',
-                routes,
-                createTitle: 'Create Designation',
-                editTitle: 'Edit Designation',
-                onSaved: () => designationTable.reload()
-            });
+                  const designationModal = CrudModal.init({
+                      modalSelector: '#designationModal',
+                      addBtnSelector: '#btnAddDesignation',
+                      routes,
+                      createTitle: 'Create Designation',
+                      editTitle: 'Edit Designation',
+                      onSaved: () => designationTable.reload()
+                  });
 
-            const designationTable = CrudTable.init({
-                tableSelector: '#designationTable',
-                listUrl: listUrl,
-                idField: 'designationId',
-                columns: [
-                    { data: 'designationName' },
-                    {
-                        data: 'isActive',
-                        render: function (d) {
-                            return d
-                                ? '<span class="badge badge-success">Active</span>'
-                                : '<span class="badge badge-secondary">Inactive</span>';
-                        }
-                    }
-                ],
-                dataTables: {
-                    columnDefs: [
-                        { className: "text-center align-middle", targets: [1] }
-                    ]
-                },
-                actions: {
-                    editSelector: '.js-edit',
-                    deleteSelector: '.js-delete',
-                    renderButtons: (id, row) => `
-                                  <button class="btn btn-sm btn-warning mr-1 js-edit" data-id="${id}">
-                                      <i class="fas fa-edit"></i>
-                                  </button>
-                                  <button class="btn btn-sm btn-danger js-delete" data-id="${id}">
-                                      <i class="fas fa-trash"></i>
-                                  </button>
-                              `,
-                    onEdit: (id) => designationModal.openEdit(id),
-                    deleteUrl: (id) => routes.delete(id)
-                }
-            });
+                  const designationTable = CrudTable.init({
+                      tableSelector: '#designationTable',
+                      listUrl: listUrl,
+                      idField: 'designationId',
+                      columns: [
+                          { data: 'designationName' },
+                          {
+                              data: 'isActive',
+                              render: function (d) {
+                                  return d
+                                      ? '<span class="badge badge-success">Active</span>'
+                                      : '<span class="badge badge-secondary">Inactive</span>';
+                              }
+                          }
+                      ],
+                      dataTables: {
+                        columnDefs: [
+                          { className: "text-center align-middle", targets: [1] }
+                        ]
+                      },
+                      actions: {
+                          editSelector: '.js-edit',
+                          deleteSelector: '.js-delete',
+                          renderButtons: (id, row) => `
+                              <button class="btn btn-sm btn-warning mr-1 js-edit" data-id="${id}">
+                                  <i class="fas fa-edit"></i>
+                              </button>
+                              <button class="btn btn-sm btn-danger js-delete" data-id="${id}">
+                                  <i class="fas fa-trash"></i>
+                              </button>
+                          `,
+                          onEdit: (id) => designationModal.openEdit(id),
+                          deleteUrl: (id) => routes.delete(id)
+                      }
+                  });
 
-            // Make table reload function available globally for form callback
-            window.designationTableReload = function () {
-                designationTable.reload();
-            };
-        });
+                  // Make table reload function available globally for form callback
+         window.designationTableReload = function () {
+        designationTable.reload();
+        };
+              });
     </script>
 }
+

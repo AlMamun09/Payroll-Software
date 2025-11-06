@@ -4,9 +4,11 @@
 
 <link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
 
-<div class="card" id="leaveCard" data-list-url="@Url.Action("GetLeavesJson", "Leave")"
-    data-create-get="@Url.Action("Create", "Leave")" data-edit-get-template="@Url.Action("Edit", "Leave")/"
-    data-delete-template="@Url.Action("Delete", "Leave")/">
+<div class="card" id="leaveCard"
+     data-list-url="@Url.Action("GetLeavesJson", "Leave")"
+     data-create-get="@Url.Action("Create", "Leave")"
+     data-edit-get-template="@Url.Action("Edit", "Leave")/"
+     data-delete-template="@Url.Action("Delete", "Leave")/">
 
     <div class="card-header">
         <h3 class="card-title m-0">
@@ -167,14 +169,14 @@
                         data: 'leaveId',
                         render: function (data, type, row) {
                             return `
-                                    <div class="text-center">
-                                        <button class="btn btn-sm btn-info mr-1 js-edit" data-id="${data}" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger js-delete" data-id="${data}" title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>`;
+                                <div class="text-center">
+                                    <button class="btn btn-sm btn-info mr-1 js-edit" data-id="${data}" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger js-delete" data-id="${data}" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>`;
                         },
                         orderable: false,
                         className: 'text-center'
