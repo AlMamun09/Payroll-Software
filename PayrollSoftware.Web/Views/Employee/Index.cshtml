@@ -4,10 +4,12 @@
 
 <link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
 
-<div class="card" id="employeeCard" data-list-url="@Url.Action("GetEmployeesJson", "Employee")"
-    data-create-get="@Url.Action("Create", "Employee")" data-edit-url-template="@Url.Action("Edit", "Employee")/"
-    data-details-url-template="@Url.Action("Details", "Employee")/"
-    data-delete-template="@Url.Action("Delete", "Employee")/">
+<div class="card" id="employeeCard"
+     data-list-url="@Url.Action("GetEmployeesJson", "Employee")"
+     data-create-get="@Url.Action("Create", "Employee")"
+     data-edit-url-template="@Url.Action("Edit", "Employee")/"
+     data-details-url-template="@Url.Action("Details", "Employee")/"
+     data-delete-template="@Url.Action("Delete", "Employee")/">
 
     <div class="card-header">
         <h3 class="card-title m-0">
@@ -64,7 +66,7 @@
                     { data: 'dateOfBirth', render: d => d ? d.substring(0, 10) : '' },
                     { data: 'departmentName', defaultContent: '' },
                     { data: 'designationName', defaultContent: '' },
-                    {
+                            {
                         data: 'status',
                         render: d => {
                             if (d === 'Active') {
@@ -84,19 +86,20 @@
                     editSelector: '.js-edit',
                     deleteSelector: '.js-delete',
                     renderButtons: (id, row) => `
-                            <a class="btn btn-sm btn-info mr-1" href="${detailsUrlTemplate}${id}">
-                                <i class="fas fa-info-circle"></i>
-                            </a>
-                            <a class="btn btn-sm btn-warning mr-1" href="${editUrlTemplate}${id}">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button class="btn btn-sm btn-danger js-delete" data-id="${id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        `,
+                        <a class="btn btn-sm btn-info mr-1" href="${detailsUrlTemplate}${id}">
+                            <i class="fas fa-info-circle"></i>
+                        </a>
+                        <a class="btn btn-sm btn-warning mr-1" href="${editUrlTemplate}${id}">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn btn-sm btn-danger js-delete" data-id="${id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `,
                     deleteUrl: (id) => `${deleteTemplate}${id}`
                 }
             });
         });
     </script>
 }
+
