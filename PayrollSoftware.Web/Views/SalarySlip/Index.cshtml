@@ -4,54 +4,6 @@
 
 <link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
 
-<!-- Statistics Row -->
-<div class="row mb-3">
-   <div class="col-lg-3 col-6">
-      <div class="small-box bg-info">
-         <div class="inner">
-            <h3 id="totalSlips">0</h3>
-            <p>Total Salary Slips</p>
-         </div>
-         <div class="icon">
-            <i class="fas fa-file-invoice"></i>
-         </div>
-      </div>
-   </div>
-   <div class="col-lg-3 col-6">
-      <div class="small-box bg-success">
-         <div class="inner">
-            <h3 id="paidSlips">0</h3>
-            <p>Paid Slips</p>
-         </div>
-         <div class="icon">
-            <i class="fas fa-check-circle"></i>
-         </div>
-      </div>
-   </div>
-   <div class="col-lg-3 col-6">
-      <div class="small-box bg-warning">
-         <div class="inner">
-            <h3 id="pendingSlips">0</h3>
-            <p>Pending Slips</p>
-         </div>
-         <div class="icon">
-            <i class="fas fa-clock"></i>
-         </div>
-      </div>
-   </div>
-   <div class="col-lg-3 col-6">
-      <div class="small-box bg-primary">
-         <div class="inner">
-            <h3 id="currentMonth">0</h3>
-            <p>Current Month</p>
-         </div>
-         <div class="icon">
-            <i class="fas fa-calendar-alt"></i>
-         </div>
-      </div>
-   </div>
-</div>
-
 <div class="card" id="salarySlipCard" data-list-url="@Url.Action("GetSalarySlipsJson", "SalarySlip")"
    data-view-url-template="@Url.Action("View", "SalarySlip")/"
    data-delete-template="@Url.Action("Delete", "SalarySlip")/">
@@ -159,15 +111,15 @@
                {
                   data: 'salarySlipId',
                   render: (id, type, row) => `
-                  <div class="text-center">
-                     <a class="btn btn-sm btn-info mr-1" href="${viewUrlTemplate}${id}" title="View Salary Slip">
-                        <i class="fas fa-eye"></i>
-                     </a>
-                     <button class="btn btn-sm btn-danger js-delete" data-id="${id}" title="Delete">
-                        <i class="fas fa-trash"></i>
-                     </button>
-                  </div>
-                  `,
+                     <div class="text-center">
+                        <a class="btn btn-sm btn-info mr-1" href="${viewUrlTemplate}${id}" title="View Salary Slip">
+                           <i class="fas fa-eye"></i>
+                        </a>
+                        <button class="btn btn-sm btn-danger js-delete" data-id="${id}" title="Delete">
+                           <i class="fas fa-trash"></i>
+                        </button>
+                     </div>
+                     `,
                   orderable: false,
                   className: 'text-center'
                }
@@ -199,10 +151,11 @@
                text: 'This will also revert the payroll status to Pending.',
                icon: 'warning',
                showCancelButton: true,
-               confirmButtonColor: '#d33',
-               cancelButtonColor: '#3085d6',
+               confirmButtonColor: '#3085d6',
+               cancelButtonColor: '#d33',
                confirmButtonText: 'Yes, delete it!',
-               cancelButtonText: 'Cancel'
+               cancelButtonText: 'Cancel',
+               reverseButtons: false
             }).then((result) => {
                if (result.isConfirmed) {
                   $.ajax({
@@ -211,11 +164,23 @@
                      headers: { 'RequestVerificationToken': window.__AntiForgeryToken }
                   })
                      .done(r => {
-                        Swal.fire('Deleted!', r.message, 'success');
+                        Swal.fire({
+                           icon: 'success',
+                           title: 'Deleted!',
+                           text: r.message,
+                           confirmButtonColor: '#3085d6',
+                           timer: 2000,
+                           timerProgressBar: true
+                        });
                         table.ajax.reload();
                      })
                      .fail(x => {
-                        Swal.fire('Error', x.responseJSON?.message || 'Failed to delete', 'error');
+                        Swal.fire({
+                           icon: 'error',
+                           title: 'Error',
+                           text: x.responseJSON?.message || 'Failed to delete',
+                           confirmButtonColor: '#3085d6'
+                        });
                      });
                }
             });

@@ -1,4 +1,12 @@
+/* global Swal */
 window.CommonAjax = (function () {
+  // SweetAlert2 theme configuration
+  const SWAL_CONFIG = {
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    denyButtonColor: "#6c757d",
+  };
+
   function getCsrfHeader() {
     try {
       var token = window.__AntiForgeryToken;
@@ -33,21 +41,49 @@ window.CommonAjax = (function () {
       text: message || "",
       icon: "warning",
       showCancelButton: true,
+      confirmButtonColor: SWAL_CONFIG.confirmButtonColor,
+      cancelButtonColor: SWAL_CONFIG.cancelButtonColor,
       confirmButtonText: "Yes",
       cancelButtonText: "Cancel",
+      reverseButtons: false,
     });
   }
 
-  function toastSuccess(message) {
-    return Swal.fire({ title: message, icon: "success", draggable: true });
+  function toastSuccess(message, title) {
+    return Swal.fire({
+      title: title || "Success",
+      text: message,
+      icon: "success",
+      confirmButtonColor: SWAL_CONFIG.confirmButtonColor,
+      timer: 2000,
+      timerProgressBar: true,
+    });
   }
 
-  function toastError(message) {
+  function toastError(message, title) {
     return Swal.fire({
-      title: "Error",
+      title: title || "Error",
       text: message,
       icon: "error",
-      draggable: true,
+      confirmButtonColor: SWAL_CONFIG.confirmButtonColor,
+    });
+  }
+
+  function toastWarning(message, title) {
+    return Swal.fire({
+      title: title || "Warning",
+      text: message,
+      icon: "warning",
+      confirmButtonColor: SWAL_CONFIG.confirmButtonColor,
+    });
+  }
+
+  function toastInfo(message, title) {
+    return Swal.fire({
+      title: title || "Information",
+      text: message,
+      icon: "info",
+      confirmButtonColor: SWAL_CONFIG.confirmButtonColor,
     });
   }
 
@@ -65,6 +101,7 @@ window.CommonAjax = (function () {
       onError,
       beforeSubmit,
       successTitle = "Success",
+      successMessage = "Operation completed successfully!",
       errorTitle = "Validation Error",
     } = options || {};
 
@@ -98,7 +135,10 @@ window.CommonAjax = (function () {
             Swal.fire({
               icon: "success",
               title: successTitle,
-              text: data.message || "Operation completed successfully!",
+              text: data.message || successMessage,
+              confirmButtonColor: SWAL_CONFIG.confirmButtonColor,
+              timer: 2000,
+              timerProgressBar: true,
             }).then(() => {
               if (onSuccess) {
                 onSuccess(data);
@@ -112,6 +152,7 @@ window.CommonAjax = (function () {
               icon: "error",
               title: "Error",
               text: errorMsg,
+              confirmButtonColor: SWAL_CONFIG.confirmButtonColor,
             });
             if (onError) onError(errorMsg);
           }
@@ -132,6 +173,7 @@ window.CommonAjax = (function () {
             title: errorTitle,
             html: msg.replace(/\n/g, "<br>"),
             width: "600px",
+            confirmButtonColor: SWAL_CONFIG.confirmButtonColor,
           });
 
           if (onError) onError(msg);
@@ -180,6 +222,7 @@ window.CommonAjax = (function () {
     const {
       confirmMessage = "Are you sure you want to delete this record?",
       confirmTitle = "Delete Confirmation",
+      successMessage = "Deleted successfully!",
       onSuccess,
       onError,
     } = options || {};
@@ -192,7 +235,7 @@ window.CommonAjax = (function () {
           headers: getCsrfHeader(),
         })
           .done(function (response) {
-            toastSuccess(response?.message || "Deleted successfully!");
+            toastSuccess(response?.message || successMessage);
             if (onSuccess) onSuccess(response);
           })
           .fail(function (xhr) {
@@ -310,6 +353,8 @@ window.CommonAjax = (function () {
     confirm,
     toastSuccess,
     toastError,
+    toastWarning,
+    toastInfo,
 
     // Form handling
     submitForm,
@@ -329,5 +374,8 @@ window.CommonAjax = (function () {
 
     // CSRF helper
     getCsrfHeader,
+
+    // Config
+    SWAL_CONFIG,
   };
 })();
