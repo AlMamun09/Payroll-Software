@@ -14,6 +14,12 @@ namespace PayrollSoftware.Infrastructure.Domain.Entities
         public Guid EmployeeId { get; set; }
         public DateTime PayPeriodStart { get; set; }
         public DateTime PayPeriodEnd { get; set; }
+        public int TotalDays { get; set; }
+        public int PresentDays { get; set; }
+        public int PaidLeaveDays { get; set; }
+        public int UnpaidLeaveDays { get; set; }
+        public int AbsentDays { get; set; }
+        public int PayableDays { get; set; }
         public decimal BasicSalary { get; set; }
         public decimal TotalAllowances { get; set; }
         public decimal TotalDeductions { get; set; }
