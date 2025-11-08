@@ -1,0 +1,376 @@
+@model PayrollSoftware.Infrastructure.Domain.Entities.Payroll
+
+@{
+    ViewData["Title"] = "Payroll Details";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-file-invoice-dollar mr-2"></i>Payroll Details
+                    </h3>
+                    <div class="card-tools">
+                        <a href="@Url.Action("Index", "Payroll")" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Employee Information -->
+                        <div class="col-md-6">
+                            <div class="card card-outline card-primary">
+                                <div class="card-header">
+                                    <h3 class="card-title"><i class="fas fa-user"></i> Employee Information</h3>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm table-borderless">
+                                        <tr>
+                                            <th style="width: 150px;">Employee Code:</th>
+                                            <td>@ViewBag.EmployeeCode</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Employee Name:</th>
+                                            <td>@ViewBag.EmployeeName</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Department:</th>
+                                            <td>@ViewBag.DepartmentName</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Designation:</th>
+                                            <td>@ViewBag.DesignationName</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payroll Period -->
+                        <div class="col-md-6">
+                            <div class="card card-outline card-info">
+                                <div class="card-header">
+                                    <h3 class="card-title"><i class="fas fa-calendar"></i> Payroll Period</h3>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm table-borderless">
+                                        <tr>
+                                            <th style="width: 150px;">Period Start:</th>
+                                            <td>@Model.PayPeriodStart.ToString("dd MMM yyyy")</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Period End:</th>
+                                            <td>@Model.PayPeriodEnd.ToString("dd MMM yyyy")</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Payment Status:</th>
+                                            <td>
+                                                @if (Model.PaymentStatus == "Paid")
+                                                {
+                                                    <span class="badge badge-success">Paid</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-warning">Pending</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Payment Date:</th>
+                                            <td>@(Model.PaymentDate?.ToString("dd MMM yyyy") ?? "N/A")</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attendance Summary -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card card-outline card-success">
+                                <div class="card-header">
+                                    <h3 class="card-title"><i class="fas fa-calendar-check"></i> Attendance Summary</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-2">
+                                            <div class="info-box bg-light">
+                                                <span class="info-box-icon"><i class="fas fa-calendar-alt"></i></span>
+                                                <div class="info-box-content">
+                                                    <span class="info-box-text">Total Days</span>
+                                                    <span class="info-box-number">@Model.TotalDays</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="info-box bg-success">
+                                                <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
+                                                <div class="info-box-content">
+                                                    <span class="info-box-text">Present Days</span>
+                                                    <span class="info-box-number">@Model.PresentDays</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="info-box bg-info">
+                                                <span class="info-box-icon"><i class="fas fa-umbrella-beach"></i></span>
+                                                <div class="info-box-content">
+                                                    <span class="info-box-text">Paid Leave</span>
+                                                    <span class="info-box-number">@Model.PaidLeaveDays</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="info-box bg-warning">
+                                                <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                                                <div class="info-box-content">
+                                                    <span class="info-box-text">Unpaid Leave</span>
+                                                    <span class="info-box-number">@Model.UnpaidLeaveDays</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="info-box bg-danger">
+                                                <span class="info-box-icon"><i class="fas fa-times-circle"></i></span>
+                                                <div class="info-box-content">
+                                                    <span class="info-box-text">Absent Days</span>
+                                                    <span class="info-box-number">@Model.AbsentDays</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="info-box bg-primary">
+                                                <span class="info-box-icon"><i class="fas fa-coins"></i></span>
+                                                <div class="info-box-content">
+                                                    <span class="info-box-text">Payable Days</span>
+                                                    <span class="info-box-number">@Model.PayableDays</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Salary Breakdown -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card card-outline card-warning">
+                                <div class="card-header">
+                                    <h3 class="card-title"><i class="fas fa-money-bill-wave"></i> Salary Breakdown</h3>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-bordered">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Description</th>
+                                                <th class="text-right" style="width: 200px;">Amount (BDT)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Basic Salary</strong> (Full Month)</td>
+                                                <td class="text-right">@Model.BasicSalary.ToString("N2")</td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <strong>Pro-rated Salary</strong>
+                                                    <small class="text-muted">
+                                                        (Based on @Model.PayableDays payable days out of
+                                                        @Model.TotalDays total days)
+                                                    </small>
+                                                </td>
+                                                <td class="text-right">
+                                                    @{
+                                                        var proRatedSalary = Model.TotalDays > 0
+                                                        ? Math.Round((Model.BasicSalary / Model.TotalDays) * Model.PayableDays, 2)
+                                                        : 0;
+                                                    }
+                                                    @proRatedSalary.ToString("N2")
+                                                </td>
+                                            </tr>
+                                            <tr class="bg-light">
+                                                <td><strong>Total Allowances</strong></td>
+                                                <td class="text-right text-success">
+                                                    <strong>
+                                                        +
+                                                        @Model.TotalAllowances.ToString("N2")
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                            <tr class="bg-light">
+                                                <td><strong>Total Deductions</strong></td>
+                                                <td class="text-right text-danger">
+                                                    <strong>
+                                                        -
+                                                        @Model.TotalDeductions.ToString("N2")
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                            <tr class="table-active">
+                                                <td>
+                                                    <h5 class="mb-0"><strong>Net Salary (Payable)</strong></h5>
+                                                </td>
+                                                <td class="text-right">
+                                                    <h5 class="mb-0 text-primary">
+                                                        <strong>@Model.NetSalary.ToString("N2")</strong>
+                                                    </h5>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Allowances & Deductions Details -->
+                    @if (ViewBag.AllowancesDeductions != null)
+                    {
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="card card-outline card-success">
+                                    <div class="card-header">
+                                        <h3 class="card-title"><i class="fas fa-plus-circle"></i> Allowances Applied</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        @if (ViewBag.Allowances != null && ViewBag.Allowances.Count > 0)
+                                        {
+                                            <table class="table table-sm table-bordered">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th>Allowance Name</th>
+                                                        <th>Type</th>
+                                                        <th class="text-right">Amount</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var item in ViewBag.Allowances)
+                                                    {
+                                                        <tr>
+                                                            <td>@item.AllowanceDeductionName</td>
+                                                            <td>
+                                                                @if (item.CalculationType == "Fixed")
+                                                                {
+                                                                    <span class="badge badge-info">Fixed</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="badge badge-warning">@item.Percentage%</span>
+                                                                }
+                                                            </td>
+                                                            <td class="text-right">
+                                                                @if (item.CalculationType == "Fixed")
+                                                                {
+                                                                    @item.FixedAmount.ToString("N2")
+                                                                }
+                                                                else
+                                                                {
+                                                                    @Math.Round((item.Percentage / 100m) * Model.BasicSalary, 2).ToString("N2")
+                                                                }
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-muted">No allowances applied</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card card-outline card-danger">
+                                    <div class="card-header">
+                                        <h3 class="card-title"><i class="fas fa-minus-circle"></i> Deductions Applied</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        @if (ViewBag.Deductions != null && ViewBag.Deductions.Count > 0)
+                                        {
+                                            <table class="table table-sm table-bordered">
+                                                <thead class="bg-light">
+                                                    <tr>
+                                                        <th>Deduction Name</th>
+                                                        <th>Type</th>
+                                                        <th class="text-right">Amount</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var item in ViewBag.Deductions)
+                                                    {
+                                                        <tr>
+                                                            <td>@item.AllowanceDeductionName</td>
+                                                            <td>
+                                                                @if (item.CalculationType == "Fixed")
+                                                                {
+                                                                    <span class="badge badge-info">Fixed</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="badge badge-warning">@item.Percentage%</span>
+                                                                }
+                                                            </td>
+                                                            <td class="text-right">
+                                                                @if (item.CalculationType == "Fixed")
+                                                                {
+                                                                    @item.FixedAmount.ToString("N2")
+                                                                }
+                                                                else
+                                                                {
+                                                                    @Math.Round((item.Percentage / 100m) * Model.BasicSalary, 2).ToString("N2")
+                                                                }
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-muted">No deductions applied</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+                <div class="card-footer">
+                    <div class="row">
+                        <div class="col-md-12 text-right">
+                            @if (Model.PaymentStatus != "Paid")
+                            {
+                                <form method="post" asp-action="MarkPaid" asp-route-id="@Model.PayrollId" style="display: inline;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-success"
+                                            onclick="return confirm('Mark this payroll as paid and generate salary slip?')">
+                                        <i class="fas fa-dollar-sign"></i> Mark as Paid & Generate Slip
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a href="@Url.Action("ViewSalarySlip", "Payroll", new { id = Model.PayrollId })"
+                                   class="btn btn-info">
+                                    <i class="fas fa-file-invoice"></i> View Salary Slip
+                                </a>
+                            }
+                            <a href="@Url.Action("Index", "Payroll")" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

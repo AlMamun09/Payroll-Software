@@ -1,0 +1,155 @@
+@{
+    ViewData["Title"] = "Payroll Processing";
+}
+<link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
+<div class="card" id="payrollCard" data-list-url="@Url.Action("GetPayrollsJson", "Payroll")"
+    data-process-url="@Url.Action("Process", "Payroll")" data-delete-url-template="@Url.Action("Delete", "Payroll")/"
+    data-markpaid-url-template="@Url.Action("MarkPaid", "Payroll")/">
+    <div class="card-header">
+        <h3 class="card-title m-0"><i class="fas fa-calculator mr-2"></i>Payroll Processing</h3>
+        <div class="card-tools">
+        </div>
+    </div>
+    <div class="card-body">
+        <form id="processForm" class="form-inline mb-3">
+            <div class="form-group mr-2">
+                <label class="mr-2">Employee</label>
+                <select id="employeeSelect" name="employeeId" class="form-control" style="min-width:220px"></select>
+            </div>
+            <div class="form-group mr-2">
+                <label class="mr-2">Start</label>
+                <input type="date" name="periodStart" id="periodStart" class="form-control" />
+            </div>
+            <div class="form-group mr-2">
+                <label class="mr-2">End</label>
+                <input type="date" name="periodEnd" id="periodEnd" class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-success"><i class="fas fa-cogs"></i> Run</button>
+        </form>
+        <table id="payrollTable" class="table table-bordered table-hover w-100">
+            <thead>
+                <tr>
+                    <th>Employee Code</th>
+                    <th>Employee Name</th>
+                    <th>Period Start</th>
+                    <th>Period End</th>
+                    <th>Basic</th>
+                    <th>Allowances</th>
+                    <th>Deductions</th>
+                    <th>Net</th>
+                    <th>Status</th>
+                    <th>Paid Date</th>
+                    <th style="width:180px" class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+<form id="__afForm" method="post" style="display:none;">@Html.AntiForgeryToken()</form>
+@section Scripts {
+    <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+    <script>
+        window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
+        $(function () {
+            const listUrl = $('#payrollCard').data('list-url');
+            const processUrl = $('#payrollCard').data('process-url');
+            const deleteTemplate = $('#payrollCard').data('delete-url-template');
+            const markPaidTemplate = $('#payrollCard').data('markpaid-url-template');
+
+            const table = $('#payrollTable').DataTable({
+                ajax: { url: listUrl, dataSrc: 'data' },
+                columns: [
+                    { data: 'employeeCode' },
+                    { data: 'employeeName' },
+                    { data: 'payPeriodStart', render: d => d ? new Date(d).toLocaleDateString() : '' },
+                    { data: 'payPeriodEnd', render: d => d ? new Date(d).toLocaleDateString() : '' },
+                    { data: 'basicSalary', render: d => d?.toFixed(2) },
+                    { data: 'totalAllowances', render: d => d?.toFixed(2) },
+                    { data: 'totalDeductions', render: d => d?.toFixed(2) },
+                    { data: 'netSalary', render: d => d?.toFixed(2) },
+                    { data: 'paymentStatus' },
+                    { data: 'paymentDate', render: d => d ? new Date(d).toLocaleDateString() : '' },
+                    {
+                        data: 'payrollId', render: (id, type, row) => {
+                            const paidBtn = row.paymentStatus === 'Paid' ? '' : `<button class="btn btn-sm btn-success js-paid" data-id="${id}" title="Mark Paid"><i class="fas fa-dollar-sign"></i></button>`;
+                            return `<div class="text-center">
+                                    <a class="btn btn-sm btn-info mr-1" href="@Url.Action("Details", "Payroll")/${id}" title="Details"><i class="fas fa-info-circle"></i></a>
+                                    ${paidBtn}
+                                     <button class="btn btn-sm btn-danger js-del" data-id="${id}" title="Delete"><i class="fas fa-trash"></i></button>
+                                     </div>`;
+                        }, orderable: false, className: 'text-center'
+                    }
+                ]
+            });
+
+            // Load employees for selection
+            $.get('@Url.Action("GetEmployeesJson", "Employee")', function (r) {
+                const sel = $('#employeeSelect');
+                r.data.forEach(e => sel.append(`<option value="${e.employeeId}">${e.employeeCode} - ${e.fullName}</option>`));
+            });
+
+            // Default period: current month
+            const now = new Date();
+            const start = new Date(now.getFullYear(), now.getMonth(), 1);
+            const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            $('#periodStart').val(start.toISOString().substring(0, 10));
+            $('#periodEnd').val(end.toISOString().substring(0, 10));
+
+            $('#processForm').on('submit', function (e) {
+                e.preventDefault();
+                const employeeId = $('#employeeSelect').val();
+                const periodStart = $('#periodStart').val();
+                const periodEnd = $('#periodEnd').val();
+                if (!employeeId) { Swal.fire('Select employee'); return; }
+                $.ajax({
+                    url: processUrl,
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': window.__AntiForgeryToken },
+                    data: { employeeId, periodStart, periodEnd }
+                }).done(r => { Swal.fire('Success', r.message, 'success'); table.ajax.reload(); })
+                    .fail(x => { Swal.fire('Error', x.responseJSON?.message || 'Failed', 'error'); });
+            });
+
+            $('#payrollTable').on('click', '.js-del', function () {
+                const id = $(this).data('id');
+                Swal.fire({ title: 'Delete?', showCancelButton: true }).then(res => {
+                    if (!res.isConfirmed) return;
+                    $.ajax({ url: deleteTemplate + id, method: 'POST', headers: { 'RequestVerificationToken': window.__AntiForgeryToken } })
+                        .done(r => { Swal.fire('Deleted', r.message, 'success'); table.ajax.reload(); })
+                        .fail(x => Swal.fire('Error', x.responseJSON?.message || 'Failed', 'error'));
+                });
+            });
+
+            $('#payrollTable').on('click', '.js-paid', function () {
+                const id = $(this).data('id');
+                Swal.fire({
+                    title: 'Mark as Paid?',
+                    text: 'This will generate a salary slip',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Mark as Paid',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: markPaidTemplate + id,
+                            method: 'POST',
+                            headers: { 'RequestVerificationToken': window.__AntiForgeryToken }
+                        })
+                            .done(r => {
+                                if (r.redirectUrl) {
+                                    // Redirect to salary slip view
+                                    window.location.href = r.redirectUrl;
+                                } else {
+                                    Swal.fire('Success', r.message, 'success');
+                                    table.ajax.reload();
+                                }
+                            })
+                            .fail(x => Swal.fire('Error', x.responseJSON?.message || 'Failed', 'error'));
+                    }
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,492 @@
+@model PayrollSoftware.Infrastructure.Domain.Entities.Payroll
+@{
+ViewData["Title"] = "Salary Slip";
+Layout = null;
+}
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>@ViewData["Title"]</title>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    @@media print {
+      .no-print {
+        display: none !important;
+      }
+
+      .page-break {
+        page-break-after: always;
+      }
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    .salary-slip {
+      max-width: 800px;
+      margin: 20px auto;
+      border: 2px solid #000;
+      padding: 20px;
+      background: white;
+    }
+
+    .slip-header {
+      text-align: center;
+      border-bottom: 2px solid #000;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+
+    .company-name {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .slip-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 10px;
+      color: #666;
+    }
+
+    .copy-type {
+      font-size: 14px;
+      color: #999;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .info-label {
+      font-weight: bold;
+      color: #555;
+    }
+
+    .info-value {
+      color: #333;
+    }
+
+    .section-title {
+      background: #f8f9fa;
+      padding: 8px 10px;
+      font-weight: bold;
+      border-left: 4px solid #007bff;
+      margin-top: 15px;
+      margin-bottom: 10px;
+    }
+
+    table.earnings-deductions {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    table.earnings-deductions th,
+    table.earnings-deductions td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    table.earnings-deductions th {
+      background: #f8f9fa;
+      font-weight: bold;
+    }
+
+    .amount-cell {
+      text-align: right !important;
+      font-weight: bold;
+    }
+
+    .total-row {
+      background: #e9ecef;
+      font-weight: bold;
+    }
+
+    .net-pay-box {
+      background: #28a745;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      margin-top: 20px;
+      border-radius: 5px;
+    }
+
+    .net-pay-label {
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .net-pay-amount {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .footer-section {
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .signature-box {
+      text-align: center;
+      width: 200px;
+    }
+
+    .signature-line {
+      border-top: 1px solid #000;
+      margin-top: 50px;
+      padding-top: 5px;
+    }
+  </style>
+   </head>
+   <body>
+      <div class="no-print position-fixed d-flex flex-column align-items-end" style="top: 40px; right: 40px; gap: 12px; z-index: 1050;">
+         <button onclick="window.print()" class="btn btn-primary btn-lg shadow-sm w-100 text-start px-4" style="min-width: 260px;">
+         <i class="fas fa-print me-2"></i> Print Salary Slip
+         </button>
+         <a href="@Url.Action("Index", "SalarySlip")" class="btn btn-info btn-lg shadow-sm w-100 text-start px-4" style="min-width: 260px;">
+         <i class="fas fa-list me-2"></i> Salary Slip List
+         </a>
+         <a href="@Url.Action("Index", "Payroll")" class="btn btn-secondary btn-lg shadow-sm w-100 text-start px-4" style="min-width: 260px;">
+         <i class="fas fa-arrow-left me-2"></i> Back to Payroll
+         </a>
+      </div>
+      @* Company Copy *@
+      <div class="salary-slip">
+         <div class="slip-header">
+            <div class="company-name">YOUR COMPANY NAME</div>
+            <div>Company Address Line 1, City, Country</div>
+            <div>Phone: +880-XXX-XXXXXXX | Email: info@("@")company.com</div>
+            <div class="slip-title">SALARY SLIP</div>
+            <div class="copy-type">** COMPANY COPY **</div>
+         </div>
+         <div class="row">
+            <div class="col-md-6">
+               <div class="info-row">
+                  <span class="info-label">Employee Code:</span>
+                  <span class="info-value">@ViewBag.EmployeeCode</span>
+               </div>
+               <div class="info-row">
+                  <span class="info-label">Employee Name:</span>
+                  <span class="info-value">@ViewBag.EmployeeName</span>
+               </div>
+               <div class="info-row">
+                  <span class="info-label">Department:</span>
+                  <span class="info-value">@ViewBag.DepartmentName</span>
+               </div>
+               <div class="info-row">
+                  <span class="info-label">Designation:</span>
+                  <span class="info-value">@ViewBag.DesignationName</span>
+               </div>
+            </div>
+            <div class="col-md-6">
+               <div class="info-row">
+                  <span class="info-label">Pay Period:</span>
+                  <span class="info-value">@Model.PayPeriodStart.ToString("dd MMM yyyy") - @Model.PayPeriodEnd.ToString("dd MMM yyyy")</span>
+               </div>
+               <div class="info-row">
+                  <span class="info-label">Payment Date:</span>
+                  <span class="info-value">@(Model.PaymentDate?.ToString("dd MMM yyyy") ?? "N/A")</span>
+               </div>
+               <div class="info-row">
+                  <span class="info-label">Total Days:</span>
+                  <span class="info-value">@Model.TotalDays days</span>
+               </div>
+               <div class="info-row">
+                  <span class="info-label">Payable Days:</span>
+                  <span class="info-value">@Model.PayableDays days</span>
+               </div>
+            </div>
+         </div>
+         <div class="section-title">Attendance Summary</div>
+         <div class="row">
+            <div class="col-md-12">
+               <table class="table table-sm table-bordered">
+                  <tr>
+                     <td><strong>Present:</strong> @Model.PresentDays days</td>
+                     <td><strong>Paid Leave:</strong> @Model.PaidLeaveDays days</td>
+                     <td><strong>Unpaid Leave:</strong> @Model.UnpaidLeaveDays days</td>
+                     <td><strong>Absent:</strong> @Model.AbsentDays days</td>
+                  </tr>
+               </table>
+            </div>
+         </div>
+         <div class="row mt-3">
+            <div class="col-md-6">
+               <div class="section-title">Earnings</div>
+               <table class="earnings-deductions">
+                  <thead>
+                     <tr>
+                        <th>Description</th>
+                        <th class="amount-cell">Amount (BDT)</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     <tr>
+                        <td>Basic Salary (Pro-rated)</td>
+                        <td class="amount-cell">@ViewBag.ProRatedSalary.ToString("N2")</td>
+                     </tr>
+                     @if (ViewBag.Allowances != null && ViewBag.Allowances.Count > 0)
+                     {
+                     foreach (var allowance in ViewBag.Allowances)
+                     {
+                     <tr>
+                        <td>@allowance.AllowanceDeductionName</td>
+                        <td class="amount-cell">
+                           @if (allowance.CalculationType == "Fixed")
+                           {
+                           @allowance.FixedAmount.ToString("N2")
+                           }
+                           else
+                           {
+                           @Math.Round((allowance.Percentage / 100m) * Model.BasicSalary, 2).ToString("N2")
+                           }
+                        </td>
+                     </tr>
+                     }
+                     }
+                     <tr class="total-row">
+                        <td>Total Earnings</td>
+                        <td class="amount-cell">@((ViewBag.ProRatedSalary + Model.TotalAllowances).ToString("N2"))</td>
+                     </tr>
+                  </tbody>
+               </table>
+            </div>
+            <div class="col-md-6">
+               <div class="section-title">Deductions</div>
+               <table class="earnings-deductions">
+                  <thead>
+                     <tr>
+                        <th>Description</th>
+                        <th class="amount-cell">Amount (BDT)</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     @if (ViewBag.Deductions != null && ViewBag.Deductions.Count > 0)
+                     {
+                     foreach (var deduction in ViewBag.Deductions)
+                     {
+                     <tr>
+                        <td>@deduction.AllowanceDeductionName</td>
+                        <td class="amount-cell">
+                           @if (deduction.CalculationType == "Fixed")
+                           {
+                           @deduction.FixedAmount.ToString("N2")
+                           }
+                           else
+                           {
+                           @Math.Round((deduction.Percentage / 100m) * Model.BasicSalary, 2).ToString("N2")
+                           }
+                        </td>
+                     </tr>
+                     }
+                     }
+                     else
+                     {
+                     <tr>
+                        <td colspan="2" class="text-center text-muted">No deductions</td>
+                     </tr>
+                     }
+                     <tr class="total-row">
+                        <td>Total Deductions</td>
+                        <td class="amount-cell">@Model.TotalDeductions.ToString("N2")</td>
+                     </tr>
+                  </tbody>
+               </table>
+            </div>
+         </div>
+         <div class="net-pay-box">
+            <div class="net-pay-label">NET PAY</div>
+            <div class="net-pay-amount">BDT @Model.NetSalary.ToString("N2")</div>
+         </div>
+         <div class="footer-section">
+            <div class="signature-box">
+               <div class="signature-line">Employee Signature</div>
+            </div>
+            <div class="signature-box">
+               <div class="signature-line">Authorized Signatory</div>
+            </div>
+         </div>
+         <div class="mt-3 text-center text-muted" style="font-size: 12px;">
+            <p>This is a computer-generated salary slip and does not require a signature.</p>
+            <p>Generated on: @DateTime.Now.ToString("dd MMM yyyy HH:mm")</p>
+         </div>
+      </div>
+      <div class="page-break"></div>
+      @* Employee Copy *@
+      <div class="salary-slip">
+         <div class="slip-header">
+            <div class="company-name">YOUR COMPANY NAME</div>
+            <div>Company Address Line 1, City, Country</div>
+            <div>Phone: +880-XXX-XXXXXXX | Email: info@("@")company.com</div>
+            <div class="slip-title">SALARY SLIP</div>
+            <div class="copy-type">** EMPLOYEE COPY **</div>
+         </div>
+         <div class="row">
+            <div class="col-md-6">
+               <div class="info-row">
+                  <span class="info-label">Employee Code:</span>
+                  <span class="info-value">@ViewBag.EmployeeCode</span>
+               </div>
+               <div class="info-row">
+                  <span class="info-label">Employee Name:</span>
+                  <span class="info-value">@ViewBag.EmployeeName</span>
+               </div>
+               <div class="info-row">
+                  <span class="info-label">Department:</span>
+                  <span class="info-value">@ViewBag.DepartmentName</span>
+               </div>
+               <div class="info-row">
+                  <span class="info-label">Designation:</span>
+                  <span class="info-value">@ViewBag.DesignationName</span>
+               </div>
+            </div>
+            <div class="col-md-6">
+               <div class="info-row">
+                  <span class="info-label">Pay Period:</span>
+                  <span class="info-value">@Model.PayPeriodStart.ToString("dd MMM yyyy") - @Model.PayPeriodEnd.ToString("dd MMM yyyy")</span>
+               </div>
+               <div class="info-row">
+                  <span class="info-label">Payment Date:</span>
+                  <span class="info-value">@(Model.PaymentDate?.ToString("dd MMM yyyy") ?? "N/A")</span>
+               </div>
+               <div class="info-row">
+                  <span class="info-label">Total Days:</span>
+                  <span class="info-value">@Model.TotalDays days</span>
+               </div>
+               <div class="info-row">
+                  <span class="info-label">Payable Days:</span>
+                  <span class="info-value">@Model.PayableDays days</span>
+               </div>
+            </div>
+         </div>
+         <div class="section-title">Attendance Summary</div>
+         <div class="row">
+            <div class="col-md-12">
+               <table class="table table-sm table-bordered">
+                  <tr>
+                     <td><strong>Present:</strong> @Model.PresentDays days</td>
+                     <td><strong>Paid Leave:</strong> @Model.PaidLeaveDays days</td>
+                     <td><strong>Unpaid Leave:</strong> @Model.UnpaidLeaveDays days</td>
+                     <td><strong>Absent:</strong> @Model.AbsentDays days</td>
+                  </tr>
+               </table>
+            </div>
+         </div>
+         <div class="row mt-3">
+            <div class="col-md-6">
+               <div class="section-title">Earnings</div>
+               <table class="earnings-deductions">
+                  <thead>
+                     <tr>
+                        <th>Description</th>
+                        <th class="amount-cell">Amount (BDT)</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     <tr>
+                        <td>Basic Salary (Pro-rated)</td>
+                        <td class="amount-cell">@ViewBag.ProRatedSalary.ToString("N2")</td>
+                     </tr>
+                     @if (ViewBag.Allowances != null && ViewBag.Allowances.Count > 0)
+                     {
+                     foreach (var allowance in ViewBag.Allowances)
+                     {
+                     <tr>
+                        <td>@allowance.AllowanceDeductionName</td>
+                        <td class="amount-cell">
+                           @if (allowance.CalculationType == "Fixed")
+                           {
+                           @allowance.FixedAmount.ToString("N2")
+                           }
+                           else
+                           {
+                           @Math.Round((allowance.Percentage / 100m) * Model.BasicSalary, 2).ToString("N2")
+                           }
+                        </td>
+                     </tr>
+                     }
+                     }
+                     <tr class="total-row">
+                        <td>Total Earnings</td>
+                        <td class="amount-cell">@((ViewBag.ProRatedSalary + Model.TotalAllowances).ToString("N2"))</td>
+                     </tr>
+                  </tbody>
+               </table>
+            </div>
+            <div class="col-md-6">
+               <div class="section-title">Deductions</div>
+               <table class="earnings-deductions">
+                  <thead>
+                     <tr>
+                        <th>Description</th>
+                        <th class="amount-cell">Amount (BDT)</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     @if (ViewBag.Deductions != null && ViewBag.Deductions.Count > 0)
+                     {
+                     foreach (var deduction in ViewBag.Deductions)
+                     {
+                     <tr>
+                        <td>@deduction.AllowanceDeductionName</td>
+                        <td class="amount-cell">
+                           @if (deduction.CalculationType == "Fixed")
+                           {
+                           @deduction.FixedAmount.ToString("N2")
+                           }
+                           else
+                           {
+                           @Math.Round((deduction.Percentage / 100m) * Model.BasicSalary, 2).ToString("N2")
+                           }
+                        </td>
+                     </tr>
+                     }
+                     }
+                     else
+                     {
+                     <tr>
+                        <td colspan="2" class="text-center text-muted">No deductions</td>
+                     </tr>
+                     }
+                     <tr class="total-row">
+                        <td>Total Deductions</td>
+                        <td class="amount-cell">@Model.TotalDeductions.ToString("N2")</td>
+                     </tr>
+                  </tbody>
+               </table>
+            </div>
+         </div>
+         <div class="net-pay-box">
+            <div class="net-pay-label">NET PAY</div>
+            <div class="net-pay-amount">BDT @Model.NetSalary.ToString("N2")</div>
+         </div>
+         <div class="footer-section">
+            <div class="signature-box">
+               <div class="signature-line">Employee Signature</div>
+            </div>
+            <div class="signature-box">
+               <div class="signature-line">Authorized Signatory</div>
+            </div>
+         </div>
+         <div class="mt-3 text-center text-muted" style="font-size: 12px;">
+            <p>This is a computer-generated salary slip and does not require a signature.</p>
+            <p>Generated on: @DateTime.Now.ToString("dd MMM yyyy HH:mm")</p>
+         </div>
+      </div>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+   </body>
+</html>

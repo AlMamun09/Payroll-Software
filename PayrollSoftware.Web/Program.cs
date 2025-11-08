@@ -17,17 +17,17 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<PayrollUser>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false;
-    // Turn off all password validation rules
-    options.Password.RequireDigit = false;
-    options.Password.RequiredLength = 1;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = false;
-    options.Password.RequireLowercase = false;
+ options.SignIn.RequireConfirmedAccount = false;
+ // Turn off all password validation rules
+ options.Password.RequireDigit = false;
+ options.Password.RequiredLength = 1;
+ options.Password.RequireNonAlphanumeric = false;
+ options.Password.RequireUppercase = false;
+ options.Password.RequireLowercase = false;
 
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
-    options.Lockout.MaxFailedAccessAttempts = 5;
-    options.Lockout.AllowedForNewUsers = true;
+ options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
+ options.Lockout.MaxFailedAccessAttempts = 5;
+ options.Lockout.AllowedForNewUsers = true;
 })
  .AddEntityFrameworkStores<ApplicationDbContext>();
 
@@ -44,6 +44,8 @@ builder.Services.AddScoped<ILeaveRepository, LeaveRepository>();
 builder.Services.AddScoped<IAttendanceRepository, AttendanceRepository>();
 
 builder.Services.AddScoped<IAllowanceDeductionRepository, AllowanceDeductionRepository>();
+builder.Services.AddScoped<IPayrollRepository, PayrollRepository>();
+builder.Services.AddScoped<ISalarySlipRepository, SalarySlipRepository>();
 
 var app = builder.Build();
 
