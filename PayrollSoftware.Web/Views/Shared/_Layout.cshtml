@@ -168,11 +168,34 @@
                                 <p>Manage Attendance</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a asp-controller="Leave" asp-action="Index" class="nav-link">
+                        <li class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Leave" ? "menu-open" : "")">
+                            <a href="#" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Leave" ? "active" : "")">
                                 <i class="nav-icon fas fa-calendar-alt"></i>
-                                <p>Manage Leaves</p>
+                                <p>
+                                    Manage Leave
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
                             </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a asp-controller="Leave" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Leave" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Add Leave</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Leave" asp-action="PendingLeaves" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "PendingLeaves" ? "active" : "")">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Pending Leave</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Leave" asp-action="ApprovedLeaves" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "ApprovedLeaves" ? "active" : "")">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Approved Leave</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a asp-controller="Department" asp-action="Index" class="nav-link">
