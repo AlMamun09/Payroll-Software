@@ -1,0 +1,200 @@
+@{
+ ViewData["Title"] = "Approved Leave Applications";
+}
+
+<link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
+
+<div class="card" id="leaveCard" data-list-url="@Url.Action("GetApprovedLeavesJson", "Leave")"
+    data-details-template="@Url.Action("Details", "Leave")/">
+
+<div class="card-header">
+     <h3 class="card-title m-0">
+        <i class="fas fa-check-circle mr-2"></i>Approved Leave Applications
+        </h3>
+    </div>
+
+    <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-md-3">
+      <label for="monthFilter">Filter by Month</label>
+      <input type="month" id="monthFilter" class="form-control" value="@DateTime.Now.ToString("yyyy-MM")" />
+            </div>
+            <div class="col-md-3">
+            <label>&nbsp;</label>
+         <button id="btnClearFilter" class="btn btn-secondary btn-block">Show All</button>
+       </div>
+        </div>
+
+        <table id="leaveTable" class="table table-bordered table-hover w-100">
+            <thead>
+          <tr>
+           <th>Employee ID</th>
+            <th>Employee Name</th>
+      <th>Month</th>
+            <th>Start Date</th>
+      <th>End Date</th>
+<th>Paid Leave</th>
+    <th>Unpaid Leave</th>
+    <th>Total Leave</th>
+      <th style="width:80px;" class="text-center">Action</th>
+      </tr>
+            </thead>
+            <tbody>
+<!-- Data will be loaded via AJAX -->
+            </tbody>
+     </table>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Leave Details</h5>
+           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+           </button>
+            </div>
+       <div class="modal-body">
+      <!-- dynamic details content loads here -->
+  </div>
+         <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+  </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+
+    <script>
+        $(function () {
+  const $card = $('#leaveCard');
+   const listUrl = $card.data('list-url');
+       const detailsTemplate = $card.data('details-template');
+
+  // Initialize DataTable
+    const dataTable = $('#leaveTable').DataTable({
+            processing: true,
+      serverSide: false,
+     ajax: {
+   url: listUrl,
+    type: 'GET',
+        data: function(d) {
+            d.monthFilter = $('#monthFilter').val();
+        },
+         dataSrc: 'data',
+   error: function (xhr, error, thrown) {
+          console.error('DataTables Ajax Error:', xhr.responseText);
+           }
+ },
+       columns: [
+        { data: 'employeeCode', className: 'text-center' },
+        { data: 'employeeName' },
+       { 
+             data: 'month',
+  render: function (data) {
+  // Format: January 2025
+   const date = new Date(data + '-01');
+       return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+  }
+    },
+        { 
+             data: 'startDate',
+render: function (data) {
+          return data ? new Date(data).toLocaleDateString() : '-';
+  }
+            },
+ { 
+     data: 'endDate',
+   render: function (data) {
+ return data ? new Date(data).toLocaleDateString() : '-';
+         }
+    },
+   { 
+     data: 'paidLeaveDays', 
+        className: 'text-center',
+     render: function (data) {
+    return data || '0';
+      }
+        },
+      { 
+         data: 'unpaidLeaveDays', 
+    className: 'text-center',
+              render: function (data) {
+  return data || '0';
+      }
+     },
+  { 
+       data: 'totalLeaveDays', 
+           className: 'text-center font-weight-bold',
+         render: function (data) {
+  return data || '0';
+         }
+        },
+ {
+                data: null,
+     render: function (data, type, row) {
+    return `
+       <div class="text-center">
+    <button class="btn btn-sm btn-info js-details" 
+           data-employee-id="${row.employeeId}" 
+       data-month="${row.month}"
+     title="View Details">
+           <i class="fas fa-eye"></i>
+   </button>
+        </div>`;
+       },
+         orderable: false,
+  className: 'text-center'
+        }
+    ],
+  order: [[2, 'desc'], [1, 'asc']], // Sort by Month desc, then Employee Name asc
+    language: {
+        emptyTable: "No approved leave records found",
+            zeroRecords: "No matching leaves found"
+   }
+            });
+
+        // Details button handler
+$('#leaveTable').on('click', '.js-details', function () {
+     const employeeId = $(this).data('employee-id');
+    const month = $(this).data('month');
+           const employeeName = $(this).closest('tr').find('td:eq(1)').text(); // Get employee name from table
+    
+  $.ajax({
+        url: detailsTemplate + employeeId,
+  type: 'GET',
+  data: { month: month },
+        success: function (response) {
+       $('#detailsModal .modal-body').html(response);
+          // Update modal title with employee name
+         $('#detailsModal .modal-title').text(employeeName + ' - Leave Details');
+ $('#detailsModal').modal('show');
+  },
+  error: function (xhr) {
+ Swal.fire({
+     icon: 'error',
+   title: 'Error',
+        text: xhr.responseJSON?.message || 'Error loading details',
+    confirmButtonColor: '#3085d6'
+ });
+           }
+ });
+  });
+
+          // Month filter change handler
+            $('#monthFilter').change(function () {
+              dataTable.ajax.reload();
+ });
+
+    // Clear filter button handler
+    $('#btnClearFilter').click(function () {
+              $('#monthFilter').val('');
+    dataTable.ajax.reload();
+      });
+  });
+    </script>
+}

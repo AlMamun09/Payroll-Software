@@ -1,21 +1,26 @@
 ﻿@{
-    ViewData["Title"] = "Leave Management";
+    ViewData["Title"] = "Create Leave Page";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+    var filterType = action == "PendingLeaves" ? "Pending" : (action == "ApprovedLeaves" ? "Approved" : "");
+ var pageTitle = action == "PendingLeaves" ? "Pending Leave Applications" : 
+           (action == "ApprovedLeaves" ? "Approved Leave Applications" : "Create Leave Page");
 }
 
 <link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
 
 <div class="card" id="leaveCard" data-list-url="@Url.Action("GetLeavesJson", "Leave")"
+    data-filter-type="@filterType"
     data-create-get="@Url.Action("Create", "Leave")" data-edit-get-template="@Url.Action("Edit", "Leave")/"
     data-delete-template="@Url.Action("Delete", "Leave")/">
 
-    <div class="card-header">
-        <h3 class="card-title m-0">
-            <i class="fas fa-calendar-alt mr-2"></i>Leave Management
+  <div class="card-header">
+      <h3 class="card-title m-0">
+ <i class="fas fa-calendar-alt mr-2"></i>@pageTitle
         </h3>
         <div class="card-tools">
-            <button id="btnAddLeave" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Apply for Leave
-            </button>
+       <button id="btnAddLeave" class="btn btn-primary">
+  <i class="fas fa-plus"></i> Add Leave
+       </button>
         </div>
     </div>
 
@@ -90,44 +95,48 @@
     <script>
         window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
 
-        $(function () {
-            const $card = $('#leaveCard');
-            const listUrl = $card.data('list-url');
+  $(function () {
+  const $card = $('#leaveCard');
+       const listUrl = $card.data('list-url');
+      const filterType = $card.data('filter-type');
 
             // Routes for modal and actions
-            const routes = {
-                createGet: $card.data('create-get'),
-                editGet: (id) => $card.data('edit-get-template') + id,
-                delete: (id) => $card.data('delete-template') + id
-            };
+       const routes = {
+ createGet: $card.data('create-get'),
+         editGet: (id) => $card.data('edit-get-template') + id,
+         delete: (id) => $card.data('delete-template') + id
+    };
 
-            // Initialize modal
-            const leaveModal = CrudModal.init({
-                modalSelector: '#leaveModal',
-                addBtnSelector: '#btnAddLeave',
-                routes,
-                createTitle: 'Apply for Leave',
-                editTitle: 'Edit Leave Application',
-                onSaved: () => dataTable.ajax.reload() // Reload the table when saved
-            });
+      // Initialize modal
+     const leaveModal = CrudModal.init({
+ modalSelector: '#leaveModal',
+       addBtnSelector: '#btnAddLeave',
+       routes,
+     createTitle: 'Add Leave',
+editTitle: 'Edit Leave Application',
+      onSaved: () => dataTable.ajax.reload() // Reload the table when saved
+      });
 
-            // Make table reload function available globally for form callback
-            window.leaveTableReload = function () {
-                dataTable.ajax.reload();
-            };
+      // Make table reload function available globally for form callback
+    window.leaveTableReload = function () {
+       dataTable.ajax.reload();
+    };
 
-            // Initialize DataTable
-            const dataTable = $('#leaveTable').DataTable({
-                processing: true,
-                serverSide: false,
-                ajax: {
-                    url: listUrl,
-                    type: 'GET',
-                    dataSrc: 'data',
-                    error: function (xhr, error, thrown) {
-                        console.error('DataTables Ajax Error:', xhr.responseText);
-                    }
-                },
+   // Initialize DataTable
+       const dataTable = $('#leaveTable').DataTable({
+          processing: true,
+    serverSide: false,
+           ajax: {
+    url: listUrl,
+      type: 'GET',
+    data: function(d) {
+         d.filterType = filterType;
+  },
+            dataSrc: 'data',
+          error: function (xhr, error, thrown) {
+        console.error('DataTables Ajax Error:', xhr.responseText);
+      }
+        },
                 columns: [
                     { data: 'employeeCode', className: 'text-center' },
                     { data: 'employeeName' },

@@ -1,7 +1,7 @@
 ﻿@model PayrollSoftware.Infrastructure.Application.DTOs.LeaveDto
 @{
     Layout = null; // render inside modal without site layout
-    ViewData["Title"] = ViewBag?.Title ?? (Model?.LeaveId != Guid.Empty ? "Edit Leave" : "Create Leave");
+    ViewData["Title"] = ViewBag?.Title ?? (Model?.LeaveId != Guid.Empty ? "Edit Leave" : "Add Leave");
     var formAction = ViewBag?.FormAction as string ?? (Model?.LeaveId != Guid.Empty ? Url.Action("Edit", "Leave") :
     Url.Action("Create", "Leave"));
     var isEdit = Model?.LeaveId != Guid.Empty;
@@ -52,7 +52,7 @@
         </div>
 
         <div class="row">
-            <div class="form-group col-md-6">
+            <div class="form-group col-md-12">
                 <label asp-for="LeaveType">Leave Type</label>
                 <select asp-for="LeaveType" class="form-control select2" id="LeaveType"
                     data-placeholder="Select Leave Type" style="width:100%;">
@@ -64,39 +64,33 @@
                 </select>
                 <span asp-validation-for="LeaveType" class="text-danger"></span>
             </div>
-
-            <div class="form-group col-md-6">
-                <label asp-for="LeaveStatus">Leave Status</label>
-                <select asp-for="LeaveStatus" class="form-control select2" id="LeaveStatus"
-                    data-placeholder="Select Status" style="width:100%;">
-                    <option value="">-- select --</option>
-                    <option value="Pending"
-                        selected="@(string.IsNullOrEmpty(Model?.LeaveStatus) || Model?.LeaveStatus == "Pending")">
-                        Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
-                </select>
-                <span asp-validation-for="LeaveStatus" class="text-danger"></span>
-            </div>
         </div>
 
+        <!-- Hidden Leave Status field - always set to Pending -->
+        <input type="hidden" asp-for="LeaveStatus" id="LeaveStatus" value="Pending" />
+
         <div class="row">
-            <div class="form-group col-md-4">
+            <div class="form-group col-md-3">
                 <label asp-for="StartDate">Start Date</label>
                 <input asp-for="StartDate" type="date" class="form-control" id="StartDate"
                     min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                 <span asp-validation-for="StartDate" class="text-danger"></span>
             </div>
-            <div class="form-group col-md-4">
+            <div class="form-group col-md-3">
                 <label asp-for="EndDate">End Date</label>
                 <input asp-for="EndDate" type="date" class="form-control" id="EndDate"
                     min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                 <span asp-validation-for="EndDate" class="text-danger"></span>
             </div>
-            <div class="form-group col-md-4">
+            <div class="form-group col-md-3">
                 <label>Total Days</label>
                 <input id="TotalDaysPreview" class="form-control" readonly />
                 <small id="TotalDaysHint" class="form-text text-muted">Business days (Sun-Thu).</small>
+            </div>
+            <div class="form-group col-md-3">
+                <label>Leave Status</label>
+                <input id="LeaveStatusDisplay" class="form-control" readonly value="Pending" />
+                <small class="form-text text-muted">Status is automatically set to Pending.</small>
             </div>
         </div>
 
@@ -119,7 +113,7 @@
 <script>
     (function () {
         // Initialize all Select2 dropdowns using common function
-        CommonAjax.initSelect2('#EmployeeId, #LeaveType, #LeaveStatus', {
+        CommonAjax.initSelect2('#EmployeeId, #LeaveType', {
             dropdownParent: $('#leaveModal')
         });
 
