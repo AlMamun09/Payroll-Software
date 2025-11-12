@@ -1,16 +1,16 @@
 ﻿@{
-    ViewData["Title"] = "Create Leave Page";
+    ViewData["Title"] = "Leave";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
     var filterType = action == "PendingLeaves" ? "Pending" : (action == "ApprovedLeaves" ? "Approved" : "");
- var pageTitle = action == "PendingLeaves" ? "Pending Leave Applications" : 
-           (action == "ApprovedLeaves" ? "Approved Leave Applications" : "Create Leave Page");
+    var pageTitle = action == "PendingLeaves" ? "Pending Leave Applications" : 
+           (action == "ApprovedLeaves" ? "Approved Leave Applications" : "Leave Applications");
 }
 
 <link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
 
 <div class="card" id="leaveCard" data-list-url="@Url.Action("GetLeavesJson", "Leave")"
     data-filter-type="@filterType"
-    data-create-get="@Url.Action("Create", "Leave")" data-edit-get-template="@Url.Action("Edit", "Leave")/"
+    data-edit-get-template="@Url.Action("Edit", "Leave")/"
     data-delete-template="@Url.Action("Delete", "Leave")/">
 
   <div class="card-header">
@@ -18,9 +18,9 @@
  <i class="fas fa-calendar-alt mr-2"></i>@pageTitle
         </h3>
         <div class="card-tools">
-       <button id="btnAddLeave" class="btn btn-primary">
+       <a asp-controller="Leave" asp-action="Create" class="btn btn-primary">
   <i class="fas fa-plus"></i> Add Leave
-       </button>
+       </a>
         </div>
     </div>
 
@@ -70,7 +70,7 @@
     @Html.AntiForgeryToken()
 </form>
 
-<!-- Modal -->
+<!-- Modal used for Edit only -->
 <div class="modal fade" id="leaveModal" tabindex="-1" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
@@ -102,15 +102,13 @@
 
             // Routes for modal and actions
        const routes = {
- createGet: $card.data('create-get'),
          editGet: (id) => $card.data('edit-get-template') + id,
          delete: (id) => $card.data('delete-template') + id
     };
 
-      // Initialize modal
+      // Initialize modal (Edit only)
      const leaveModal = CrudModal.init({
  modalSelector: '#leaveModal',
-       addBtnSelector: '#btnAddLeave',
        routes,
      createTitle: 'Add Leave',
 editTitle: 'Edit Leave Application',
