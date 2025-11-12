@@ -1,228 +1,242 @@
 ﻿@model PayrollSoftware.Infrastructure.Application.DTOs.LeaveDto
 @{
-    Layout = null; // render inside modal without site layout
     ViewData["Title"] = ViewBag?.Title ?? (Model?.LeaveId != Guid.Empty ? "Edit Leave" : "Add Leave");
     var formAction = ViewBag?.FormAction as string ?? (Model?.LeaveId != Guid.Empty ? Url.Action("Edit", "Leave") :
     Url.Action("Create", "Leave"));
     var isEdit = Model?.LeaveId != Guid.Empty;
 }
 
-<!-- Select2 CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-<link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title m-0">
+            <i class="fas fa-calendar-plus mr-2"></i>@ViewData["Title"]
+        </h3>
+        <div class="card-tools d-none d-md-block">
+            <a asp-controller="Leave" asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
 
-<div class="p-3">
-    <form id="leaveForm" method="post" action="@formAction">
-        @Html.AntiForgeryToken()
+    <div class="card-body">
+        <form id="leaveForm" method="post" action="@formAction">
+            @Html.AntiForgeryToken()
 
-        @if (isEdit)
-        {
-            <input type="hidden" asp-for="LeaveId" />
-        }
+            @if (isEdit)
+            {
+                <input type="hidden" asp-for="LeaveId" />
+            }
 
-        <!-- Hidden total days for POST; server still computes its own, this is for validation/UI -->
-        <input type="hidden" asp-for="TotalDays" id="TotalDays" />
+            <!-- Hidden total days for POST; server still computes its own, this is for validation/UI -->
+            <input type="hidden" asp-for="TotalDays" id="TotalDays" />
 
-        <div class="row">
-            <div class="form-group col-md-6">
-                <label asp-for="EmployeeId">Employee ID</label>
-                <select asp-for="EmployeeId" class="form-control select2" id="EmployeeId"
-                    data-placeholder="Select Employee ID" style="width:100%;">
-                    <option value="">-- select --</option>
-                    @if (ViewBag.Employees != null)
-                    {
-                        foreach (var e in (IEnumerable<dynamic>)ViewBag.Employees)
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label asp-for="EmployeeId">Employee ID</label>
+                    <select asp-for="EmployeeId" class="form-control select2" id="EmployeeId"
+                        data-placeholder="Select Employee ID" style="width:100%;">
+                        <option value="">-- select --</option>
+                        @if (ViewBag.Employees != null)
                         {
-                            <option value="@e.EmployeeId" data-name="@e.FullName"
-                                selected="@(Model?.EmployeeId == (Guid)e.EmployeeId)">
-                                @e.EmployeeCode
-                            </option>
+                            foreach (var e in (IEnumerable<dynamic>)ViewBag.Employees)
+                            {
+                                <option value="@e.EmployeeId" data-name="@e.FullName"
+                                    selected="@(Model?.EmployeeId == (Guid)e.EmployeeId)">
+                                    @e.EmployeeCode
+                                </option>
+                            }
                         }
-                    }
-                </select>
-                <span asp-validation-for="EmployeeId" class="text-danger"></span>
+                    </select>
+                    <span asp-validation-for="EmployeeId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group col-md-6">
+                    <label>Employee Name</label>
+                    <input id="EmployeeName" class="form-control" readonly placeholder="Select Employee ID first" />
+                    <small class="form-text text-muted">Auto-populated based on Employee ID.</small>
+                </div>
             </div>
 
-            <div class="form-group col-md-6">
-                <label>Employee Name</label>
-                <input id="EmployeeName" class="form-control" readonly placeholder="Select Employee ID first" />
-                <small class="form-text text-muted">Auto-populated based on Employee ID.</small>
+            <div class="row">
+                <div class="form-group col-md-12">
+                    <label asp-for="LeaveType">Leave Type</label>
+                    <select asp-for="LeaveType" class="form-control select2" id="LeaveType"
+                        data-placeholder="Select Leave Type" style="width:100%;">
+                        <option value="">-- select --</option>
+                        <option>Casual</option>
+                        <option>Sick</option>
+                        <option>Earned</option>
+                        <option>Unpaid</option>
+                    </select>
+                    <span asp-validation-for="LeaveType" class="text-danger"></span>
+                </div>
             </div>
-        </div>
 
-        <div class="row">
-            <div class="form-group col-md-12">
-                <label asp-for="LeaveType">Leave Type</label>
-                <select asp-for="LeaveType" class="form-control select2" id="LeaveType"
-                    data-placeholder="Select Leave Type" style="width:100%;">
-                    <option value="">-- select --</option>
-                    <option>Casual</option>
-                    <option>Sick</option>
-                    <option>Earned</option>
-                    <option>Unpaid</option>
-                </select>
-                <span asp-validation-for="LeaveType" class="text-danger"></span>
-            </div>
-        </div>
+            <!-- Hidden Leave Status field - always set to Pending -->
+            <input type="hidden" asp-for="LeaveStatus" id="LeaveStatus" value="Pending" />
 
-        <!-- Hidden Leave Status field - always set to Pending -->
-        <input type="hidden" asp-for="LeaveStatus" id="LeaveStatus" value="Pending" />
+            <div class="row">
+                <div class="form-group col-md-3">
+                    <label asp-for="StartDate">Start Date</label>
+                    <input asp-for="StartDate" type="date" class="form-control" id="StartDate"
+                        min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-3">
+                    <label asp-for="EndDate">End Date</label>
+                    <input asp-for="EndDate" type="date" class="form-control" id="EndDate"
+                        min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Total Days</label>
+                    <input id="TotalDaysPreview" class="form-control" readonly />
+                    <small id="TotalDaysHint" class="form-text text-muted">Business days (Sun-Thu).</small>
+                </div>
+                <div class="form-group col-md-3">
+                    <label>Leave Status</label>
+                    <input id="LeaveStatusDisplay" class="form-control" readonly value="Pending" />
+                    <small class="form-text text-muted">Status is automatically set to Pending.</small>
+                </div>
+            </div>
 
-        <div class="row">
-            <div class="form-group col-md-3">
-                <label asp-for="StartDate">Start Date</label>
-                <input asp-for="StartDate" type="date" class="form-control" id="StartDate"
-                    min="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                <span asp-validation-for="StartDate" class="text-danger"></span>
+            <div class="form-group">
+                <label asp-for="Remarks"></label>
+                <textarea asp-for="Remarks" class="form-control" rows="3"
+                    placeholder="Enter remarks (optional)"></textarea>
+                <span asp-validation-for="Remarks" class="text-danger"></span>
             </div>
-            <div class="form-group col-md-3">
-                <label asp-for="EndDate">End Date</label>
-                <input asp-for="EndDate" type="date" class="form-control" id="EndDate"
-                    min="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                <span asp-validation-for="EndDate" class="text-danger"></span>
-            </div>
-            <div class="form-group col-md-3">
-                <label>Total Days</label>
-                <input id="TotalDaysPreview" class="form-control" readonly />
-                <small id="TotalDaysHint" class="form-text text-muted">Business days (Sun-Thu).</small>
-            </div>
-            <div class="form-group col-md-3">
-                <label>Leave Status</label>
-                <input id="LeaveStatusDisplay" class="form-control" readonly value="Pending" />
-                <small class="form-text text-muted">Status is automatically set to Pending.</small>
-            </div>
-        </div>
 
-        <div class="form-group">
-            <label asp-for="Remarks"></label>
-            <textarea asp-for="Remarks" class="form-control" rows="3" placeholder="Enter remarks (optional)"></textarea>
-            <span asp-validation-for="Remarks" class="text-danger"></span>
-        </div>
-
-        <div class="text-right">
-            <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-        </div>
-    </form>
+            <div class="text-right">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save</button>
+                <button type="button" id="btnCancel" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
 </div>
 
-<!-- Select2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+@section Scripts {
+    <script>
+        (function () {
+            // Initialize all Select2 dropdowns using common function (auto-detect modal parent)
+            CommonAjax.initSelect2('#EmployeeId, #LeaveType');
 
-<script>
-    (function () {
-        // Initialize all Select2 dropdowns using common function
-        CommonAjax.initSelect2('#EmployeeId, #LeaveType', {
-            dropdownParent: $('#leaveModal')
-        });
+            // Handle Employee selection – populate name
+            const empNameEl = document.getElementById('EmployeeName');
 
-        // Handle Employee selection – populate name
-        const empNameEl = document.getElementById('EmployeeName');
-
-        $('#EmployeeId').on('select2:select', function (e) {
-            const selectedOption = e.params.data.element;
-            const empName = selectedOption.getAttribute('data-name') || '';
-            if (empNameEl) empNameEl.value = empName;
-            calcAndPreview();
-        });
-
-        $('#EmployeeId').on('select2:clear', function () {
-            if (empNameEl) empNameEl.value = '';
-        });
-
-        // Set initial employee name if editing
-        const selectedEmp = $('#EmployeeId option:selected');
-        if (selectedEmp.length && selectedEmp.val()) {
-            const empName = selectedEmp.attr('data-name') || '';
-            if (empNameEl) empNameEl.value = empName;
-        }
-
-        // Date and calculation elements
-        const form = document.getElementById('leaveForm');
-        const startEl = document.getElementById('StartDate');
-        const endEl = document.getElementById('EndDate');
-        const totalHidden = document.getElementById('TotalDays');
-        const totalPreview = document.getElementById('TotalDaysPreview');
-        const hint = document.getElementById('TotalDaysHint');
-
-        // Ensure EndDate is not before StartDate
-        function updateMinEnd() {
-            if (!startEl?.value || !endEl) return;
-            endEl.min = startEl.value;
-            if (endEl.value && endEl.value < startEl.value) {
-                endEl.value = startEl.value;
-            }
-        }
-
-        // Set total days and hint message
-        function setTotals(val, message, isError) {
-            if (totalHidden) totalHidden.value = (val || val === 0) ? val : '';
-            if (totalPreview) totalPreview.value = (val || val === 0) ? val : '';
-            if (hint) {
-                hint.textContent = message || '';
-                hint.className = 'form-text ' + (
-                    isError
-                        ? 'text-danger'
-                        : (val > 0 ? 'text-success' : 'text-muted')
-                );
-            }
-        }
-
-        // Calculate and preview total business days using common function
-        function calcAndPreview() {
-            const s = startEl?.value, e = endEl?.value;
-            if (!s || !e) {
-                setTotals('', 'Select start and end dates to calculate.');
-                return;
-            }
-
-            // Use common business days calculation
-            const days = CommonAjax.calculateBusinessDays(s, e);
-            if (days < 0) {
-                setTotals('', 'End date cannot be before start date.', true);
-                return;
-            }
-            setTotals(days, days > 0 ? 'Business days (Sun–Thu).' : 'No business days in range.');
-        }
-
-        // Event listeners
-        startEl?.addEventListener('change', () => {
-            updateMinEnd();
-            calcAndPreview();
-        });
-
-        endEl?.addEventListener('change', () => {
-            calcAndPreview();
-        });
-
-        $('#LeaveType').on('select2:select', () => {
-            calcAndPreview();
-        });
-
-        // Use common form submission handler
-        CommonAjax.submitForm(form, {
-            successTitle: 'Success',
-            errorTitle: 'Validation Error',
-            beforeSubmit: function () {
-                // Ensure calculation is done before submit
+            $('#EmployeeId').on('select2:select', function (e) {
+                const selectedOption = e.params.data.element;
+                const empName = selectedOption.getAttribute('data-name') || '';
+                if (empNameEl) empNameEl.value = empName;
                 calcAndPreview();
-            },
-            onSuccess: function (data) {
-                // Close modal and reload table
-                if (typeof $('#leaveModal')?.modal === 'function') {
-                    $('#leaveModal').modal('hide');
-                    if (window.leaveTableReload) {
-                        window.leaveTableReload();
-                    }
-                } else {
-                    window.location.reload();
+            });
+
+            $('#EmployeeId').on('select2:clear', function () {
+                if (empNameEl) empNameEl.value = '';
+            });
+
+            // Set initial employee name if editing
+            const selectedEmp = $('#EmployeeId option:selected');
+            if (selectedEmp.length && selectedEmp.val()) {
+                const empName = selectedEmp.attr('data-name') || '';
+                if (empNameEl) empNameEl.value = empName;
+            }
+
+            // Date and calculation elements
+            const form = document.getElementById('leaveForm');
+            const startEl = document.getElementById('StartDate');
+            const endEl = document.getElementById('EndDate');
+            const totalHidden = document.getElementById('TotalDays');
+            const totalPreview = document.getElementById('TotalDaysPreview');
+            const hint = document.getElementById('TotalDaysHint');
+
+            // Ensure EndDate is not before StartDate
+            function updateMinEnd() {
+                if (!startEl?.value || !endEl) return;
+                endEl.min = startEl.value;
+                if (endEl.value && endEl.value < startEl.value) {
+                    endEl.value = startEl.value;
                 }
             }
-        });
 
-        // Initial setup
-        updateMinEnd();
-        calcAndPreview();
-    })();
-</script>
+            // Set total days and hint message
+            function setTotals(val, message, isError) {
+                if (totalHidden) totalHidden.value = (val || val === 0) ? val : '';
+                if (totalPreview) totalPreview.value = (val || val === 0) ? val : '';
+                if (hint) {
+                    hint.textContent = message || '';
+                    hint.className = 'form-text ' + (
+                        isError
+                            ? 'text-danger'
+                            : (val > 0 ? 'text-success' : 'text-muted')
+                    );
+                }
+            }
+
+            // Calculate and preview total business days using common function
+            function calcAndPreview() {
+                const s = startEl?.value, e = endEl?.value;
+                if (!s || !e) {
+                    setTotals('', 'Select start and end dates to calculate.');
+                    return;
+                }
+
+                // Use common business days calculation
+                const days = CommonAjax.calculateBusinessDays(s, e);
+                if (days < 0) {
+                    setTotals('', 'End date cannot be before start date.', true);
+                    return;
+                }
+                setTotals(days, days > 0 ? 'Business days (Sun–Thu).' : 'No business days in range.');
+            }
+
+            // Event listeners
+            startEl?.addEventListener('change', () => {
+                updateMinEnd();
+                calcAndPreview();
+            });
+
+            endEl?.addEventListener('change', () => {
+                calcAndPreview();
+            });
+
+            $('#LeaveType').on('select2:select', () => {
+                calcAndPreview();
+            });
+
+            // Use common form submission handler
+            CommonAjax.submitForm(form, {
+                successTitle: 'Success',
+                errorTitle: 'Validation Error',
+                beforeSubmit: function () {
+                    // Ensure calculation is done before submit
+                    calcAndPreview();
+                },
+                onSuccess: function (data) {
+                    // If in modal, close and refresh list; otherwise navigate to list page
+                    if (typeof $('#leaveModal')?.modal === 'function' && $('#leaveModal').length) {
+                        $('#leaveModal').modal('hide');
+                        if (window.leaveTableReload) {
+                            window.leaveTableReload();
+                        }
+                    } else {
+                        window.location.href = '@Url.Action("PendingLeaves", "Leave")';
+                    }
+                }
+            });
+
+            // Cancel handling: close modal if present, else go back to list
+            document.getElementById('btnCancel')?.addEventListener('click', function () {
+                if (typeof $('#leaveModal')?.modal === 'function' && $('#leaveModal').length) {
+                    $('#leaveModal').modal('hide');
+                } else {
+                    window.location.href = '@Url.Action("Create", "Leave")';
+                }
+            });
+
+            // Initial setup
+            updateMinEnd();
+            calcAndPreview();
+        })();
+    </script>
+}

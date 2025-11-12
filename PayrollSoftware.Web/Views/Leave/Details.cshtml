@@ -1,103 +1,193 @@
 @model List<PayrollSoftware.Infrastructure.Domain.Entities.Leave>
 
 <div class="container-fluid">
-    <div class="row mb-3">
-      <div class="col-md-12">
-   <div class="card">
-        <div class="card-body">
-           <h5 class="card-title mb-3">Employee Information</h5>
-   <div class="row">
-   <div class="col-md-4">
- <strong>Employee ID:</strong> @ViewBag.EmployeeCode
-</div>
-      <div class="col-md-4">
-       <strong>Employee Name:</strong> @ViewBag.EmployeeName
-     </div>
-             <div class="col-md-4">
-    <strong>Period:</strong> @ViewBag.Month
+    <!-- Employee Information Card -->
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-user mr-2"></i>Employee Information
+            </h5>
         </div>
- </div>
-         </div>
-</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <strong>Employee ID:</strong> <span class="text-muted">@ViewBag.EmployeeCode</span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Employee Name:</strong> <span class="text-muted">@ViewBag.EmployeeName</span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Period:</strong> <span class="badge badge-info">@ViewBag.Month</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-12">
     @if (Model == null || !Model.Any())
-            {
-        <div class="alert alert-info">
-     <i class="fas fa-info-circle"></i> No approved leave found for this period.
-              </div>
-            }
-            else
-            {
-           @foreach (var leave in Model.OrderBy(l => l.StartDate))
-{
-      <div class="card mb-3 border-left-primary">
-            <div class="card-body">
-   <div class="row">
-         <div class="col-md-6">
-         <p><strong>Employee Name:</strong> @ViewBag.EmployeeName</p>
-            </div>
-<div class="col-md-6">
-    <p><strong>Leave Type:</strong>
-           @if (leave.LeaveType == "Unpaid")
-           {
-          <span class="badge badge-secondary">@leave.LeaveType</span>
-             }
-    else if (leave.LeaveType == "Sick")
-           {
- <span class="badge badge-warning">@leave.LeaveType</span>
-       }
-   else if (leave.LeaveType == "Casual")
     {
-             <span class="badge badge-info">@leave.LeaveType</span>
-        }
-            else
-{
-    <span class="badge badge-primary">@leave.LeaveType</span>
-          }
-  </p>
-          </div>
-      </div>
-       <div class="row">
-  <div class="col-md-4">
-        <p><strong>Start Date:</strong> @leave.StartDate.ToString("dd MMM yyyy")</p>
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <p class="text-muted mb-0">No approved leave found for this period.</p>
+            </div>
         </div>
-         <div class="col-md-4">
-        <p><strong>End Date:</strong> @leave.EndDate.ToString("dd MMM yyyy")</p>
-  </div>
- <div class="col-md-4">
-    <p><strong>Number of Days:</strong> <span class="badge badge-primary badge-pill">@leave.TotalDays days</span></p>
-  </div>
-           </div>
-      <div class="row">
-     <div class="col-md-12">
-    <p><strong>Leave Cause (Remarks):</strong> @(string.IsNullOrWhiteSpace(leave.Remarks) ? "No remarks provided" : leave.Remarks)</p>
+    }
+    else
+    {
+        <!-- Leave Details Table -->
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-check mr-2"></i>Leave Details
+                </h5>
             </div>
-          </div>
-     </div>
-            </div>
-      }
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="text-center" style="width: 5%">#</th>
+                                <th style="width: 15%">Leave Type</th>
+                                <th style="width: 15%">Start Date</th>
+                                <th style="width: 15%">End Date</th>
+                                <th class="text-center" style="width: 10%">Days</th>
+                                <th style="width: 35%">Remarks</th>
+                                <th class="text-center" style="width: 5%">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var counter = 1;
+                                var totalDays = 0;
+                                var paidDays = 0;
+                                var unpaidDays = 0;
+                            }
+                            @foreach (var leave in Model.OrderBy(l => l.StartDate))
+                            {
+                                var isPaid = !string.Equals(leave.LeaveType, "Unpaid", StringComparison.OrdinalIgnoreCase);
+                                totalDays += leave.TotalDays;
+                                if (isPaid)
+                                {
+                                    paidDays += leave.TotalDays;
+                                }
+                                else
+                                {
+                                    unpaidDays += leave.TotalDays;
+                                }
 
-          <div class="card bg-light">
-        <div class="card-body">
-            <h6 class="card-title font-weight-bold">Summary</h6>
-         <div class="row">
-          <div class="col-md-4">
-       <p><strong>Total Leave Days:</strong> <span class="badge badge-dark badge-pill">@Model.Sum(l => l.TotalDays) days</span></p>
-             </div>
- <div class="col-md-4">
-         <p><strong>Paid Leave Days:</strong> <span class="badge badge-success badge-pill">@Model.Where(l => !string.Equals(l.LeaveType, "Unpaid", StringComparison.OrdinalIgnoreCase)).Sum(l => l.TotalDays) days</span></p>
+                                <tr>
+                                    <td class="text-center align-middle">@counter</td>
+                                    <td class="align-middle">
+                                        @if (leave.LeaveType == "Unpaid")
+                                        {
+                                            <span class="badge badge-secondary px-3 py-2">
+                                                <i class="fas fa-minus-circle mr-1"></i>@leave.LeaveType
+                                            </span>
+                                        }
+                                        else if (leave.LeaveType == "Sick")
+                                        {
+                                            <span class="badge badge-warning px-3 py-2">
+                                                <i class="fas fa-medkit mr-1"></i>@leave.LeaveType
+                                            </span>
+                                        }
+                                        else if (leave.LeaveType == "Casual")
+                                        {
+                                            <span class="badge badge-info px-3 py-2">
+                                                <i class="fas fa-umbrella-beach mr-1"></i>@leave.LeaveType
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-primary px-3 py-2">
+                                                <i class="fas fa-calendar-alt mr-1"></i>@leave.LeaveType
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="align-middle">
+                                        <i class="far fa-calendar mr-1 text-muted"></i>
+                                        @leave.StartDate.ToString("dd MMM yyyy")
+                                    </td>
+                                    <td class="align-middle">
+                                        <i class="far fa-calendar mr-1 text-muted"></i>
+                                        @leave.EndDate.ToString("dd MMM yyyy")
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <span class="badge badge-primary badge-pill px-3 py-2 font-weight-bold">
+                                            @leave.TotalDays
+                                        </span>
+                                    </td>
+                                    <td class="align-middle">
+                                        <small class="text-muted">
+                                            @(string.IsNullOrWhiteSpace(leave.Remarks) ? "No remarks provided" : leave.Remarks)
+                                        </small>
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <span class="badge badge-success px-2 py-1">
+                                            <i class="fas fa-check-circle mr-1"></i>Approved
+                                        </span>
+                                    </td>
+                                </tr>
+                                counter++;
+                            }
+                        </tbody>
+                        <tfoot class="bg-light font-weight-bold">
+                            <tr>
+                                <td colspan="4" class="text-right align-middle">
+                                    <strong>Summary:</strong>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <span class="badge badge-dark badge-pill px-3 py-2 font-weight-bold"
+                                        style="font-size: 1rem;">
+                                        @totalDays
+                                    </span>
+                                </td>
+                                <td colspan="2" class="align-middle">
+                                    <span class="badge badge-success mr-2 px-3 py-2">
+                                        <i class="fas fa-check mr-1"></i>Paid: @paidDays days
+                                    </span>
+                                    <span class="badge badge-warning px-3 py-2">
+                                        <i class="fas fa-times mr-1"></i>Unpaid: @unpaidDays days
+                                    </span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
         </div>
-      <div class="col-md-4">
-     <p><strong>Unpaid Leave Days:</strong> <span class="badge badge-warning badge-pill">@Model.Where(l => string.Equals(l.LeaveType, "Unpaid", StringComparison.OrdinalIgnoreCase)).Sum(l => l.TotalDays) days</span></p>
-     </div>
-          </div>
-             </div>
-      </div>
-            }
+
+        <!-- Summary Cards -->
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="card border-dark">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Total Leave Days</h6>
+                        <h2 class="mb-0 text-dark">
+                            <i class="fas fa-calendar-day mr-2"></i>@totalDays
+                        </h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Paid Leave Days</h6>
+                        <h2 class="mb-0 text-success">
+                            <i class="fas fa-check-circle mr-2"></i>@paidDays
+                        </h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted mb-2">Unpaid Leave Days</h6>
+                        <h2 class="mb-0 text-warning">
+                            <i class="fas fa-minus-circle mr-2"></i>@unpaidDays
+                        </h2>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    }
 </div>

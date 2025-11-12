@@ -40,18 +40,27 @@ namespace PayrollSoftware.Web.Controllers
 
                 // Filter only pending leaves
                 leaves = leaves
-                    .Where(l => string.Equals(l.LeaveStatus, "Pending", StringComparison.OrdinalIgnoreCase))
+                    .Where(l =>
+                        string.Equals(l.LeaveStatus, "Pending", StringComparison.OrdinalIgnoreCase)
+                    )
                     .ToList();
 
                 // Optional type filter
                 var typeFilter = (Request.Query["typeFilter"].ToString() ?? string.Empty).Trim();
                 if (!string.IsNullOrWhiteSpace(typeFilter))
                     leaves = leaves
-                        .Where(l => string.Equals(l.LeaveType, typeFilter, StringComparison.OrdinalIgnoreCase))
+                        .Where(l =>
+                            string.Equals(
+                                l.LeaveType,
+                                typeFilter,
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
                         .ToList();
 
                 // Enrich with employee code and name
-                var empLookup = await _context.Employees.AsNoTracking()
+                var empLookup = await _context
+                    .Employees.AsNoTracking()
                     .ToDictionaryAsync(e => e.EmployeeId, e => new { e.EmployeeCode, e.FullName });
 
                 var data = leaves
@@ -92,11 +101,20 @@ namespace PayrollSoftware.Web.Controllers
 
                 // Filter only approved leaves
                 leaves = leaves
-                    .Where(l => string.Equals(l.LeaveStatus, "Approved", StringComparison.OrdinalIgnoreCase))
+                    .Where(l =>
+                        string.Equals(l.LeaveStatus, "Approved", StringComparison.OrdinalIgnoreCase)
+                    )
                     .ToList();
 
                 // Split leaves that span multiple months
-                var splitLeaves = new List<(Guid EmployeeId, string LeaveType, DateTime StartDate, DateTime EndDate, int Days)>();
+                var splitLeaves =
+                    new List<(
+                        Guid EmployeeId,
+                        string LeaveType,
+                        DateTime StartDate,
+                        DateTime EndDate,
+                        int Days
+                    )>();
 
                 foreach (var leave in leaves)
                 {
@@ -105,12 +123,18 @@ namespace PayrollSoftware.Web.Controllers
 
                     while (currentStart <= leaveEnd)
                     {
-                        var monthEnd = new DateTime(currentStart.Year, currentStart.Month, DateTime.DaysInMonth(currentStart.Year, currentStart.Month));
+                        var monthEnd = new DateTime(
+                            currentStart.Year,
+                            currentStart.Month,
+                            DateTime.DaysInMonth(currentStart.Year, currentStart.Month)
+                        );
                         var periodEnd = leaveEnd < monthEnd ? leaveEnd : monthEnd;
 
                         var days = CalculateBusinessDays(currentStart, periodEnd);
 
-                        splitLeaves.Add((leave.EmployeeId, leave.LeaveType ?? "", currentStart, periodEnd, days));
+                        splitLeaves.Add(
+                            (leave.EmployeeId, leave.LeaveType ?? "", currentStart, periodEnd, days)
+                        );
 
                         // Move to next month
                         currentStart = monthEnd.AddDays(1);
@@ -121,7 +145,12 @@ namespace PayrollSoftware.Web.Controllers
                 if (!string.IsNullOrWhiteSpace(monthFilter))
                 {
                     var filterDate = DateTime.Parse(monthFilter + "-01");
-                    splitLeaves = splitLeaves.Where(l => l.StartDate.Year == filterDate.Year && l.StartDate.Month == filterDate.Month).ToList();
+                    splitLeaves = splitLeaves
+                        .Where(l =>
+                            l.StartDate.Year == filterDate.Year
+                            && l.StartDate.Month == filterDate.Month
+                        )
+                        .ToList();
                 }
 
                 // Group by employee and month
@@ -133,14 +162,21 @@ namespace PayrollSoftware.Web.Controllers
                         Month = g.Key.Month,
                         StartDate = g.Min(l => l.StartDate),
                         EndDate = g.Max(l => l.EndDate),
-                        PaidLeaveDays = g.Where(l => !l.LeaveType.Equals("Unpaid", StringComparison.OrdinalIgnoreCase)).Sum(l => l.Days),
-                        UnpaidLeaveDays = g.Where(l => l.LeaveType.Equals("Unpaid", StringComparison.OrdinalIgnoreCase)).Sum(l => l.Days),
-                        TotalLeaveDays = g.Sum(l => l.Days)
+                        PaidLeaveDays = g.Where(l =>
+                                !l.LeaveType.Equals("Unpaid", StringComparison.OrdinalIgnoreCase)
+                            )
+                            .Sum(l => l.Days),
+                        UnpaidLeaveDays = g.Where(l =>
+                                l.LeaveType.Equals("Unpaid", StringComparison.OrdinalIgnoreCase)
+                            )
+                            .Sum(l => l.Days),
+                        TotalLeaveDays = g.Sum(l => l.Days),
                     })
                     .ToList();
 
                 // Enrich with employee details
-                var empLookup = await _context.Employees.AsNoTracking()
+                var empLookup = await _context
+                    .Employees.AsNoTracking()
                     .ToDictionaryAsync(e => e.EmployeeId, e => new { e.EmployeeCode, e.FullName });
 
                 var data = grouped
@@ -158,7 +194,7 @@ namespace PayrollSoftware.Web.Controllers
                         g.EndDate,
                         g.PaidLeaveDays,
                         g.UnpaidLeaveDays,
-                        g.TotalLeaveDays
+                        g.TotalLeaveDays,
                     })
                     .OrderByDescending(x => x.Month)
                     .ThenBy(x => x.EmployeeName)
@@ -192,50 +228,109 @@ namespace PayrollSoftware.Web.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = $"Error approving leave: {ex.Message}" });
+                return StatusCode(
+                    500,
+                    new { success = false, message = $"Error approving leave: {ex.Message}" }
+                );
             }
         }
 
         // GET: /Leave/Details/{employeeId}
         [HttpGet]
+        [Route("Leave/Details/{employeeId:guid}")]
         public async Task<IActionResult> Details(Guid employeeId, string month = "")
         {
             try
             {
-                var leaves = await _leaveRepository.GetAllLeavesAsync();
+                // Log the incoming parameters for debugging
+                Console.WriteLine($"Details called with EmployeeId: {employeeId}, Month: {month}");
 
-                // Filter by employee and approved status
-                leaves = leaves
-                    .Where(l => l.EmployeeId == employeeId && string.Equals(l.LeaveStatus, "Approved", StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-
-                // Filter by month if provided
-                if (!string.IsNullOrWhiteSpace(month))
-                {
-                    var filterDate = DateTime.Parse(month + "-01");
-                    leaves = leaves
-                        .Where(l =>
-                            (l.StartDate.Year == filterDate.Year && l.StartDate.Month == filterDate.Month) ||
-                            (l.EndDate.Year == filterDate.Year && l.EndDate.Month == filterDate.Month) ||
-                            (l.StartDate < filterDate && l.EndDate > filterDate.AddMonths(1).AddDays(-1))
-                        )
-                        .ToList();
-                }
-
-                // Get employee details
-                var employee = await _context.Employees.AsNoTracking()
+                // Get employee details first - Use AsNoTracking for read-only query
+                var employee = await _context
+                    .Employees.AsNoTracking()
                     .Where(e => e.EmployeeId == employeeId)
                     .Select(e => new { e.EmployeeCode, e.FullName })
                     .FirstOrDefaultAsync();
 
+                Console.WriteLine($"Employee found: {employee?.FullName ?? "NULL"}");
+
                 ViewBag.EmployeeCode = employee?.EmployeeCode ?? "N/A";
                 ViewBag.EmployeeName = employee?.FullName ?? "Unknown";
-                ViewBag.Month = !string.IsNullOrWhiteSpace(month) ? DateTime.Parse(month + "-01").ToString("MMMM yyyy") : "All Time";
+
+                // Get ALL leaves for this employee with approved status
+                var allLeaves = await _leaveRepository.GetAllLeavesAsync();
+                Console.WriteLine($"Total leaves in system: {allLeaves.Count()}");
+
+                // Filter by employee and approved status
+                var leaves = allLeaves
+                    .Where(l =>
+                        l.EmployeeId == employeeId
+                        && string.Equals(
+                            l.LeaveStatus,
+                            "Approved",
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                    .ToList();
+
+                Console.WriteLine($"Approved leaves for employee {employeeId}: {leaves.Count}");
+
+                // If month filter is provided, split leaves by month boundaries
+                if (!string.IsNullOrWhiteSpace(month))
+                {
+                    var filterDate = DateTime.Parse(month + "-01");
+                    var monthStart = new DateTime(filterDate.Year, filterDate.Month, 1);
+                    var monthEnd = new DateTime(filterDate.Year, filterDate.Month, DateTime.DaysInMonth(filterDate.Year, filterDate.Month));
+
+                    Console.WriteLine($"Filtering by month: {filterDate:yyyy-MM}");
+                    Console.WriteLine($"Month range: {monthStart:yyyy-MM-dd} to {monthEnd:yyyy-MM-dd}");
+
+                    // Split leaves that span across month boundaries
+                    var splitLeaves = new List<Leave>();
+
+                    foreach (var leave in leaves)
+                    {
+                        // Check if this leave overlaps with the selected month
+                        if (leave.StartDate.Date <= monthEnd && leave.EndDate.Date >= monthStart)
+                        {
+                            // Create a new leave object with dates constrained to the selected month
+                            var splitLeave = new Leave
+                            {
+                                LeaveId = leave.LeaveId,
+                                EmployeeId = leave.EmployeeId,
+                                LeaveType = leave.LeaveType,
+                                LeaveStatus = leave.LeaveStatus,
+                                Remarks = leave.Remarks,
+                                // Constrain start date to be within the month
+                                StartDate = leave.StartDate < monthStart ? monthStart : leave.StartDate,
+                                // Constrain end date to be within the month
+                                EndDate = leave.EndDate > monthEnd ? monthEnd : leave.EndDate
+                            };
+
+                            // Recalculate total days for the split period
+                            splitLeave.TotalDays = CalculateBusinessDays(splitLeave.StartDate, splitLeave.EndDate);
+
+                            splitLeaves.Add(splitLeave);
+
+                            Console.WriteLine($"Split leave {leave.LeaveId}: Original {leave.StartDate:yyyy-MM-dd} to {leave.EndDate:yyyy-MM-dd}, Split to {splitLeave.StartDate:yyyy-MM-dd} to {splitLeave.EndDate:yyyy-MM-dd}, Days: {splitLeave.TotalDays}");
+                        }
+                    }
+
+                    leaves = splitLeaves;
+                    Console.WriteLine($"Leaves after month filter and split: {leaves.Count}");
+                    ViewBag.Month = filterDate.ToString("MMMM yyyy");
+                }
+                else
+                {
+                    ViewBag.Month = "All Time";
+                }
 
                 return PartialView("Details", leaves);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in Details: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 return StatusCode(500, ex.Message);
             }
         }
@@ -340,7 +435,8 @@ namespace PayrollSoftware.Web.Controllers
             await PopulateEmployeesAsync();
             ViewBag.Title = "Add Leave";
             ViewBag.FormAction = Url.Action(nameof(Create));
-            return PartialView(
+            // Return full view instead of PartialView so it uses layout
+            return View(
                 "Create",
                 new LeaveDto { StartDate = DateTime.Today, EndDate = DateTime.Today }
             );
