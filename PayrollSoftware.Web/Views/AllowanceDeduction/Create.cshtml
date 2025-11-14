@@ -19,12 +19,12 @@
                   <label asp-for="AllowanceDeductionType" class="control-label">
                      Type <span class="text-danger">*</span>
                   </label>
-                  <select asp-for="AllowanceDeductionType" class="form-control" required>
-                     <option value="">-- Select Type --</option>
-                     <option value="Allowance">Allowance</option>
-                     <option value="Deduction">Deduction</option>
-                  </select>
-                  <span asp-validation-for="AllowanceDeductionType" class="text-danger"></span>
+                  <select asp-for="AllowanceDeductionType" class="form-control select2" 
+  id="AllowanceDeductionType" data-placeholder="Select Type" 
+        style="width:100%;" required>
+       <option value="">-- Select Type --</option>
+      </select>
+   <span asp-validation-for="AllowanceDeductionType" class="text-danger"></span>
                </div>
 
                <div class="form-group col-md-6">
@@ -42,12 +42,11 @@
                   <label asp-for="CalculationType" class="control-label">
                      Calculation Type <span class="text-danger">*</span>
                   </label>
-                  <select asp-for="CalculationType" id="CalculationType" class="form-control" required>
-                     <option value="">-- Select Calculation Type --</option>
-                     <option value="Fixed">Fixed Amount</option>
-                     <option value="Percentage">Percentage of Basic Salary</option>
-                  </select>
-                  <span asp-validation-for="CalculationType" class="text-danger"></span>
+                  <select asp-for="CalculationType" id="CalculationType" class="form-control select2"
+  data-placeholder="Select Calculation Type" style="width:100%;" required>
+    <option value="">-- Select Calculation Type --</option>
+     </select>
+  <span asp-validation-for="CalculationType" class="text-danger"></span>
                </div>
 
                <div class="form-group col-md-6" id="percentageGroup" style="display:none;">
@@ -145,6 +144,10 @@
       CommonAjax.initSelect2('.select2', {
          dropdownParent: $('#allowanceDeductionModal')
       });
+
+      // Load lookup values
+      CommonAjax.loadLookup('AllowanceDeductionType', '#AllowanceDeductionType', '@Model?.AllowanceDeductionType');
+      CommonAjax.loadLookup('CalculationType', '#CalculationType', '@Model?.CalculationType');
 
       // === Logic for Calculation Type ===
       function toggleCalculationFields() {
