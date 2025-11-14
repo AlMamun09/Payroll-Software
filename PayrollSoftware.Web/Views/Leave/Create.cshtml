@@ -63,10 +63,6 @@
                     <select asp-for="LeaveType" class="form-control select2" id="LeaveType"
                         data-placeholder="Select Leave Type" style="width:100%;">
                         <option value="">-- select --</option>
-                        <option>Casual</option>
-                        <option>Sick</option>
-                        <option>Earned</option>
-                        <option>Unpaid</option>
                     </select>
                     <span asp-validation-for="LeaveType" class="text-danger"></span>
                 </div>
@@ -120,6 +116,9 @@
         (function () {
             // Initialize all Select2 dropdowns using common function (auto-detect modal parent)
             CommonAjax.initSelect2('#EmployeeId, #LeaveType');
+
+            // Load lookup values for Leave Type
+            CommonAjax.loadLookup('LeaveType', '#LeaveType', '@Model?.LeaveType');
 
             // Handle Employee selection – populate name
             const empNameEl = document.getElementById('EmployeeName');

@@ -344,6 +344,46 @@ window.CommonAjax = (function () {
     };
   }
 
+  /**
+   * Load lookup values for dynamic dropdowns
+   * @param {string} lookupType - Type of lookup (e.g., "Gender", "LeaveType")
+   * @param {string} targetSelector - Selector for target dropdown
+   * @param {string} selectedValue - Optional selected value
+   * @returns {Promise} jQuery AJAX promise
+   */
+  function loadLookup(lookupType, targetSelector, selectedValue) {
+    return $.ajax({
+      url: "/Lookup/GetLookupsByType",
+      type: "GET",
+      data: { lookupType: lookupType },
+      success: function (response) {
+        if (response.success && response.data) {
+          const $select = $(targetSelector);
+          $select.empty();
+          $select.append('<option value="">-- select --</option>');
+
+          response.data.forEach(function (item) {
+            const option = new Option(
+              item.lookupValue,
+              item.lookupValue,
+              false,
+              item.lookupValue === selectedValue
+            );
+            $select.append(option);
+          });
+
+          // Refresh Select2 if applicable
+          if ($select.hasClass("select2-hidden-accessible")) {
+            $select.trigger("change.select2");
+          }
+        }
+      },
+      error: function (xhr) {
+        console.error("Error loading lookup:", lookupType, xhr.responseText);
+      },
+    });
+  }
+
   return {
     // AJAX functions
     ajaxGet,
@@ -371,6 +411,7 @@ window.CommonAjax = (function () {
     calculateAge,
     formatDate,
     debounce,
+    loadLookup,
 
     // CSRF helper
     getCsrfHeader,
