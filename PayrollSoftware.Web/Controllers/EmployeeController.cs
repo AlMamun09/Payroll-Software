@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PayrollSoftware.Data;
 using PayrollSoftware.Infrastructure.Application.DTOs;
-using PayrollSoftware.Infrastructure.Domain.Entities;
 using PayrollSoftware.Infrastructure.Application.Interfaces;
+using PayrollSoftware.Infrastructure.Domain.Entities;
 
 namespace PayrollSoftware.Web.Controllers
 {
@@ -12,7 +12,10 @@ namespace PayrollSoftware.Web.Controllers
         private readonly IEmployeeRepository _employeeRepository;
         private readonly ApplicationDbContext _context;
 
-        public EmployeeController(IEmployeeRepository employeeRepository, ApplicationDbContext context)
+        public EmployeeController(
+            IEmployeeRepository employeeRepository,
+            ApplicationDbContext context
+        )
         {
             _employeeRepository = employeeRepository;
             _context = context;
@@ -28,34 +31,30 @@ namespace PayrollSoftware.Web.Controllers
         {
             try
             {
-                // Load related names for listing
-                var deptLookup = await _context.Departments.AsNoTracking().ToDictionaryAsync(d => d.DepartmentId, d => d.DepartmentName);
-                var desigLookup = await _context.Designations.AsNoTracking().ToDictionaryAsync(d => d.DesignationId, d => d.DesignationName);
-
                 var employees = await _employeeRepository.GetAllEmployeesAsync();
-                var dtos = employees.Select(e => new EmployeeDto
-                {
-                    EmployeeId = e.EmployeeId,
-                    EmployeeNumericId = e.EmployeeNumericId,
-                    EmployeeCode = e.EmployeeCode,
-                    FullName = e.FullName,
-                    Gender = e.Gender,
-                    DateOfBirth = e.DateOfBirth,
-                    JoiningDate = e.JoiningDate,
-                    BasicSalary = e.BasicSalary,
-                    EmploymentType = e.EmploymentType,
-                    PaymentSystem = e.PaymentSystem,
-                    AccountHolderName = e.AccountHolderName,
-                    BankAndBranchName = e.BankAndBranchName,
-                    BankAccountNumber = e.BankAccountNumber,
-                    MobileNumber = e.MobileNumber,
-                    Status = e.Status,
-                    DepartmentId = e.DepartmentId,
-                    DesignationId = e.DesignationId,
-                    ShiftId = e.ShiftId,
-                    DepartmentName = deptLookup.TryGetValue(e.DepartmentId, out var dn) ? dn : null,
-                    DesignationName = desigLookup.TryGetValue(e.DesignationId, out var en) ? en : null
-                }).ToList();
+                var dtos = employees
+                    .Select(e => new EmployeeDto
+                    {
+                        EmployeeId = e.EmployeeId,
+                        EmployeeNumericId = e.EmployeeNumericId,
+                        EmployeeCode = e.EmployeeCode,
+                        FullName = e.FullName,
+                        Gender = e.Gender,
+                        DateOfBirth = e.DateOfBirth,
+                        JoiningDate = e.JoiningDate,
+                        BasicSalary = e.BasicSalary,
+                        EmploymentType = e.EmploymentType,
+                        PaymentSystem = e.PaymentSystem,
+                        AccountHolderName = e.AccountHolderName,
+                        BankAndBranchName = e.BankAndBranchName,
+                        BankAccountNumber = e.BankAccountNumber,
+                        MobileNumber = e.MobileNumber,
+                        Status = e.Status,
+                        Department = e.Department,
+                        Designation = e.Designation,
+                        ShiftId = e.ShiftId,
+                    })
+                    .ToList();
 
                 return Json(new { data = dtos });
             }
@@ -71,7 +70,10 @@ namespace PayrollSoftware.Web.Controllers
             await PopulateDropdownsAsync();
             ViewBag.Title = "Create Employee";
             ViewBag.FormAction = Url.Action("Create");
-            return View("Create", new EmployeeDto { DateOfBirth = DateTime.Today, JoiningDate = DateTime.Today });
+            return View(
+                "Create",
+                new EmployeeDto { DateOfBirth = DateTime.Today, JoiningDate = DateTime.Today }
+            );
         }
 
         [HttpPost]
@@ -98,7 +100,10 @@ namespace PayrollSoftware.Web.Controllers
             catch (Exception ex)
             {
                 // Unexpected errors
-                return StatusCode(500, new { success = false, message = $"Error creating employee: {ex.Message}" });
+                return StatusCode(
+                    500,
+                    new { success = false, message = $"Error creating employee: {ex.Message}" }
+                );
             }
         }
 
@@ -141,7 +146,10 @@ namespace PayrollSoftware.Web.Controllers
             catch (Exception ex)
             {
                 // Unexpected errors
-                return StatusCode(500, new { success = false, message = $"Error updating employee: {ex.Message}" });
+                return StatusCode(
+                    500,
+                    new { success = false, message = $"Error updating employee: {ex.Message}" }
+                );
             }
         }
 
@@ -149,17 +157,16 @@ namespace PayrollSoftware.Web.Controllers
         public async Task<IActionResult> Details(Guid id)
         {
             var e = await _employeeRepository.GetEmployeeByIdAsync(id);
-            if (e == null) return NotFound();
+            if (e == null)
+                return NotFound();
 
-            var dept = await _context.Departments.AsNoTracking().FirstOrDefaultAsync(d => d.DepartmentId == e.DepartmentId);
-            var desig = await _context.Designations.AsNoTracking().FirstOrDefaultAsync(d => d.DesignationId == e.DesignationId);
             var shift = e.ShiftId.HasValue
-                ? await _context.Shifts.AsNoTracking().FirstOrDefaultAsync(s => s.ShiftId == e.ShiftId.Value)
+                ? await _context
+                    .Shifts.AsNoTracking()
+                    .FirstOrDefaultAsync(s => s.ShiftId == e.ShiftId.Value)
                 : null;
 
             var dto = MapToDto(e);
-            dto.DepartmentName = dept?.DepartmentName;
-            dto.DesignationName = desig?.DesignationName;
             dto.ShiftName = shift?.ShiftName;
             return View("Details", dto);
         }
@@ -182,8 +189,8 @@ namespace PayrollSoftware.Web.Controllers
             return new Employee
             {
                 EmployeeId = dto.EmployeeId,
-                DesignationId = dto.DesignationId,
-                DepartmentId = dto.DepartmentId,
+                Designation = dto.Designation,
+                Department = dto.Department,
                 ShiftId = dto.ShiftId,
                 EmployeeNumericId = dto.EmployeeNumericId,
                 EmployeeCode = dto.EmployeeCode,
@@ -198,7 +205,7 @@ namespace PayrollSoftware.Web.Controllers
                 BankAndBranchName = dto.BankAndBranchName,
                 BankAccountNumber = dto.BankAccountNumber,
                 MobileNumber = dto.MobileNumber,
-                Status = dto.Status
+                Status = dto.Status,
             };
         }
 
@@ -207,8 +214,8 @@ namespace PayrollSoftware.Web.Controllers
             return new EmployeeDto
             {
                 EmployeeId = entity.EmployeeId,
-                DesignationId = entity.DesignationId,
-                DepartmentId = entity.DepartmentId,
+                Designation = entity.Designation,
+                Department = entity.Department,
                 ShiftId = entity.ShiftId,
                 EmployeeNumericId = entity.EmployeeNumericId,
                 EmployeeCode = entity.EmployeeCode,
@@ -223,30 +230,17 @@ namespace PayrollSoftware.Web.Controllers
                 BankAndBranchName = entity.BankAndBranchName,
                 BankAccountNumber = entity.BankAccountNumber,
                 MobileNumber = entity.MobileNumber,
-                Status = entity.Status
+                Status = entity.Status,
             };
         }
 
         private async Task PopulateDropdownsAsync()
         {
-            ViewBag.Departments = await _context.Departments
-                .AsNoTracking()
-                .Where(d => d.IsActive)
-                .OrderBy(d => d.DepartmentName)
-                .ToListAsync();
-
-            ViewBag.Designations = await _context.Designations
-                .AsNoTracking()
-                .Where(d => d.IsActive)
-                .OrderBy(d => d.DesignationName)
-                .ToListAsync();
-
-            ViewBag.Shifts = await _context.Shifts
-                .AsNoTracking()
+            ViewBag.Shifts = await _context
+                .Shifts.AsNoTracking()
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.ShiftName)
                 .ToListAsync();
         }
-
     }
 }

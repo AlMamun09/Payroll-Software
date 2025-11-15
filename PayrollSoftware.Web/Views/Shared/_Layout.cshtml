@@ -154,22 +154,23 @@
                             </a>
                         </li>
 
+                        <!-- Previous code remains the same until the Manage Leave section -->
                         <!-- MEMBER 1: HR MODULES -->
                         <li class="nav-header">HUMAN RESOURCES</li>
                         <li class="nav-item">
-                            <a asp-controller="Employee" asp-action="Index" class="nav-link">
+                            <a asp-controller="Employee" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Employee" ? "active" : "")">
                                 <i class="nav-icon fas fa-users"></i>
                                 <p>Manage Employees</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a asp-controller="Attendance" asp-action="Index" class="nav-link">
+                            <a asp-controller="Attendance" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Attendance" ? "active" : "")">
                                 <i class="nav-icon fas fa-check-circle"></i>
                                 <p>Manage Attendance</p>
                             </a>
                         </li>
                         <li class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Leave" ? "menu-open" : "")">
-                            <a asp-controller="Leave" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                            <a href="#" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Leave" ? "active" : "")">
                                 <i class="nav-icon fas fa-calendar-alt"></i>
                                 <p>
                                     Manage Leave
@@ -181,6 +182,12 @@
                                     <a asp-controller="Leave" asp-action="Create" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Create" ? "active" : "")">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Add Leave</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Leave" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>All Leaves</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
@@ -198,19 +205,19 @@
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a asp-controller="Department" asp-action="Index" class="nav-link">
+                            <a asp-controller="Department" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Department" ? "active" : "")">
                                 <i class="nav-icon fas fa-building"></i>
                                 <p>Manage Departments</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a asp-controller="Designation" asp-action="Index" class="nav-link">
+                            <a asp-controller="Designation" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Designation" ? "active" : "")">
                                 <i class="nav-icon fas fa-briefcase"></i>
                                 <p>Manage Designations</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a asp-controller="Shift" asp-action="Index" class="nav-link">
+                            <a asp-controller="Shift" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Shift" ? "active" : "")">
                                 <i class="nav-icon fas fa-clock"></i>
                                 <p>Manage Shifts</p>
                             </a>
@@ -219,19 +226,19 @@
                         <!-- MEMBER 2: FINANCE MODULES -->
                         <li class="nav-header">FINANCE & PAYROLL</li>
                         <li class="nav-item">
-                            <a asp-controller="AllowanceDeduction" asp-action="Index" class="nav-link">
+                            <a asp-controller="AllowanceDeduction" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "AllowanceDeduction" ? "active" : "")">
                                 <i class="nav-icon fas fa-cogs"></i>
                                 <p>Allowances & Deductions</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a asp-controller="Payroll" asp-action="Index" class="nav-link">
+                            <a asp-controller="Payroll" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Payroll" ? "active" : "")">
                                 <i class="nav-icon fas fa-calculator"></i>
                                 <p>Process Payroll</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a asp-controller="SalarySlip" asp-action="Index" class="nav-link">
+                            <a asp-controller="SalarySlip" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "SalarySlip" ? "active" : "")">
                                 <i class="nav-icon fas fa-file-invoice-dollar"></i>
                                 <p>Salary Slips</p>
                             </a>
@@ -240,7 +247,7 @@
                         <!-- SYSTEM CONFIGURATION -->
                         <li class="nav-header">SYSTEM CONFIGURATION</li>
                         <li class="nav-item">
-                            <a asp-controller="Lookup" asp-action="Index" class="nav-link">
+                            <a asp-controller="Lookup" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Lookup" ? "active" : "")">
                                 <i class="nav-icon fas fa-list"></i>
                                 <p>Manage Lookups</p>
                             </a>

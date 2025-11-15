@@ -147,28 +147,12 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 e.JoiningDate = e.JoiningDate.Date;
 
             // Designation required and must exist
-            if (e.DesignationId == Guid.Empty)
+            if (e.Designation == string.Empty)
                 errors.Add("Designation is required.");
-            else
-            {
-                var designationExists = await _context
-                    .Designations.AsNoTracking()
-                    .AnyAsync(d => d.DesignationId == e.DesignationId);
-                if (!designationExists)
-                    errors.Add("Invalid designation selected.");
-            }
 
             // Department required and must exist
-            if (e.DepartmentId == Guid.Empty)
+            if (e.Department == string.Empty)
                 errors.Add("Department is required.");
-            else
-            {
-                var deptExists = await _context
-                    .Departments.AsNoTracking()
-                    .AnyAsync(d => d.DepartmentId == e.DepartmentId);
-                if (!deptExists)
-                    errors.Add("Invalid department selected.");
-            }
 
             // Optional Shift - if provided, must exist
             if (e.ShiftId.HasValue)
