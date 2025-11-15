@@ -55,18 +55,16 @@
                 </div>
 
                 <div class="form-group col-md-4">
-                    <label asp-for="DepartmentId">Department</label>
-                    <select asp-for="DepartmentId" class="form-control select2" style="width:100%;"
-                        data-placeholder="Select Department"
-                        asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Department>)ViewBag.Departments, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Department.DepartmentId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Department.DepartmentName))">
+                    <label asp-for="Department">Designation</label>
+                    <select asp-for="Department" class="form-control select2" id="Department"
+                            data-placeholder="Select Department" style="width:100%;">
                         <option value="">-- select --</option>
                     </select>
                 </div>
                 <div class="form-group col-md-4">
-                    <label asp-for="DesignationId">Designation</label>
-                    <select asp-for="DesignationId" class="form-control select2" style="width:100%;"
-                        data-placeholder="Select Designation"
-                        asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Designation>)ViewBag.Designations, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Designation.DesignationId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Designation.DesignationName))">
+                    <label asp-for="Designation">Designation</label>
+                    <select asp-for="Designation" class="form-control select2" id="Designation"
+                            data-placeholder="Select Designation" style="width:100%;">
                         <option value="">-- select --</option>
                     </select>
                 </div>
@@ -131,6 +129,9 @@
         CommonAjax.loadLookup('Status', '#Status', '@Model?.Status');
         CommonAjax.loadLookup('EmploymentType', '#EmploymentType', '@Model?.EmploymentType');
         CommonAjax.loadLookup('PaymentSystem', '#PaymentSystem', '@Model?.PaymentSystem');
+        CommonAjax.loadDepartments('#Department', '@Model?.Department');
+        CommonAjax.loadDesignations('#Designation', '@Model?.Designation');
+
 
         // Payment system conditional fields
         function togglePayment() {

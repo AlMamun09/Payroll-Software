@@ -1,199 +1,198 @@
 @{
-    ViewData["Title"] = "Lookup Management";
+  ViewData["Title"] = "Lookup Management";
 }
 
 <link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
 
 <div class="card" id="lookupCard" data-list-url="@Url.Action("GetLookupsJson", "Lookup")"
-    data-edit-template="@Url.Action("Edit", "Lookup")/"
-    data-delete-template="@Url.Action("Delete", "Lookup")/">
+  data-edit-template="@Url.Action("Edit", "Lookup")/" data-delete-template="@Url.Action("Delete", "Lookup")/">
 
-    <div class="card-header">
+  <div class="card-header">
     <h3 class="card-title m-0">
-            <i class="fas fa-list mr-2"></i>Lookup Management
-     </h3>
-        <div class="card-tools">
-  <a asp-action="Create" class="btn btn-primary">
-       <i class="fas fa-plus"></i> Add Lookup
-         </a>
-        </div>
+      <i class="fas fa-list mr-2"></i>Lookup Management
+    </h3>
+    <div class="card-tools">
+      <a asp-action="Create" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Lookup
+      </a>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="row mb-3">
+      <div class="col-md-3">
+        <label for="typeFilter">Filter by Type</label>
+        <select id="typeFilter" class="form-control">
+          <option value="">All Types</option>
+          <option value="Gender">Gender</option>
+          <option value="LeaveType">Leave Type</option>
+          <option value="EmploymentType">Employment Type</option>
+          <option value="PaymentSystem">Payment System</option>
+          <option value="Status">Status</option>
+          <option value="LeaveStatus">Leave Status</option>
+          <option value="AttendanceStatus">Attendance Status</option>
+          <option value="Department">Department</option>
+          <option value="Designation">Designation</option>
+          <option value="CalculationType">Calculation Type</option>
+          <option value="AllowanceDeductionType">Allowance/Deduction Type</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label for="statusFilter">Filter by Status</label>
+        <select id="statusFilter" class="form-control">
+          <option value="">All Status</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
     </div>
 
-    <div class="card-body">
-        <div class="row mb-3">
-            <div class="col-md-3">
-       <label for="typeFilter">Filter by Type</label>
-   <select id="typeFilter" class="form-control">
-       <option value="">All Types</option>
-        <option value="Gender">Gender</option>
-       <option value="LeaveType">Leave Type</option>
-         <option value="EmploymentType">Employment Type</option>
-     <option value="PaymentSystem">Payment System</option>
- <option value="Status">Status</option>
-     <option value="LeaveStatus">Leave Status</option>
-            <option value="AttendanceStatus">Attendance Status</option>
-         <option value="Department">Department</option>
-         <option value="Designation">Designation</option>
-    <option value="CalculationType">Calculation Type</option>
-   <option value="AllowanceDeductionType">Allowance/Deduction Type</option>
-  </select>
-            </div>
-         <div class="col-md-3">
-     <label for="statusFilter">Filter by Status</label>
-         <select id="statusFilter" class="form-control">
-            <option value="">All Status</option>
-        <option value="Active">Active</option>
-      <option value="Inactive">Inactive</option>
-  </select>
-        </div>
-        </div>
-
-        <table id="lookupTable" class="table table-bordered table-hover w-100">
-     <thead>
+    <table id="lookupTable" class="table table-bordered table-hover w-100">
+      <thead>
         <tr>
-     <th>Lookup Type</th>
-        <th>Lookup Value</th>
-<th style="width:100px;" class="text-center">Display Order</th>
-        <th style="width:100px;" class="text-center">Status</th>
-       <th style="width:100px;" class="text-center">Actions</th>
-         </tr>
-     </thead>
+          <th>Lookup Type</th>
+          <th>Lookup Value</th>
+          <th style="width:100px;" class="text-center">Display Order</th>
+          <th style="width:100px;" class="text-center">Status</th>
+          <th style="width:100px;" class="text-center">Actions</th>
+        </tr>
+      </thead>
       <tbody>
-                <!-- Data will be loaded via AJAX -->
-     </tbody>
+        <!-- Data will be loaded via AJAX -->
+      </tbody>
     </table>
-    </div>
+  </div>
 </div>
 
 <!-- Hidden anti-forgery form to extract token for AJAX -->
 <form id="__afForm" method="post" style="display:none;">
-    @Html.AntiForgeryToken()
+  @Html.AntiForgeryToken()
 </form>
 
 @section Scripts {
-    <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+  <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
 
-    <script>
-        window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
+  <script>
+    window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
 
-        $(function () {
-          const $card = $('#lookupCard');
-            const listUrl = $card.data('list-url');
+    $(function () {
+      const $card = $('#lookupCard');
+      const listUrl = $card.data('list-url');
 
-    // Routes for actions
-            const routes = {
-                edit: (id) => $card.data('edit-template') + id,
+      // Routes for actions
+      const routes = {
+        edit: (id) => $card.data('edit-template') + id,
         delete: (id) => $card.data('delete-template') + id
-          };
+      };
 
-     // Initialize DataTable
-       const dataTable = $('#lookupTable').DataTable({
+      // Initialize DataTable
+      const dataTable = $('#lookupTable').DataTable({
         processing: true,
-          serverSide: false,
-       ajax: {
- url: listUrl,
-       type: 'GET',
-         dataSrc: 'data',
-       error: function (xhr, error, thrown) {
-                console.error('DataTables Ajax Error:', xhr.responseText);
-          CommonAjax.toastError('Failed to load lookup data');
-         }
-     },
-           columns: [
-    {
-       data: 'lookupType',
+        serverSide: false,
+        ajax: {
+          url: listUrl,
+          type: 'GET',
+          dataSrc: 'data',
+          error: function (xhr, error, thrown) {
+            console.error('DataTables Ajax Error:', xhr.responseText);
+            CommonAjax.toastError('Failed to load lookup data');
+          }
+        },
+        columns: [
+          {
+            data: 'lookupType',
             render: function (data) {
-           return `<span class="badge badge-info">${data}</span>`;
-   }
-         },
-    { data: 'lookupValue' },
-           {
-           data: 'displayOrder',
-     className: 'text-center'
-                    },
-        {
-          data: 'isActive',
-      className: 'text-center',
-       render: function (data) {
-        return data
-      ? '<span class="badge badge-success">Active</span>'
-     : '<span class="badge badge-secondary">Inactive</span>';
-      }
-       },
-        {
-      data: 'lookupId',
-         className: 'text-center',
-         render: function (data, type, row) {
-        return `
-  <div class="btn-group btn-group-sm">
-          <a href="${routes.edit(data)}" class="btn btn-info" title="Edit">
-           <i class="fas fa-edit"></i>
-           </a>
-                 <button class="btn btn-danger js-delete" data-id="${data}" title="Delete">
-      <i class="fas fa-trash"></i>
-     </button>
-        </div>`;
+              return `<span class="badge badge-info">${data}</span>`;
+            }
+          },
+          { data: 'lookupValue' },
+          {
+            data: 'displayOrder',
+            className: 'text-center'
+          },
+          {
+            data: 'isActive',
+            className: 'text-center',
+            render: function (data) {
+              return data
+                ? '<span class="badge badge-success">Active</span>'
+                : '<span class="badge badge-secondary">Inactive</span>';
+            }
+          },
+          {
+            data: 'lookupId',
+            className: 'text-center',
+            render: function (data, type, row) {
+              return `
+    <div class="btn-group btn-group-sm">
+            <a href="${routes.edit(data)}" class="btn btn-info" title="Edit">
+             <i class="fas fa-edit"></i>
+             </a>
+                   <button class="btn btn-danger js-delete" data-id="${data}" title="Delete">
+        <i class="fas fa-trash"></i>
+       </button>
+          </div>`;
             },
-           orderable: false
-     }
-       ],
-              order: [[0, 'asc'], [2, 'asc']], // Sort by Type, then Display Order
-   language: {
-    emptyTable: "No lookup values found",
-        zeroRecords: "No matching lookups found"
-             }
-          });
+            orderable: false
+          }
+        ],
+        order: [[0, 'asc'], [2, 'asc']], // Sort by Type, then Display Order
+        language: {
+          emptyTable: "No lookup values found",
+          zeroRecords: "No matching lookups found"
+        }
+      });
 
       // Delete button handler
       $('#lookupTable').on('click', '.js-delete', function () {
-         const lookupId = $(this).data('id');
-     const row = $(this).closest('tr');
-     const rowData = dataTable.row(row).data();
+        const lookupId = $(this).data('id');
+        const row = $(this).closest('tr');
+        const rowData = dataTable.row(row).data();
 
-                CommonAjax.confirm(
-         `Are you sure you want to delete "${rowData.lookupValue}" from ${rowData.lookupType}?`,
-            'Delete Lookup'
-          ).then((result) => {
-      if (result.isConfirmed) {
-      $.ajax({
-          url: routes.delete(lookupId),
-    type: 'POST',
-   headers: {
-      'RequestVerificationToken': window.__AntiForgeryToken
-       },
- success: function (response) {
-  Swal.fire({
- icon: 'success',
-    title: 'Deleted!',
-    text: response.message || 'Lookup deleted successfully!',
-            confirmButtonColor: CommonAjax.SWAL_CONFIG.confirmButtonColor,
- timer: 2000,
-    timerProgressBar: true
-      });
-        dataTable.ajax.reload();
-      },
-          error: function (xhr) {
-  Swal.fire({
-    icon: 'error',
-  title: 'Error',
-   text: xhr.responseJSON?.message || 'Error deleting lookup',
-   confirmButtonColor: CommonAjax.SWAL_CONFIG.confirmButtonColor
-   });
-     }
-        });
+        CommonAjax.confirm(
+          `Are you sure you want to delete "${rowData.lookupValue}" from ${rowData.lookupType}?`,
+          'Delete Lookup'
+        ).then((result) => {
+          if (result.isConfirmed) {
+            $.ajax({
+              url: routes.delete(lookupId),
+              type: 'POST',
+              headers: {
+                'RequestVerificationToken': window.__AntiForgeryToken
+              },
+              success: function (response) {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Deleted!',
+                  text: response.message || 'Lookup deleted successfully!',
+                  confirmButtonColor: CommonAjax.SWAL_CONFIG.confirmButtonColor,
+                  timer: 2000,
+                  timerProgressBar: true
+                });
+                dataTable.ajax.reload();
+              },
+              error: function (xhr) {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: xhr.responseJSON?.message || 'Error deleting lookup',
+                  confirmButtonColor: CommonAjax.SWAL_CONFIG.confirmButtonColor
+                });
               }
-       });
-       });
-
-// Filter functionality
- $('#typeFilter').change(function () {
-      dataTable.column(0).search(this.value).draw();
- });
-
-            $('#statusFilter').change(function () {
-     const searchValue = this.value === 'Active' ? 'Active' : this.value === 'Inactive' ? 'Inactive' : '';
-                dataTable.column(3).search(searchValue).draw();
-     });
+            });
+          }
         });
-    </script>
+      });
+
+      // Filter functionality
+      $('#typeFilter').change(function () {
+        dataTable.column(0).search(this.value).draw();
+      });
+
+      $('#statusFilter').change(function () {
+        const searchValue = this.value === 'Active' ? 'Active' : this.value === 'Inactive' ? 'Inactive' : '';
+        dataTable.column(3).search(searchValue).draw();
+      });
+    });
+  </script>
 }

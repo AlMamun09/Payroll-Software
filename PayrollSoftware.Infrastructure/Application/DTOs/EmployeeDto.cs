@@ -1,12 +1,12 @@
-using System;
-
 namespace PayrollSoftware.Infrastructure.Application.DTOs
 {
     public class EmployeeDto
     {
         public Guid EmployeeId { get; set; }
-        public Guid DesignationId { get; set; }
-        public Guid DepartmentId { get; set; }
+
+        public string? Department { get; set; }
+        public string? Designation { get; set; }
+
         public Guid? ShiftId { get; set; }
         public int EmployeeNumericId { get; set; }
         public string? EmployeeCode { get; set; }

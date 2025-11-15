@@ -17,8 +17,7 @@ namespace PayrollSoftware.Infrastructure.Repositories
         public async Task<IEnumerable<Lookup>> GetAllLookupsAsync()
         {
             return await _context
-                .Lookups.Where(l => l.IsActive)
-                .OrderBy(l => l.LookupType)
+                .Lookups.OrderBy(l => l.LookupType)
                 .ThenBy(l => l.DisplayOrder)
                 .ToListAsync();
         }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace PayrollSoftware.Infrastructure.Domain.Entities
 {
@@ -11,8 +6,8 @@ namespace PayrollSoftware.Infrastructure.Domain.Entities
     {
         [Key]
         public Guid EmployeeId { get; set; }
-        public Guid DesignationId { get; set; }
-        public Guid DepartmentId { get; set; }
+        public string? Department { get; set; }
+        public string? Designation { get; set; }
         public Guid? ShiftId { get; set; }
         public int EmployeeNumericId { get; set; }
         public string? EmployeeCode { get; set; }

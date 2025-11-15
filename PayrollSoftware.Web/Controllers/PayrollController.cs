@@ -233,18 +233,8 @@ namespace PayrollSoftware.Web.Controllers
                 {
                     ViewBag.EmployeeCode = employee.EmployeeCode;
                     ViewBag.EmployeeName = employee.FullName;
-
-                    // Get department name
-                    var department = await _context
-                        .Departments.AsNoTracking()
-                        .FirstOrDefaultAsync(d => d.DepartmentId == employee.DepartmentId);
-                    ViewBag.DepartmentName = department?.DepartmentName ?? "N/A";
-
-                    // Get designation name
-                    var designation = await _context
-                        .Designations.AsNoTracking()
-                        .FirstOrDefaultAsync(d => d.DesignationId == employee.DesignationId);
-                    ViewBag.DesignationName = designation?.DesignationName ?? "N/A";
+                    ViewBag.Department = employee.Department;
+                    ViewBag.Designation = employee.Designation;
                 }
 
                 // Get allowances and deductions applied during this period
@@ -306,18 +296,8 @@ namespace PayrollSoftware.Web.Controllers
                 ViewBag.MobileNumber = employee.MobileNumber;
                 ViewBag.AccountNumber = employee.BankAccountNumber;
                 ViewBag.BankName = employee.BankAndBranchName;
-
-                // Get department name
-                var department = await _context
-                    .Departments.AsNoTracking()
-                    .FirstOrDefaultAsync(d => d.DepartmentId == employee.DepartmentId);
-                ViewBag.DepartmentName = department?.DepartmentName ?? "N/A";
-
-                // Get designation name
-                var designation = await _context
-                    .Designations.AsNoTracking()
-                    .FirstOrDefaultAsync(d => d.DesignationId == employee.DesignationId);
-                ViewBag.DesignationName = designation?.DesignationName ?? "N/A";
+                ViewBag.Department = employee.Department;
+                ViewBag.Designation = employee.Designation;
 
                 // Get allowances and deductions applied during this period
                 var allowancesDeductions = await _context
