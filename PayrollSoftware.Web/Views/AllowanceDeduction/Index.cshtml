@@ -8,7 +8,8 @@
   data-list-url="@Url.Action("GetAllowanceDeductionsJson", "AllowanceDeduction")"
   data-create-get="@Url.Action("Create", "AllowanceDeduction")"
   data-edit-get-template="@Url.Action("Edit", "AllowanceDeduction")/"
-  data-delete-template="@Url.Action("Delete", "AllowanceDeduction")/">
+  data-deactivate-template="@Url.Action("Deactivate", "AllowanceDeduction")/"
+  data-activate-template="@Url.Action("Activate", "AllowanceDeduction")/">
 
   <div class="card-header">
     <h3 class="card-title m-0">
@@ -75,7 +76,8 @@
       const routes = {
         createGet: $card.data('create-get'),
         editGet: (id) => $card.data('edit-get-template') + id,
-        delete: (id) => $card.data('delete-template') + id
+        deactivate: (id) => $card.data('deactivate-template') + id,
+        activate: (id) => $card.data('activate-template') + id
       };
 
       const allowanceDeductionModal = CrudModal.init({
@@ -145,7 +147,7 @@
             render: function (d) {
               return d
                 ? '<span class="badge badge-success">Active</span>'
-                : '<span class="badge badge-secondary">Inactive</span>';
+                : '<span class="badge badge-danger">Inactive</span>';
             }
           }
         ],
@@ -155,21 +157,106 @@
             { className: "text-right align-middle", targets: [3] },
             { className: "align-middle", targets: '_all' }
           ],
-          order: [[6, 'desc']] // Order by Effective From descending
+          order: [[6, 'desc']]
         },
         actions: {
           editSelector: '.js-edit',
-          deleteSelector: '.js-delete',
+          deactivateSelector: '.js-deactivate',
+          activateSelector: '.js-activate',
           renderButtons: (id, row) => `
-          <button class="btn btn-sm btn-warning mr-1 js-edit" data-id="${id}" title="Edit">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-sm btn-danger js-delete" data-id="${id}" title="Delete">
-            <i class="fas fa-trash"></i>
-          </button>
-          `,
+            <button class="btn btn-sm btn-warning mr-1 js-edit" data-id="${id}" title="Edit">
+                <i class="fas fa-edit"></i>
+                    </button>
+                    ${row.isActive
+                              ? `<button class="btn btn-sm btn-danger js-deactivate" data-id="${id}" title="Deactivate">
+                    <i class="fas fa-toggle-off"></i>
+                    </button>`
+                    : `<button class="btn btn-sm btn-success js-activate" data-id="${id}" title="Activate">
+              <i class="fas fa-toggle-on"></i>
+            </button>`
+            }
+            `,
           onEdit: (id) => allowanceDeductionModal.openEdit(id),
-          deleteUrl: (id) => routes.delete(id)
+          onDeactivate: (id) => {
+            Swal.fire({
+              title: 'Deactivate Allowance/Deduction?',
+              text: 'This will mark the allowance/deduction as inactive',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#6c757d',
+              cancelButtonColor: '#3085d6',
+              confirmButtonText: 'Yes, deactivate it!',
+              cancelButtonText: 'Cancel'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                $.ajax({
+                  url: routes.deactivate(id),
+                  method: 'POST',
+                  headers: { 'RequestVerificationToken': window.__AntiForgeryToken },
+                  success: (res) => {
+                    Swal.fire({
+                      icon: 'success',
+                      title: 'Deactivated!',
+                      text: res.message || 'Allowance/Deduction deactivated successfully',
+                      confirmButtonColor: '#3085d6',
+                      timer: 2000,
+                      timerProgressBar: true
+                    });
+                    allowanceDeductionTable.reload();
+                  },
+                  error: (xhr) => {
+                    const msg = xhr.responseJSON?.message || 'Failed to deactivate allowance/deduction';
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Error',
+                      text: msg,
+                      confirmButtonColor: '#3085d6'
+                    });
+                  }
+                });
+              }
+            });
+          },
+          onActivate: (id) => {
+            Swal.fire({
+              title: 'Activate Allowance/Deduction?',
+              text: 'This will mark the allowance/deduction as active',
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonColor: '#28a745',
+              cancelButtonColor: '#6c757d',
+              confirmButtonText: 'Yes, activate it!',
+              cancelButtonText: 'Cancel'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                $.ajax({
+                  url: routes.activate(id),
+                  method: 'POST',
+                  headers: { 'RequestVerificationToken': window.__AntiForgeryToken },
+                  success: (res) => {
+                    Swal.fire({
+                      icon: 'success',
+                      title: 'Activated!',
+                      text: res.message || 'Allowance/Deduction activated successfully',
+                      confirmButtonColor: '#3085d6',
+                      timer: 2000,
+                      timerProgressBar: true
+                    });
+                    allowanceDeductionTable.reload();
+                  },
+                  error: (xhr) => {
+                    const msg = xhr.responseJSON?.message || 'Failed to activate allowance/deduction';
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Error',
+                      text: msg,
+                      confirmButtonColor: '#3085d6'
+                    });
+                  }
+                });
+              }
+            });
+          }
         }
       });
 

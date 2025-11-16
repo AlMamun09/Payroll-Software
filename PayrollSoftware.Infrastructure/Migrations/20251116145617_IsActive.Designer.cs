@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PayrollSoftware.Data;
 
@@ -11,9 +12,11 @@ using PayrollSoftware.Data;
 namespace PayrollSoftware.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251116145617_IsActive")]
+    partial class IsActive
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -174,12 +177,6 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<string>("CalculationType")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("EffectiveFrom")
                         .HasColumnType("datetime2");
 
@@ -204,17 +201,7 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<decimal>("Percentage")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("AllowanceDeductionId");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("PayrollId");
 
                     b.ToTable("AllowanceDeductions");
                 });
@@ -227,12 +214,6 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.Property<DateTime>("AttendanceDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<TimeSpan?>("EarlyLeave")
                         .HasColumnType("time");
@@ -255,20 +236,10 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<decimal>("WorkingHours")
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("AttendanceId");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("ShiftId");
 
                     b.ToTable("Attendances");
                 });
@@ -290,12 +261,6 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.Property<decimal>("BasicSalary")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
@@ -336,15 +301,7 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("EmployeeId");
-
-                    b.HasIndex("ShiftId");
 
                     b.ToTable("Employees");
                 });
@@ -354,12 +311,6 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<Guid>("LeaveId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uniqueidentifier");
@@ -382,15 +333,7 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<int>("TotalDays")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("LeaveId");
-
-                    b.HasIndex("EmployeeId");
 
                     b.ToTable("Leaves");
                 });
@@ -403,9 +346,6 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
@@ -424,9 +364,6 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("LookupId");
 
                     b.ToTable("Lookups");
@@ -444,14 +381,11 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<decimal>("BasicSalary")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<decimal>("NetSalary")
                         .HasColumnType("decimal(18,2)");
@@ -489,15 +423,7 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<int>("UnpaidLeaveDays")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("PayrollId");
-
-                    b.HasIndex("EmployeeId");
 
                     b.ToTable("Payrolls");
                 });
@@ -507,12 +433,6 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<Guid>("SalarySlipId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uniqueidentifier");
@@ -535,20 +455,10 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<decimal>("TotalDeductions")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("Year")
                         .HasColumnType("int");
 
                     b.HasKey("SalarySlipId");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("PayrollId");
 
                     b.ToTable("SalarySlips");
                 });
@@ -558,12 +468,6 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<Guid>("ShiftId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<TimeSpan>("EndTime")
                         .HasColumnType("time");
@@ -576,12 +480,6 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("time");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ShiftId");
 
@@ -708,90 +606,6 @@ namespace PayrollSoftware.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.AllowanceDeduction", b =>
-                {
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId");
-
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Payroll", "Payroll")
-                        .WithMany()
-                        .HasForeignKey("PayrollId");
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Payroll");
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Attendance", b =>
-                {
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Shift", "Shift")
-                        .WithMany()
-                        .HasForeignKey("ShiftId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Shift");
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Employee", b =>
-                {
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Shift", "Shift")
-                        .WithMany()
-                        .HasForeignKey("ShiftId");
-
-                    b.Navigation("Shift");
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Leave", b =>
-                {
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Payroll", b =>
-                {
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.SalarySlip", b =>
-                {
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Payroll", "Payroll")
-                        .WithMany()
-                        .HasForeignKey("PayrollId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Payroll");
                 });
 #pragma warning restore 612, 618
         }

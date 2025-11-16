@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PayrollSoftware.Infrastructure.Domain.Entities
 {
@@ -6,8 +7,13 @@ namespace PayrollSoftware.Infrastructure.Domain.Entities
     {
         [Key]
         public Guid AllowanceDeductionId { get; set; }
+
+        [ForeignKey("Payroll")]
         public Guid? PayrollId { get; set; }
+
+        [ForeignKey("Employee")]
         public Guid? EmployeeId { get; set; }
+
         public string? AllowanceDeductionType { get; set; }
         public string? AllowanceDeductionName { get; set; }
         public string? CalculationType { get; set; }
@@ -15,7 +21,17 @@ namespace PayrollSoftware.Infrastructure.Domain.Entities
         public decimal FixedAmount { get; set; }
         public DateTime EffectiveFrom { get; set; }
         public DateTime? EffectiveTo { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
         public bool IsCompanyWide { get; set; }
+
+        // Navigation properties
+        public virtual Payroll? Payroll { get; set; }
+        public virtual Employee? Employee { get; set; }
+
+        // Audit fields
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public string? CreatedBy { get; set; }
+        public string? UpdatedBy { get; set; }
     }
 }

@@ -203,6 +203,8 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 TotalDeductions = totalDeductions,
                 NetSalary = netSalary,
                 PaymentStatus = "Pending",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             _context.Payrolls.Add(payroll);
@@ -210,20 +212,13 @@ namespace PayrollSoftware.Infrastructure.Repositories
             return payroll;
         }
 
-        public async Task UpdatePayrollAsync(Payroll payroll)
+        public async Task UpdatePayrollAsync(Payroll payroll, string? updatedBy = null)
         {
+            payroll.UpdatedAt = DateTime.UtcNow;
+            payroll.UpdatedBy = updatedBy;
+
             _context.Payrolls.Update(payroll);
             await _context.SaveChangesAsync();
-        }
-
-        public async Task DeletePayrollAsync(Guid payrollId)
-        {
-            var p = await GetPayrollByIdAsync(payrollId);
-            if (p != null)
-            {
-                _context.Payrolls.Remove(p);
-                await _context.SaveChangesAsync();
-            }
         }
     }
 }

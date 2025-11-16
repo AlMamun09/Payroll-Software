@@ -61,7 +61,8 @@ namespace PayrollSoftware.Web.Controllers
             {
                 var entity = MapToEntity(dto);
                 entity.ShiftId = Guid.NewGuid();
-                await _shiftRepository.AddShiftAsync(entity);
+                var userName = User.Identity?.Name;
+                await _shiftRepository.AddShiftAsync(entity, userName);
                 return Json(new { success = true, message = "Shift created successfully." });
             }
             catch (ArgumentException ex)
@@ -100,7 +101,8 @@ namespace PayrollSoftware.Web.Controllers
             try
             {
                 var entity = MapToEntity(dto);
-                await _shiftRepository.UpdateShiftAsync(entity);
+                var userName = User.Identity?.Name;
+                await _shiftRepository.UpdateShiftAsync(entity, userName);
                 return Json(new { success = true, message = "Shift updated successfully." });
             }
             catch (ArgumentException ex)
@@ -118,15 +120,41 @@ namespace PayrollSoftware.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<IActionResult> Deactivate(Guid id)
         {
-            var shift = await _shiftRepository.GetShiftByIdAsync(id);
-            if (shift == null)
+            try
             {
-                return NotFound();
+                var userName = User.Identity?.Name;
+                await _shiftRepository.DeactivateShiftAsync(id, userName);
+                return Json(new { success = true, message = "Shift deactivated successfully." });
             }
-            await _shiftRepository.DeleteShiftAsync(id);
-            return Json(new { success = true, message = "Shift deleted successfully." });
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error deactivating shift: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Activate(Guid id)
+        {
+            try
+            {
+                var userName = User.Identity?.Name;
+                await _shiftRepository.ActivateShiftAsync(id, userName);
+                return Json(new { success = true, message = "Shift activated successfully." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error activating shift: {ex.Message}" });
+            }
         }
 
         private static Shift MapToEntity(ShiftDto dto)

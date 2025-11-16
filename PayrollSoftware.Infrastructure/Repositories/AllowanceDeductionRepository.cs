@@ -83,42 +83,61 @@ namespace PayrollSoftware.Infrastructure.Repositories
             );
         }
 
-        public async Task AddAllowanceDeductionAsync(AllowanceDeduction allowanceDeduction)
+        public async Task AddAllowanceDeductionAsync(AllowanceDeduction allowanceDeduction, string? createdBy = null)
         {
             await ValidateAllowanceDeductionAsync(allowanceDeduction);
+
+            allowanceDeduction.CreatedAt = DateTime.UtcNow;
+            allowanceDeduction.UpdatedAt = DateTime.UtcNow;
+            allowanceDeduction.CreatedBy = createdBy;
+            allowanceDeduction.UpdatedBy = createdBy;
+            allowanceDeduction.IsActive = true;
 
             _context.AllowanceDeductions.Add(allowanceDeduction);
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAllowanceDeductionAsync(AllowanceDeduction allowanceDeduction)
+        public async Task UpdateAllowanceDeductionAsync(AllowanceDeduction allowanceDeduction, string? updatedBy = null)
         {
             await ValidateAllowanceDeductionAsync(allowanceDeduction);
+
+            allowanceDeduction.UpdatedAt = DateTime.UtcNow;
+            allowanceDeduction.UpdatedBy = updatedBy;
 
             _context.AllowanceDeductions.Update(allowanceDeduction);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAllowanceDeductionAsync(Guid allowanceDeductionId)
+        public async Task DeactivateAllowanceDeductionAsync(Guid allowanceDeductionId, string? updatedBy = null)
         {
             var allowanceDeduction = await GetAllowanceDeductionByIdAsync(allowanceDeductionId);
-            if (allowanceDeduction != null)
+            if (allowanceDeduction == null)
             {
-                // Check if this allowance/deduction is linked to any payroll records
-                var isLinkedToPayroll = await _context.AllowanceDeductions.AnyAsync(a =>
-                    a.AllowanceDeductionId == allowanceDeductionId && a.PayrollId != null
-                );
-
-                if (isLinkedToPayroll)
-                {
-                    throw new InvalidOperationException(
-                        "Cannot delete this allowance/deduction as it is linked to payroll records. Please deactivate it instead."
-                    );
-                }
-
-                _context.AllowanceDeductions.Remove(allowanceDeduction);
-                await _context.SaveChangesAsync();
+                throw new InvalidOperationException("Allowance/Deduction not found.");
             }
+
+            allowanceDeduction.IsActive = false;
+            allowanceDeduction.UpdatedAt = DateTime.UtcNow;
+            allowanceDeduction.UpdatedBy = updatedBy;
+
+            _context.AllowanceDeductions.Update(allowanceDeduction);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task ActivateAllowanceDeductionAsync(Guid allowanceDeductionId, string? updatedBy = null)
+        {
+            var allowanceDeduction = await GetAllowanceDeductionByIdAsync(allowanceDeductionId);
+            if (allowanceDeduction == null)
+            {
+                throw new InvalidOperationException("Allowance/Deduction not found.");
+            }
+
+            allowanceDeduction.IsActive = true;
+            allowanceDeduction.UpdatedAt = DateTime.UtcNow;
+            allowanceDeduction.UpdatedBy = updatedBy;
+
+            _context.AllowanceDeductions.Update(allowanceDeduction);
+            await _context.SaveChangesAsync();
         }
 
         public async Task ValidateAllowanceDeductionAsync(AllowanceDeduction ad)
