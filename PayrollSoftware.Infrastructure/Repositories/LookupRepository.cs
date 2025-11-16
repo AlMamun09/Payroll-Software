@@ -25,7 +25,7 @@ namespace PayrollSoftware.Infrastructure.Repositories
         public async Task<IEnumerable<Lookup>> GetLookupsByTypeAsync(string lookupType)
         {
             return await _context
-                .Lookups.Where(l => l.LookupType == lookupType && l.IsActive)
+                .Lookups.Where(l => l.LookupType == lookupType)
                 .OrderBy(l => l.DisplayOrder)
                 .ToListAsync();
         }
@@ -33,7 +33,7 @@ namespace PayrollSoftware.Infrastructure.Repositories
         public async Task<Lookup?> GetLookupByIdAsync(Guid lookupId)
         {
             return await _context.Lookups.FirstOrDefaultAsync(l =>
-                l.LookupId == lookupId && l.IsActive
+                l.LookupId == lookupId
             );
         }
 

@@ -1,8 +1,8 @@
-﻿using System.Text.RegularExpressions;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using PayrollSoftware.Data;
 using PayrollSoftware.Infrastructure.Application.Interfaces;
 using PayrollSoftware.Infrastructure.Domain.Entities;
+using System.Text.RegularExpressions;
 
 namespace PayrollSoftware.Infrastructure.Repositories
 {
@@ -82,6 +82,34 @@ namespace PayrollSoftware.Infrastructure.Repositories
             {
                 _context.Employees.Remove(employee);
                 await _context.SaveChangesAsync();
+            }
+        }
+
+        // Add this method to the EmployeeRepository class
+        public async Task ToggleEmployeeStatusAsync(Guid employeeId)
+        {
+            if (employeeId == Guid.Empty)
+                throw new ArgumentException("Employee ID cannot be empty.");
+
+            var employee = await GetEmployeeByIdAsync(employeeId);
+            if (employee == null)
+                throw new ArgumentException($"Employee with ID {employeeId} not found.");
+
+            try
+            {
+                // Toggle status between Active and Inactive
+                employee.Status = employee.Status == "Active" ? "Inactive" : "Active";
+
+                _context.Employees.Update(employee);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new Exception($"An error occurred while updating employee status: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"An error occurred while toggling employee status: {ex.Message}", ex);
             }
         }
 

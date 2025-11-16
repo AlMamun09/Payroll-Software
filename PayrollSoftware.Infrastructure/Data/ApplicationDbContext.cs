@@ -15,8 +15,6 @@ namespace PayrollSoftware.Data
         public DbSet<SalarySlip> SalarySlips { get; set; }
         public DbSet<Leave> Leaves { get; set; }
         public DbSet<Shift> Shifts { get; set; }
-        public DbSet<Department> Departments { get; set; }
-        public DbSet<Designation> Designations { get; set; }
         public DbSet<AllowanceDeduction> AllowanceDeductions { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<Lookup> Lookups { get; set; }

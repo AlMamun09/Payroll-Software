@@ -384,6 +384,26 @@ window.CommonAjax = (function () {
     });
   }
 
+  /**
+   * Load departments for dropdown
+   * @param {string} targetSelector - Selector for target dropdown
+   * @param {string} selectedValue - Optional selected department value
+   * @returns {Promise} jQuery AJAX promise
+   */
+  function loadDepartments(targetSelector, selectedValue) {
+    return loadLookup('Department', targetSelector, selectedValue);
+  }
+
+  /**
+   * Load designations for dropdown
+   * @param {string} targetSelector - Selector for target dropdown
+   * @param {string} selectedValue - Optional selected designation value
+   * @returns {Promise} jQuery AJAX promise
+   */
+  function loadDesignations(targetSelector, selectedValue) {
+    return loadLookup('Designation', targetSelector, selectedValue);
+  }
+
   return {
     // AJAX functions
     ajaxGet,
@@ -412,6 +432,8 @@ window.CommonAjax = (function () {
     formatDate,
     debounce,
     loadLookup,
+    loadDepartments,
+    loadDesignations,
 
     // CSRF helper
     getCsrfHeader,

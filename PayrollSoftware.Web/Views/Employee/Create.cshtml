@@ -25,14 +25,14 @@
                 <div class="form-group col-md-3">
                     <label asp-for="Gender"></label>
                     <select asp-for="Gender" class="form-control select2" id="Gender"
-                        data-placeholder="Select Gender" style="width:100%;">
+                            data-placeholder="Select Gender" style="width:100%;">
                         <option value="">-- select --</option>
                     </select>
                 </div>
                 <div class="form-group col-md-3">
                     <label asp-for="Status"></label>
                     <select asp-for="Status" class="form-control select2" id="Status"
-                        data-placeholder="Select Status" style="width:100%;">
+                            data-placeholder="Select Status" style="width:100%;">
                         <option value="">-- select --</option>
                     </select>
                 </div>
@@ -55,7 +55,7 @@
                 </div>
 
                 <div class="form-group col-md-4">
-                    <label asp-for="Department">Designation</label>
+                    <label asp-for="Department">Department</label>
                     <select asp-for="Department" class="form-control select2" id="Department"
                             data-placeholder="Select Department" style="width:100%;">
                         <option value="">-- select --</option>
@@ -71,17 +71,16 @@
                 <div class="form-group col-md-4">
                     <label asp-for="ShiftId">Shift</label>
                     <select asp-for="ShiftId" class="form-control select2" style="width:100%;"
-                        data-placeholder="Select Shift"
-                        asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Shift>)ViewBag.Shifts, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Shift.ShiftId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Shift.ShiftName))">
+                            data-placeholder="Select Shift"
+                            asp-items="new SelectList((IEnumerable<PayrollSoftware.Infrastructure.Domain.Entities.Shift>)ViewBag.Shifts, nameof(PayrollSoftware.Infrastructure.Domain.Entities.Shift.ShiftId), nameof(PayrollSoftware.Infrastructure.Domain.Entities.Shift.ShiftName))">
                         <option value="">-- Select --</option>
                     </select>
                 </div>
 
-                <!-- Updated Employment Type with Select2 -->
                 <div class="form-group col-md-4">
                     <label asp-for="EmploymentType">Employment Type</label>
                     <select asp-for="EmploymentType" class="form-control select2" id="EmploymentType"
-                        data-placeholder="Select Employment Type" style="width:100%;">
+                            data-placeholder="Select Employment Type" style="width:100%;">
                         <option value="">-- select --</option>
                     </select>
                 </div>
@@ -89,24 +88,24 @@
                 <div class="form-group col-md-4">
                     <label asp-for="PaymentSystem"></label>
                     <select asp-for="PaymentSystem" class="form-control select2" id="PaymentSystem"
-                        data-placeholder="Select Payment System" style="width:100%;">
+                            data-placeholder="Select Payment System" style="width:100%;">
                         <option value="">-- select --</option>
                     </select>
                 </div>
-                <div class="form-group col-md-4" id="MobileNumberGroup">
+                <div class="form-group col-md-4 d-none" id="MobileNumberGroup">
                     <label asp-for="MobileNumber"></label>
                     <input asp-for="MobileNumber" class="form-control" id="MobileNumber" />
                 </div>
 
-                <div class="form-group col-md-4 bank-only">
+                <div class="form-group col-md-4 bank-only d-none">
                     <label asp-for="AccountHolderName"></label>
                     <input asp-for="AccountHolderName" class="form-control" />
                 </div>
-                <div class="form-group col-md-4 bank-only">
+                <div class="form-group col-md-4 bank-only d-none">
                     <label asp-for="BankAndBranchName"></label>
                     <input asp-for="BankAndBranchName" class="form-control" />
                 </div>
-                <div class="form-group col-md-4 bank-only">
+                <div class="form-group col-md-4 bank-only d-none">
                     <label asp-for="BankAccountNumber"></label>
                     <input asp-for="BankAccountNumber" class="form-control" />
                 </div>
@@ -124,26 +123,45 @@
         // Initialize all Select2 dropdowns using common function
         CommonAjax.initSelect2('.select2');
 
+        // Payment system conditional fields
+        function togglePayment() {
+            const v = $('#PaymentSystem').val();
+            console.log('Payment System changed to:', v); // Debug log
+
+            const showBank = v === 'Bank Transfer';
+            const showMobile = v === 'Mobile Banking';
+
+            // Hide/show bank fields
+            if (showBank) {
+                $('.bank-only').removeClass('d-none');
+            } else {
+                $('.bank-only').addClass('d-none');
+            }
+
+            // Hide/show mobile field
+            if (showMobile) {
+                $('#MobileNumberGroup').removeClass('d-none');
+            } else {
+                $('#MobileNumberGroup').addClass('d-none');
+            }
+        }
+
+        // Attach event handlers BEFORE loading data
+        $('#PaymentSystem').on('change select2:select', togglePayment);
+
         // Load lookup values for dynamic dropdowns
         CommonAjax.loadLookup('Gender', '#Gender', '@Model?.Gender');
         CommonAjax.loadLookup('Status', '#Status', '@Model?.Status');
         CommonAjax.loadLookup('EmploymentType', '#EmploymentType', '@Model?.EmploymentType');
-        CommonAjax.loadLookup('PaymentSystem', '#PaymentSystem', '@Model?.PaymentSystem');
+
+        // Load PaymentSystem and trigger toggle AFTER loading
+        CommonAjax.loadLookup('PaymentSystem', '#PaymentSystem', '@Model?.PaymentSystem').done(function() {
+            // Trigger toggle after lookup is loaded
+            setTimeout(togglePayment, 100);
+        });
+
         CommonAjax.loadDepartments('#Department', '@Model?.Department');
         CommonAjax.loadDesignations('#Designation', '@Model?.Designation');
-
-
-        // Payment system conditional fields
-        function togglePayment() {
-            const v = $('#PaymentSystem').val();
-            const showBank = v === 'Bank Transfer';
-            const showMobile = v === 'Mobile Banking';
-            $('.bank-only').toggleClass('d-none', !showBank);
-            $('#MobileNumberGroup').toggleClass('d-none', !showMobile);
-        }
-
-        $('#PaymentSystem').on('change select2:select', togglePayment);
-        togglePayment();
     </script>
 
     <script>

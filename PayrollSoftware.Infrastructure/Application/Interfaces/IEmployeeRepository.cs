@@ -1,9 +1,4 @@
 ﻿using PayrollSoftware.Infrastructure.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PayrollSoftware.Infrastructure.Application.Interfaces
 {
@@ -14,6 +9,6 @@ namespace PayrollSoftware.Infrastructure.Application.Interfaces
         Task AddEmployeeAsync(Employee employee);
         Task UpdateEmployeeAsync(Employee employee);
         Task DeleteEmployeeAsync(Guid employeeId);
-
+        Task ToggleEmployeeStatusAsync(Guid employeeId);
     }
 }
