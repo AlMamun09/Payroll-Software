@@ -90,7 +90,8 @@ namespace PayrollSoftware.Web.Controllers
             {
                 var entity = MapToEntity(dto);
                 entity.AllowanceDeductionId = Guid.NewGuid();
-                await _allowanceDeductionRepository.AddAllowanceDeductionAsync(entity);
+                var userName = User.Identity?.Name;
+                await _allowanceDeductionRepository.AddAllowanceDeductionAsync(entity, userName);
                 return Json(
                     new { success = true, message = "Allowance/Deduction created successfully." }
                 );
@@ -139,7 +140,8 @@ namespace PayrollSoftware.Web.Controllers
             try
             {
                 var entity = MapToEntity(dto);
-                await _allowanceDeductionRepository.UpdateAllowanceDeductionAsync(entity);
+                var userName = User.Identity?.Name;
+                await _allowanceDeductionRepository.UpdateAllowanceDeductionAsync(entity, userName);
                 return Json(
                     new { success = true, message = "Allowance/Deduction updated successfully." }
                 );
@@ -166,21 +168,14 @@ namespace PayrollSoftware.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Delete(Guid id)
+        public async Task<IActionResult> Deactivate(Guid id)
         {
             try
             {
-                var entity = await _allowanceDeductionRepository.GetAllowanceDeductionByIdAsync(id);
-                if (entity == null)
-                {
-                    return NotFound(
-                        new { success = false, message = "Allowance/Deduction not found." }
-                    );
-                }
-
-                await _allowanceDeductionRepository.DeleteAllowanceDeductionAsync(id);
+                var userName = User.Identity?.Name;
+                await _allowanceDeductionRepository.DeactivateAllowanceDeductionAsync(id, userName);
                 return Json(
-                    new { success = true, message = "Allowance/Deduction deleted successfully." }
+                    new { success = true, message = "Allowance/Deduction deactivated successfully." }
                 );
             }
             catch (InvalidOperationException ex)
@@ -194,7 +189,35 @@ namespace PayrollSoftware.Web.Controllers
                     new
                     {
                         success = false,
-                        message = $"Error deleting allowance/deduction: {ex.Message}",
+                        message = $"Error deactivating allowance/deduction: {ex.Message}",
+                    }
+                );
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Activate(Guid id)
+        {
+            try
+            {
+                var userName = User.Identity?.Name;
+                await _allowanceDeductionRepository.ActivateAllowanceDeductionAsync(id, userName);
+                return Json(
+                    new { success = true, message = "Allowance/Deduction activated successfully." }
+                );
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    500,
+                    new
+                    {
+                        success = false,
+                        message = $"Error activating allowance/deduction: {ex.Message}",
                     }
                 );
             }

@@ -37,30 +37,61 @@ namespace PayrollSoftware.Infrastructure.Repositories
             return await Task.FromResult(_context.Shifts.FirstOrDefault(s => s.ShiftId == shiftId));
         }
 
-        public async Task AddShiftAsync(Shift shift)
+        public async Task AddShiftAsync(Shift shift, string? createdBy = null)
         {
             await ValidateShiftAsync(shift);
+
+            shift.CreatedAt = DateTime.UtcNow;
+            shift.UpdatedAt = DateTime.UtcNow;
+            shift.CreatedBy = createdBy;
+            shift.UpdatedBy = createdBy;
+            shift.IsActive = true;
 
             _context.Shifts.Add(shift);
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateShiftAsync(Shift shift)
+        public async Task UpdateShiftAsync(Shift shift, string? updatedBy = null)
         {
             await ValidateShiftAsync(shift);
+
+            shift.UpdatedAt = DateTime.UtcNow;
+            shift.UpdatedBy = updatedBy;
 
             _context.Shifts.Update(shift);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteShiftAsync(Guid shiftId)
+        public async Task DeactivateShiftAsync(Guid shiftId, string? updatedBy = null)
         {
             var shift = await GetShiftByIdAsync(shiftId);
-            if (shift != null)
+            if (shift == null)
             {
-                _context.Shifts.Remove(shift);
-                await _context.SaveChangesAsync();
+                throw new InvalidOperationException("Shift not found.");
             }
+
+            shift.IsActive = false;
+            shift.UpdatedAt = DateTime.UtcNow;
+            shift.UpdatedBy = updatedBy;
+
+            _context.Shifts.Update(shift);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task ActivateShiftAsync(Guid shiftId, string? updatedBy = null)
+        {
+            var shift = await GetShiftByIdAsync(shiftId);
+            if (shift == null)
+            {
+                throw new InvalidOperationException("Shift not found.");
+            }
+
+            shift.IsActive = true;
+            shift.UpdatedAt = DateTime.UtcNow;
+            shift.UpdatedBy = updatedBy;
+
+            _context.Shifts.Update(shift);
+            await _context.SaveChangesAsync();
         }
 
         // Centralized validation logic for Shift entity

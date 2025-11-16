@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PayrollSoftware.Infrastructure.Domain.Entities
 {
@@ -6,22 +7,34 @@ namespace PayrollSoftware.Infrastructure.Domain.Entities
     {
         [Key]
         public Guid EmployeeId { get; set; }
-        public string? Department { get; set; }
-        public string? Designation { get; set; }
+
+        [ForeignKey("Shift")]
         public Guid? ShiftId { get; set; }
+
         public int EmployeeNumericId { get; set; }
         public string? EmployeeCode { get; set; }
         public string? FullName { get; set; }
         public string? Gender { get; set; }
         public DateTime DateOfBirth { get; set; }
         public DateTime JoiningDate { get; set; }
+        public string? Department { get; set; }
+        public string? Designation { get; set; }
         public decimal BasicSalary { get; set; }
         public string? EmploymentType { get; set; }
+        public string? Status { get; set; } = "Active";
+        public string? MobileNumber { get; set; }
         public string? PaymentSystem { get; set; }
         public string? AccountHolderName { get; set; }
         public string? BankAndBranchName { get; set; }
         public string? BankAccountNumber { get; set; }
-        public string? MobileNumber { get; set; }
-        public string? Status { get; set; }
+
+        // Navigation property
+        public virtual Shift? Shift { get; set; }
+
+        // Audit fields
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public string? CreatedBy { get; set; }
+        public string? UpdatedBy { get; set; }
     }
 }

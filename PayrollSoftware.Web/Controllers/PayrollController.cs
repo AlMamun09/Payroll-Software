@@ -28,11 +28,24 @@ namespace PayrollSoftware.Web.Controllers
         public IActionResult Index() => View();
 
         [HttpGet]
-        public async Task<IActionResult> GetPayrollsJson()
+        public async Task<IActionResult> GetPayrollsJson(string? monthFilter = null)
         {
             try
             {
                 var payrolls = await _payrollRepository.GetAllPayrollsAsync();
+
+                // Apply month filter if provided
+                if (!string.IsNullOrWhiteSpace(monthFilter))
+                {
+                    var filterDate = DateTime.Parse(monthFilter + "-01");
+                    payrolls = payrolls
+                        .Where(p =>
+                            p.PayPeriodStart.Year == filterDate.Year
+                            && p.PayPeriodStart.Month == filterDate.Month
+                        )
+                        .ToList();
+                }
+
                 // Include BasicSalary from Employee table (original), not the pro-rated stored in payroll record
                 var empLookup = await _context
                     .Employees.AsNoTracking()
@@ -72,9 +85,12 @@ namespace PayrollSoftware.Web.Controllers
                         p.TotalDeductions,
                         p.NetSalary,
                         p.PaymentStatus,
-                        p.PaymentDate,
+                        p.PaymentDate
                     })
+                    .OrderByDescending(p => p.PayPeriodStart)
+                    .ThenBy(p => p.EmployeeName)
                     .ToList();
+
                 return Json(new { data = dtos });
             }
             catch (Exception ex)
@@ -85,31 +101,60 @@ namespace PayrollSoftware.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Process(
-            Guid employeeId,
-            DateTime periodStart,
-            DateTime periodEnd
-        )
+        public async Task<IActionResult> Process(Guid employeeId, string payrollMonth)
         {
             try
             {
                 if (employeeId == Guid.Empty)
                     return BadRequest(new { success = false, message = "Employee is required." });
-                if (periodEnd < periodStart)
+
+                if (string.IsNullOrWhiteSpace(payrollMonth))
                     return BadRequest(
-                        new { success = false, message = "End date cannot be before start date." }
+                        new { success = false, message = "Payroll month is required." }
                     );
+
+                // Parse the month input (format: YYYY-MM)
+                if (!DateTime.TryParse(payrollMonth + "-01", out DateTime monthDate))
+                    return BadRequest(new { success = false, message = "Invalid month format." });
+
+                // Calculate start and end dates for the month
+                DateTime periodStart = new DateTime(monthDate.Year, monthDate.Month, 1);
+                DateTime periodEnd = new DateTime(
+                    monthDate.Year,
+                    monthDate.Month,
+                    DateTime.DaysInMonth(monthDate.Year, monthDate.Month)
+                );
+
+                // Check if payroll already exists for this employee and month
+                var existingPayroll = await _payrollRepository.GetAllPayrollsAsync();
+                var duplicate = existingPayroll.FirstOrDefault(p =>
+                    p.EmployeeId == employeeId
+                    && p.PayPeriodStart.Year == periodStart.Year
+                    && p.PayPeriodStart.Month == periodStart.Month
+                );
+
+                if (duplicate != null)
+                {
+                    return BadRequest(
+                        new
+                        {
+                            success = false,
+                            message = $"Payroll for this employee in {monthDate:MMMM yyyy} already exists.",
+                        }
+                    );
+                }
 
                 var payroll = await _payrollRepository.ProcessPayrollAsync(
                     employeeId,
-                    periodStart.Date,
-                    periodEnd.Date
+                    periodStart,
+                    periodEnd
                 );
+
                 return Json(
                     new
                     {
                         success = true,
-                        message = "Payroll processed successfully.",
+                        message = $"Payroll for {monthDate:MMMM yyyy} processed successfully.",
                         id = payroll.PayrollId,
                     }
                 );
@@ -141,10 +186,17 @@ namespace PayrollSoftware.Web.Controllers
                 if (payroll == null)
                     return NotFound(new { success = false, message = "Payroll not found." });
 
+                // Check if already paid
+                if (payroll.PaymentStatus == "Paid")
+                {
+                    return BadRequest(new { success = false, message = "Payroll is already marked as paid." });
+                }
+
                 // Mark as paid
                 payroll.PaymentStatus = "Paid";
                 payroll.PaymentDate = DateTime.UtcNow;
-                await _payrollRepository.UpdatePayrollAsync(payroll);
+                var userName = User.Identity?.Name;
+                await _payrollRepository.UpdatePayrollAsync(payroll, userName);
 
                 // Generate salary slip
                 var existingSlip = await _salarySlipRepository.GetSalarySlipByPayrollIdAsync(
@@ -195,21 +247,6 @@ namespace PayrollSoftware.Web.Controllers
 
                 TempData["Error"] = $"Error: {ex.Message}";
                 return RedirectToAction(nameof(Index));
-            }
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            try
-            {
-                await _payrollRepository.DeletePayrollAsync(id);
-                return Json(new { success = true, message = "Payroll deleted successfully." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
 

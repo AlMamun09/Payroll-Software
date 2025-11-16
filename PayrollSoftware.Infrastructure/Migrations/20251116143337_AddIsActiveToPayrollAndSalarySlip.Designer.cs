@@ -12,8 +12,8 @@ using PayrollSoftware.Data;
 namespace PayrollSoftware.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251116065812_DropDepartmentAndDesignationTables")]
-    partial class DropDepartmentAndDesignationTables
+    [Migration("20251116143337_AddIsActiveToPayrollAndSalarySlip")]
+    partial class AddIsActiveToPayrollAndSalarySlip
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -244,40 +244,6 @@ namespace PayrollSoftware.Data.Migrations
                     b.ToTable("Attendances");
                 });
 
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Department", b =>
-                {
-                    b.Property<Guid>("DepartmentId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("DepartmentName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.HasKey("DepartmentId");
-
-                    b.ToTable("Departments");
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Designation", b =>
-                {
-                    b.Property<Guid>("DesignationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("DesignationName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.HasKey("DesignationId");
-
-                    b.ToTable("Designations");
-                });
-
             modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Employee", b =>
                 {
                     b.Property<Guid>("EmployeeId")
@@ -415,8 +381,14 @@ namespace PayrollSoftware.Data.Migrations
                     b.Property<decimal>("BasicSalary")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime?>("DeactivatedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<decimal>("NetSalary")
                         .HasColumnType("decimal(18,2)");
@@ -465,6 +437,9 @@ namespace PayrollSoftware.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("DeactivatedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uniqueidentifier");
 
@@ -473,6 +448,9 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.Property<decimal>("GrossEarnings")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Month")
                         .HasColumnType("int");

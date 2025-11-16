@@ -131,6 +131,41 @@ namespace PayrollSoftware.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Deactivate(Guid id)
+        {
+            try
+            {
+                await _lookupRepository.DeleteLookupAsync(id);
+                return Json(new { success = true, message = "Lookup deactivated successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Activate(Guid id)
+        {
+            try
+            {
+                var lookup = await _lookupRepository.GetLookupByIdAsync(id);
+                if (lookup == null)
+                    return NotFound(new { success = false, message = "Lookup not found." });
+
+                lookup.IsActive = true;
+                await _lookupRepository.UpdateLookupAsync(lookup);
+                return Json(new { success = true, message = "Lookup activated successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
         public async Task<IActionResult> Delete(Guid id)
         {
             try

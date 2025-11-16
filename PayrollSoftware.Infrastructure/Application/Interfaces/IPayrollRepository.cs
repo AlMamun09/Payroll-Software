@@ -12,8 +12,7 @@ namespace PayrollSoftware.Infrastructure.Application.Interfaces
             DateTime periodEnd,
             CancellationToken ct = default
         );
-        Task UpdatePayrollAsync(Payroll payroll);
-        Task DeletePayrollAsync(Guid payrollId);
+        Task UpdatePayrollAsync(Payroll payroll, string? updatedBy = null);
         Task<bool> ExistsAsync(Guid employeeId, DateTime periodStart, DateTime periodEnd);
     }
 }
