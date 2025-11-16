@@ -2,25 +2,25 @@
     ViewData["Title"] = "Leave";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
     var filterType = action == "PendingLeaves" ? "Pending" : (action == "ApprovedLeaves" ? "Approved" : "");
-    var pageTitle = action == "PendingLeaves" ? "Pending Leave Applications" : 
+    var pageTitle = action == "PendingLeaves" ? "Pending Leave Applications" :
            (action == "ApprovedLeaves" ? "Approved Leave Applications" : "Leave Applications");
 }
 
 <link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
 
 <div class="card" id="leaveCard" data-list-url="@Url.Action("GetLeavesJson", "Leave")"
-    data-filter-type="@filterType"
-    data-edit-get-template="@Url.Action("Edit", "Leave")/"
-    data-delete-template="@Url.Action("Delete", "Leave")/">
+     data-filter-type="@filterType"
+     data-edit-get-template="@Url.Action("Edit", "Leave")/"
+     data-delete-template="@Url.Action("Delete", "Leave")/">
 
-  <div class="card-header">
-      <h3 class="card-title m-0">
- <i class="fas fa-calendar-alt mr-2"></i>@pageTitle
+    <div class="card-header">
+        <h3 class="card-title m-0">
+            <i class="fas fa-calendar-alt mr-2"></i>@pageTitle
         </h3>
         <div class="card-tools">
-       <a asp-controller="Leave" asp-action="Create" class="btn btn-primary">
-  <i class="fas fa-plus"></i> Add Leave
-       </a>
+            <a asp-controller="Leave" asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Leave
+            </a>
         </div>
     </div>
 
@@ -55,7 +55,6 @@
                     <th>End Date</th>
                     <th>Total Days</th>
                     <th>Status</th>
-                    <th style="width:100px;" class="text-center">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -93,168 +92,153 @@
     <script src="~/js/crud-modal.js"></script>
 
     <script>
-        window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
+                window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
 
-  $(function () {
-  const $card = $('#leaveCard');
-       const listUrl = $card.data('list-url');
-      const filterType = $card.data('filter-type');
+          $(function () {
+          const $card = $('#leaveCard');
+               const listUrl = $card.data('list-url');
+              const filterType = $card.data('filter-type');
 
-            // Routes for modal and actions
-       const routes = {
-         editGet: (id) => $card.data('edit-get-template') + id,
-         delete: (id) => $card.data('delete-template') + id
-    };
+                    // Routes for modal and actions
+               const routes = {
+                 editGet: (id) => $card.data('edit-get-template') + id,
+                 delete: (id) => $card.data('delete-template') + id
+            };
 
-      // Initialize modal (Edit only)
-     const leaveModal = CrudModal.init({
- modalSelector: '#leaveModal',
-       routes,
-     createTitle: 'Add Leave',
-editTitle: 'Edit Leave Application',
-      onSaved: () => dataTable.ajax.reload() // Reload the table when saved
-      });
+              // Initialize modal (Edit only)
+             const leaveModal = CrudModal.init({
+         modalSelector: '#leaveModal',
+               routes,
+             createTitle: 'Add Leave',
+        editTitle: 'Edit Leave Application',
+              onSaved: () => dataTable.ajax.reload() // Reload the table when saved
+              });
 
-      // Make table reload function available globally for form callback
-    window.leaveTableReload = function () {
-       dataTable.ajax.reload();
-    };
+              // Make table reload function available globally for form callback
+            window.leaveTableReload = function () {
+               dataTable.ajax.reload();
+            };
 
-   // Initialize DataTable
-       const dataTable = $('#leaveTable').DataTable({
-          processing: true,
-    serverSide: false,
-           ajax: {
-    url: listUrl,
-      type: 'GET',
-    data: function(d) {
-         d.filterType = filterType;
-  },
-            dataSrc: 'data',
-          error: function (xhr, error, thrown) {
-        console.error('DataTables Ajax Error:', xhr.responseText);
-      }
-        },
-                columns: [
-                    { data: 'employeeCode', className: 'text-center' },
-                    { data: 'employeeName' },
-                    { data: 'leaveType' },
-                    {
-                        data: 'startDate',
-                        render: function (data) {
-                            return data ? new Date(data).toLocaleDateString() : '';
-                        }
-                    },
-                    {
-                        data: 'endDate',
-                        render: function (data) {
-                            return data ? new Date(data).toLocaleDateString() : '';
-                        }
-                    },
-                    {
-                        data: 'totalDays',
-                        className: 'text-center',
-                        render: function (data) {
-                            return data || '0';
-                        }
-                    },
-                    {
-                        data: 'leaveStatus',
-                        render: function (data) {
-                            const statusClass = {
-                                'Pending': 'warning',
-                                'Approved': 'success',
-                                'Rejected': 'danger'
-                            }[data] || 'secondary';
-
-                            return `<span class="badge badge-${statusClass}">${data}</span>`;
-                        }
-                    },
-                    {
-                        data: 'leaveId',
-                        render: function (data, type, row) {
-                            return `
-                                    <div class="text-center">
-                                        <button class="btn btn-sm btn-info mr-1 js-edit" data-id="${data}" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger js-delete" data-id="${data}" title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>`;
-                        },
-                        orderable: false,
-                        className: 'text-center'
-                    }
-                ],
-                order: [[3, 'desc']], // default sort: Start Date descending
-                language: {
-                    emptyTable: "No leave records found",
-                    zeroRecords: "No matching leaves found"
-                }
-            });
-
-            // Edit button handler
-            $('#leaveTable').on('click', '.js-edit', function () {
-                const leaveId = $(this).data('id');
-                leaveModal.openEdit(leaveId);
-            });
-
-            // Delete button handler
-            $('#leaveTable').on('click', '.js-delete', function () {
-                const leaveId = $(this).data('id');
-                Swal.fire({
-                    title: 'Delete Leave?',
-                    text: 'This action cannot be undone',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, delete it!',
-                    cancelButtonText: 'Cancel',
-                    reverseButtons: false
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: routes.delete(leaveId),
-                            type: 'POST',
-                            headers: {
-                                'RequestVerificationToken': window.__AntiForgeryToken
+           // Initialize DataTable
+               const dataTable = $('#leaveTable').DataTable({
+                  processing: true,
+            serverSide: false,
+                   ajax: {
+            url: listUrl,
+              type: 'GET',
+            data: function(d) {
+                 d.filterType = filterType;
+          },
+                    dataSrc: 'data',
+                  error: function (xhr, error, thrown) {
+                console.error('DataTables Ajax Error:', xhr.responseText);
+              }
+                },
+                        columns: [
+                            { data: 'employeeCode', className: 'text-center' },
+                            { data: 'employeeName' },
+                            { data: 'leaveType' },
+                            {
+                                data: 'startDate',
+                                render: function (data) {
+                                    return data ? new Date(data).toLocaleDateString() : '';
+                                }
                             },
-                            success: function (response) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Deleted!',
-                                    text: response.message || 'Leave deleted successfully!',
-                                    confirmButtonColor: '#3085d6',
-                                    timer: 2000,
-                                    timerProgressBar: true
-                                });
-                                dataTable.ajax.reload();
+                            {
+                                data: 'endDate',
+                                render: function (data) {
+                                    return data ? new Date(data).toLocaleDateString() : '';
+                                }
                             },
-                            error: function (xhr) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: xhr.responseJSON?.message || 'Error deleting leave',
-                                    confirmButtonColor: '#3085d6'
+                            {
+                                data: 'totalDays',
+                                className: 'text-center',
+                                render: function (data) {
+                                    return data || '0';
+                                }
+                            },
+                            {
+                                data: 'leaveStatus',
+                                render: function (data) {
+                                    const statusClass = {
+                                        'Pending': 'warning',
+                                        'Approved': 'success',
+                                        'Rejected': 'danger'
+                                    }[data] || 'secondary';
+
+                                    return `<span class="badge badge-${statusClass}">${data}</span>`;
+                                }
+                            }
+                            
+                        ],
+                        order: [[3, 'desc']], // default sort: Start Date descending
+                        language: {
+                            emptyTable: "No leave records found",
+                            zeroRecords: "No matching leaves found"
+                        }
+                    });
+
+                    // Edit button handler
+                    $('#leaveTable').on('click', '.js-edit', function () {
+                        const leaveId = $(this).data('id');
+                        leaveModal.openEdit(leaveId);
+                    });
+
+                    // Delete button handler
+                    $('#leaveTable').on('click', '.js-delete', function () {
+                        const leaveId = $(this).data('id');
+                        Swal.fire({
+                            title: 'Delete Leave?',
+                            text: 'This action cannot be undone',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Yes, delete it!',
+                            cancelButtonText: 'Cancel',
+                            reverseButtons: false
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                $.ajax({
+                                    url: routes.delete(leaveId),
+                                    type: 'POST',
+                                    headers: {
+                                        'RequestVerificationToken': window.__AntiForgeryToken
+                                    },
+                                    success: function (response) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Deleted!',
+                                            text: response.message || 'Leave deleted successfully!',
+                                            confirmButtonColor: '#3085d6',
+                                            timer: 2000,
+                                            timerProgressBar: true
+                                        });
+                                        dataTable.ajax.reload();
+                                    },
+                                    error: function (xhr) {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: xhr.responseJSON?.message || 'Error deleting leave',
+                                            confirmButtonColor: '#3085d6'
+                                        });
+                                    }
                                 });
                             }
                         });
-                    }
+                    });
+
+                    // Filter functionality
+                    $('#statusFilter, #typeFilter').change(function () {
+                        dataTable.ajax.reload();
+                    });
+
+                    // Extend DataTable to handle filters
+                    dataTable.on('preXhr.dt', function (e, settings, data) {
+                        data.statusFilter = $('#statusFilter').val();
+                        data.typeFilter = $('#typeFilter').val();
+                    });
                 });
-            });
-
-            // Filter functionality
-            $('#statusFilter, #typeFilter').change(function () {
-                dataTable.ajax.reload();
-            });
-
-            // Extend DataTable to handle filters
-            dataTable.on('preXhr.dt', function (e, settings, data) {
-                data.statusFilter = $('#statusFilter').val();
-                data.typeFilter = $('#typeFilter').val();
-            });
-        });
     </script>
 }

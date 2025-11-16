@@ -235,6 +235,33 @@ namespace PayrollSoftware.Web.Controllers
             }
         }
 
+        // POST: /Leave/DenyLeave/{id}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DenyLeave(Guid id)
+        {
+            try
+            {
+                await _leaveRepository.UpdateLeaveStatusAsync(id, "Rejected", "");
+                return Json(new { success = true, message = "Leave Rejected successfully." });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    500,
+                    new { success = false, message = $"Error Rejecting leave: {ex.Message}" }
+                );
+            }
+        }
+
         // GET: /Leave/Details/{employeeId}
         [HttpGet]
         [Route("Leave/Details/{employeeId:guid}")]

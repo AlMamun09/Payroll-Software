@@ -205,18 +205,6 @@
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a asp-controller="Department" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Department" ? "active" : "")">
-                                <i class="nav-icon fas fa-building"></i>
-                                <p>Manage Departments</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a asp-controller="Designation" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Designation" ? "active" : "")">
-                                <i class="nav-icon fas fa-briefcase"></i>
-                                <p>Manage Designations</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a asp-controller="Shift" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Shift" ? "active" : "")">
                                 <i class="nav-icon fas fa-clock"></i>
                                 <p>Manage Shifts</p>

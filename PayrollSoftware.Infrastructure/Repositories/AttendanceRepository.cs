@@ -41,16 +41,6 @@ namespace PayrollSoftware.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAttendanceAsync(Guid attendanceId)
-        {
-            var attendance = await GetAttendanceByIdAsync(attendanceId);
-            if (attendance != null)
-            {
-                _context.Attendances.Remove(attendance);
-                await _context.SaveChangesAsync();
-            }
-        }
-
         // --- Validation and Business Rules ---
 
         private async Task ValidateAttendanceAsync(Attendance attendance, bool isNew)

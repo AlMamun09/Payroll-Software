@@ -26,41 +26,45 @@ namespace PayrollSoftware.Web.Controllers
             return View();
         }
 
+        // GET: /Employee/GetEmployeesJson
         [HttpGet]
         public async Task<IActionResult> GetEmployeesJson()
         {
             try
             {
                 var employees = await _employeeRepository.GetAllEmployeesAsync();
-                var dtos = employees
-                    .Select(e => new EmployeeDto
-                    {
-                        EmployeeId = e.EmployeeId,
-                        EmployeeNumericId = e.EmployeeNumericId,
-                        EmployeeCode = e.EmployeeCode,
-                        FullName = e.FullName,
-                        Gender = e.Gender,
-                        DateOfBirth = e.DateOfBirth,
-                        JoiningDate = e.JoiningDate,
-                        BasicSalary = e.BasicSalary,
-                        EmploymentType = e.EmploymentType,
-                        PaymentSystem = e.PaymentSystem,
-                        AccountHolderName = e.AccountHolderName,
-                        BankAndBranchName = e.BankAndBranchName,
-                        BankAccountNumber = e.BankAccountNumber,
-                        MobileNumber = e.MobileNumber,
-                        Status = e.Status,
-                        Department = e.Department,
-                        Designation = e.Designation,
-                        ShiftId = e.ShiftId,
-                    })
-                    .ToList();
 
-                return Json(new { data = dtos });
+                // Apply status filter if provided
+                var statusFilter = Request.Query["statusFilter"].ToString()?.Trim();
+                if (!string.IsNullOrWhiteSpace(statusFilter))
+                {
+                    employees = employees
+                        .Where(e => string.Equals(e.Status, statusFilter, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
+
+                // Since Department and Designation are now stored as lookup values (not IDs),
+                // they can be displayed directly
+                var data = employees.Select(e => new
+                {
+                    e.EmployeeId,
+                    e.EmployeeCode,
+                    e.FullName,
+                    e.Gender,
+                    e.DateOfBirth,
+                    e.Department,
+                    DepartmentName = e.Department ?? "-", // Department is already the display name
+                    e.Designation,
+                    DesignationName = e.Designation ?? "-", // Designation is already the display name
+                    e.Status
+                }).ToList();
+
+                return Json(new { data });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
@@ -72,7 +76,7 @@ namespace PayrollSoftware.Web.Controllers
             ViewBag.FormAction = Url.Action("Create");
             return View(
                 "Create",
-                new EmployeeDto { DateOfBirth = DateTime.Today, JoiningDate = DateTime.Today }
+                new EmployeeDto { DateOfBirth = DateTime.Today, JoiningDate = DateTime.Today, Status = "Active" }
             );
         }
 
@@ -168,20 +172,45 @@ namespace PayrollSoftware.Web.Controllers
 
             var dto = MapToDto(e);
             dto.ShiftName = shift?.ShiftName;
+
+            // Set display names (already stored as lookup values)
+            dto.DepartmentName = e.Department;
+            dto.DesignationName = e.Designation;
+
             return View("Details", dto);
         }
 
+        // POST: /Employee/ToggleStatus/{id}
         [HttpPost]
-        public async Task<IActionResult> Delete(Guid id)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleStatus(Guid id)
         {
-            var entity = await _employeeRepository.GetEmployeeByIdAsync(id);
-            if (entity == null)
+            try
             {
-                return NotFound();
-            }
+                var employee = await _employeeRepository.GetEmployeeByIdAsync(id);
+                if (employee == null)
+                    return NotFound(new { success = false, message = "Employee not found." });
 
-            await _employeeRepository.DeleteEmployeeAsync(id);
-            return Json(new { success = true, message = "Employee deleted successfully." });
+                await _employeeRepository.ToggleEmployeeStatusAsync(id);
+
+                var newStatus = employee.Status == "Active" ? "Inactive" : "Active";
+                var statusMessage = newStatus == "Inactive"
+              ? "Employee has been marked as Inactive."
+                : "Employee has been reactivated.";
+
+                return Json(new { success = true, message = statusMessage, newStatus });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                            500,
+                         new { success = false, message = $"Error updating employee status: {ex.Message}" }
+          );
+            }
         }
 
         private Employee MapToEntity(EmployeeDto dto)
@@ -189,8 +218,8 @@ namespace PayrollSoftware.Web.Controllers
             return new Employee
             {
                 EmployeeId = dto.EmployeeId,
-                Designation = dto.Designation,
-                Department = dto.Department,
+                Designation = dto.Designation, // Store lookup value directly
+                Department = dto.Department,   // Store lookup value directly
                 ShiftId = dto.ShiftId,
                 EmployeeNumericId = dto.EmployeeNumericId,
                 EmployeeCode = dto.EmployeeCode,
@@ -237,10 +266,10 @@ namespace PayrollSoftware.Web.Controllers
         private async Task PopulateDropdownsAsync()
         {
             ViewBag.Shifts = await _context
-                .Shifts.AsNoTracking()
-                .Where(s => s.IsActive)
-                .OrderBy(s => s.ShiftName)
-                .ToListAsync();
+      .Shifts.AsNoTracking()
+                  .Where(s => s.IsActive)
+          .OrderBy(s => s.ShiftName)
+    .ToListAsync();
         }
     }
 }

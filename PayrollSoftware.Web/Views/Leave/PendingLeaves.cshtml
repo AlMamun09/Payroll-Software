@@ -5,8 +5,9 @@
 <link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
 
 <div class="card" id="leaveCard" data-list-url="@Url.Action("GetPendingLeavesJson", "Leave")"
-    data-edit-get-template="@Url.Action("Edit", "Leave")/" data-delete-template="@Url.Action("Delete", "Leave")/"
-    data-approve-template="@Url.Action("ApproveLeave", "Leave")/">
+     data-edit-get-template="@Url.Action("Edit", "Leave")/"
+     data-deny-template="@Url.Action("DenyLeave", "Leave")/"
+     data-approve-template="@Url.Action("ApproveLeave", "Leave")/">
 
     <div class="card-header">
         <h3 class="card-title m-0">
@@ -89,7 +90,7 @@
             // Routes for modal and actions (Edit only)
             const routes = {
                 editGet: (id) => $card.data('edit-get-template') + id,
-                delete: (id) => $card.data('delete-template') + id,
+                deny: (id) => $card.data('deny-template') + id,
                 approve: (id) => $card.data('approve-template') + id
             };
 
@@ -155,11 +156,11 @@
                             <button class="btn btn-sm btn-success mr-1 js-approve" data-id="${data}" title="Approve">
                             <i class="fas fa-check"></i>
                             </button>
-                            <button class="btn btn-sm btn-info mr-1 js-edit" data-id="${data}" title="Edit">
-                            <i class="fas fa-edit"></i>
+                            <button class="btn btn-sm btn-danger mr-1 js-deny" data-id="${data}" title="Deny">
+                            <i class="fas fa-times"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger js-delete" data-id="${data}" title="Delete">
-                            <i class="fas fa-trash"></i>
+                            <button class="btn btn-sm btn-info js-edit" data-id="${data}" title="Edit">
+                            <i class="fas fa-edit"></i>
                             </button>
                             </div>`;
                         },
@@ -219,29 +220,23 @@
                 });
             });
 
-            // Edit button handler
-            $('#leaveTable').on('click', '.js-edit', function () {
-                const leaveId = $(this).data('id');
-                leaveModal.openEdit(leaveId);
-            });
-
-            // Delete button handler
-            $('#leaveTable').on('click', '.js-delete', function () {
+            // Deny button handler
+            $('#leaveTable').on('click', '.js-deny', function () {
                 const leaveId = $(this).data('id');
                 Swal.fire({
-                    title: 'Delete Leave?',
-                    text: 'This action cannot be undone',
+                    title: 'Deny Leave?',
+                    text: 'Are you sure you want to reject this leave application?',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, delete it!',
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, deny it!',
                     cancelButtonText: 'Cancel',
                     reverseButtons: false
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: routes.delete(leaveId),
+                            url: routes.deny(leaveId),
                             type: 'POST',
                             headers: {
                                 'RequestVerificationToken': window.__AntiForgeryToken
@@ -249,8 +244,8 @@
                             success: function (response) {
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Deleted!',
-                                    text: response.message || 'Leave deleted successfully!',
+                                    title: 'Denied!',
+                                    text: response.message || 'Leave rejected successfully!',
                                     confirmButtonColor: '#3085d6',
                                     timer: 2000,
                                     timerProgressBar: true
@@ -261,13 +256,19 @@
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error',
-                                    text: xhr.responseJSON?.message || 'Error deleting leave',
+                                    text: xhr.responseJSON?.message || 'Error rejecting leave',
                                     confirmButtonColor: '#3085d6'
                                 });
                             }
                         });
                     }
                 });
+            });
+
+            // Edit button handler
+            $('#leaveTable').on('click', '.js-edit', function () {
+                const leaveId = $(this).data('id');
+                leaveModal.openEdit(leaveId);
             });
 
             // Filter functionality

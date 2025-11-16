@@ -124,14 +124,14 @@
             className: 'text-center',
             render: function (data, type, row) {
               return `
-    <div class="btn-group btn-group-sm">
-            <a href="${routes.edit(data)}" class="btn btn-info" title="Edit">
-             <i class="fas fa-edit"></i>
-             </a>
-                   <button class="btn btn-danger js-delete" data-id="${data}" title="Delete">
-        <i class="fas fa-trash"></i>
-       </button>
-          </div>`;
+               <div class="btn-group btn-group-sm">
+               <a href="${routes.edit(data)}" class="btn btn-info" title="Edit">
+               <i class="fas fa-edit"></i>
+               </a>
+                  <button class="btn btn-danger js-delete" data-id="${data}" title="Delete">
+                     <i class="fas fa-trash"></i>
+                  </button>
+               </div>`;
             },
             orderable: false
           }
