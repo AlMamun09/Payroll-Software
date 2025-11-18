@@ -307,10 +307,16 @@ namespace PayrollSoftware.Web.Controllers
                 {
                     var filterDate = DateTime.Parse(month + "-01");
                     var monthStart = new DateTime(filterDate.Year, filterDate.Month, 1);
-                    var monthEnd = new DateTime(filterDate.Year, filterDate.Month, DateTime.DaysInMonth(filterDate.Year, filterDate.Month));
+                    var monthEnd = new DateTime(
+                        filterDate.Year,
+                        filterDate.Month,
+                        DateTime.DaysInMonth(filterDate.Year, filterDate.Month)
+                    );
 
                     Console.WriteLine($"Filtering by month: {filterDate:yyyy-MM}");
-                    Console.WriteLine($"Month range: {monthStart:yyyy-MM-dd} to {monthEnd:yyyy-MM-dd}");
+                    Console.WriteLine(
+                        $"Month range: {monthStart:yyyy-MM-dd} to {monthEnd:yyyy-MM-dd}"
+                    );
 
                     // Split leaves that span across month boundaries
                     var splitLeaves = new List<Leave>();
@@ -329,17 +335,23 @@ namespace PayrollSoftware.Web.Controllers
                                 LeaveStatus = leave.LeaveStatus,
                                 Remarks = leave.Remarks,
                                 // Constrain start date to be within the month
-                                StartDate = leave.StartDate < monthStart ? monthStart : leave.StartDate,
+                                StartDate =
+                                    leave.StartDate < monthStart ? monthStart : leave.StartDate,
                                 // Constrain end date to be within the month
-                                EndDate = leave.EndDate > monthEnd ? monthEnd : leave.EndDate
+                                EndDate = leave.EndDate > monthEnd ? monthEnd : leave.EndDate,
                             };
 
                             // Recalculate total days for the split period
-                            splitLeave.TotalDays = CalculateBusinessDays(splitLeave.StartDate, splitLeave.EndDate);
+                            splitLeave.TotalDays = CalculateBusinessDays(
+                                splitLeave.StartDate,
+                                splitLeave.EndDate
+                            );
 
                             splitLeaves.Add(splitLeave);
 
-                            Console.WriteLine($"Split leave {leave.LeaveId}: Original {leave.StartDate:yyyy-MM-dd} to {leave.EndDate:yyyy-MM-dd}, Split to {splitLeave.StartDate:yyyy-MM-dd} to {splitLeave.EndDate:yyyy-MM-dd}, Days: {splitLeave.TotalDays}");
+                            Console.WriteLine(
+                                $"Split leave {leave.LeaveId}: Original {leave.StartDate:yyyy-MM-dd} to {leave.EndDate:yyyy-MM-dd}, Split to {splitLeave.StartDate:yyyy-MM-dd} to {splitLeave.EndDate:yyyy-MM-dd}, Days: {splitLeave.TotalDays}"
+                            );
                         }
                     }
 
