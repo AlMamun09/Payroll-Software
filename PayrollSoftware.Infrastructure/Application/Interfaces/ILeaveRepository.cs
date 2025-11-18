@@ -1,15 +1,9 @@
 ﻿using PayrollSoftware.Infrastructure.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PayrollSoftware.Infrastructure.Application.Interfaces
 {
     public interface ILeaveRepository
     {
-
         Task<List<Leave>> GetAllLeavesAsync();
         Task<List<Leave>> GetLeavesByEmployeeIdAsync(Guid employeeId);
         Task<List<Leave>> GetLeavesByStatusAsync(string leaveStatus);
@@ -19,9 +13,11 @@ namespace PayrollSoftware.Infrastructure.Application.Interfaces
         Task DeleteLeaveAsync(Guid leaveId);
         Task<List<Leave>> GetLeavesByDateRangeAsync(DateTime startDate, DateTime endDate);
         Task<List<Leave>> GetPendingLeavesAsync();
-        Task<bool> HasLeaveOverlapAsync(Guid employeeId, DateTime startDate, DateTime endDate, Guid? excludeLeaveId = null);
+        Task<bool> HasLeaveOverlapAsync(
+            Guid employeeId,
+            DateTime startDate,
+            DateTime endDate,
+            Guid? excludeLeaveId = null
+        );
     }
 }
-   
-        
-  

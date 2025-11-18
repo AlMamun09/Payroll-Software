@@ -1,12 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 using PayrollSoftware.Data;
 using PayrollSoftware.Infrastructure.Application.Interfaces;
 using PayrollSoftware.Infrastructure.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace PayrollSoftware.Infrastructure.Repositories
 {
@@ -25,7 +21,10 @@ namespace PayrollSoftware.Infrastructure.Repositories
         private const int MaxFutureLeaveDays = 365;
 
         // Regex patterns
-        private readonly Regex _remarksRegex = new Regex(@"^[a-zA-Z0-9\s\.,!?\-_()@#$%&*+=:;'""]*$", RegexOptions.Compiled);
+        private readonly Regex _remarksRegex = new Regex(
+            @"^[a-zA-Z0-9\s\.,!?\-_()@#$%&*+=:;'""]*$",
+            RegexOptions.Compiled
+        );
 
         public LeaveRepository(ApplicationDbContext context)
         {
@@ -36,9 +35,7 @@ namespace PayrollSoftware.Infrastructure.Repositories
         {
             try
             {
-                return await _context.Leaves
-                    .OrderByDescending(l => l.StartDate)
-                    .ToListAsync();
+                return await _context.Leaves.OrderByDescending(l => l.StartDate).ToListAsync();
             }
             catch (Exception ex)
             {
@@ -52,14 +49,17 @@ namespace PayrollSoftware.Infrastructure.Repositories
 
             try
             {
-                return await _context.Leaves
-                    .Where(l => l.EmployeeId == employeeId)
+                return await _context
+                    .Leaves.Where(l => l.EmployeeId == employeeId)
                     .OrderByDescending(l => l.StartDate)
                     .ToListAsync();
             }
             catch (Exception ex)
             {
-                throw new Exception($"An error occurred while retrieving leaves for employee {employeeId}.", ex);
+                throw new Exception(
+                    $"An error occurred while retrieving leaves for employee {employeeId}.",
+                    ex
+                );
             }
         }
 
@@ -69,14 +69,17 @@ namespace PayrollSoftware.Infrastructure.Repositories
 
             try
             {
-                return await _context.Leaves
-                    .Where(l => l.LeaveStatus == leaveStatus)
+                return await _context
+                    .Leaves.Where(l => l.LeaveStatus == leaveStatus)
                     .OrderByDescending(l => l.StartDate)
                     .ToListAsync();
             }
             catch (Exception ex)
             {
-                throw new Exception($"An error occurred while retrieving {leaveStatus} leaves.", ex);
+                throw new Exception(
+                    $"An error occurred while retrieving {leaveStatus} leaves.",
+                    ex
+                );
             }
         }
 
@@ -87,8 +90,7 @@ namespace PayrollSoftware.Infrastructure.Repositories
 
             try
             {
-                return await _context.Leaves
-                    .FirstOrDefaultAsync(l => l.LeaveId == leaveId);
+                return await _context.Leaves.FirstOrDefaultAsync(l => l.LeaveId == leaveId);
             }
             catch (Exception ex)
             {
@@ -168,7 +170,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
 
             if (leave.LeaveStatus == "Approved")
             {
-                throw new InvalidOperationException("Cannot delete an approved leave. Please reject it first.");
+                throw new InvalidOperationException(
+                    "Cannot delete an approved leave. Please reject it first."
+                );
             }
 
             try
@@ -186,7 +190,10 @@ namespace PayrollSoftware.Infrastructure.Repositories
             }
         }
 
-        public async Task<List<Leave>> GetLeavesByDateRangeAsync(DateTime startDate, DateTime endDate)
+        public async Task<List<Leave>> GetLeavesByDateRangeAsync(
+            DateTime startDate,
+            DateTime endDate
+        )
         {
             if (startDate > endDate)
                 throw new ArgumentException("Start date cannot be after end date.");
@@ -196,8 +203,8 @@ namespace PayrollSoftware.Infrastructure.Repositories
 
             try
             {
-                return await _context.Leaves
-                    .Where(l => l.StartDate <= endDate && l.EndDate >= startDate)
+                return await _context
+                    .Leaves.Where(l => l.StartDate <= endDate && l.EndDate >= startDate)
                     .OrderByDescending(l => l.StartDate)
                     .ToListAsync();
             }
@@ -212,7 +219,12 @@ namespace PayrollSoftware.Infrastructure.Repositories
             return await GetLeavesByStatusAsync("Pending");
         }
 
-        public async Task<bool> HasLeaveOverlapAsync(Guid employeeId, DateTime startDate, DateTime endDate, Guid? excludeLeaveId = null)
+        public async Task<bool> HasLeaveOverlapAsync(
+            Guid employeeId,
+            DateTime startDate,
+            DateTime endDate,
+            Guid? excludeLeaveId = null
+        )
         {
             if (employeeId == Guid.Empty)
                 throw new ArgumentException("Employee ID cannot be empty.");
@@ -221,11 +233,12 @@ namespace PayrollSoftware.Infrastructure.Repositories
 
             try
             {
-                var query = _context.Leaves
-                    .Where(l => l.EmployeeId == employeeId &&
-                               l.LeaveStatus != "Rejected" &&
-                               l.StartDate <= endDate &&
-                               l.EndDate >= startDate);
+                var query = _context.Leaves.Where(l =>
+                    l.EmployeeId == employeeId
+                    && l.LeaveStatus != "Rejected"
+                    && l.StartDate <= endDate
+                    && l.EndDate >= startDate
+                );
 
                 if (excludeLeaveId.HasValue)
                 {
@@ -259,13 +272,17 @@ namespace PayrollSoftware.Infrastructure.Repositories
             if (string.IsNullOrWhiteSpace(leave.LeaveType))
                 errors.Add("Leave type is required.");
             else if (!_validLeaveTypes.Contains(leave.LeaveType))
-                errors.Add($"Invalid leave type '{leave.LeaveType}'. Valid types: {string.Join(", ", _validLeaveTypes)}");
+                errors.Add(
+                    $"Invalid leave type '{leave.LeaveType}'. Valid types: {string.Join(", ", _validLeaveTypes)}"
+                );
 
             // Validate dates
             if (leave.StartDate < DateTime.Today)
                 errors.Add("Start date cannot be in the past.");
             else if (leave.StartDate > DateTime.Today.AddDays(MaxFutureLeaveDays))
-                errors.Add($"Leave cannot be applied more than {MaxFutureLeaveDays} days in advance.");
+                errors.Add(
+                    $"Leave cannot be applied more than {MaxFutureLeaveDays} days in advance."
+                );
 
             if (leave.EndDate < leave.StartDate)
                 errors.Add("End date cannot be before start date.");
@@ -273,23 +290,32 @@ namespace PayrollSoftware.Infrastructure.Repositories
             {
                 var maxEndDate = leave.StartDate.AddDays(MaxLeaveDurationDays * 2);
                 if (leave.EndDate > maxEndDate)
-                    errors.Add($"Leave duration is too long. Maximum allowed duration is {MaxLeaveDurationDays} working days.");
+                    errors.Add(
+                        $"Leave duration is too long. Maximum allowed duration is {MaxLeaveDurationDays} working days."
+                    );
             }
 
             // Check employee exists
             if (leave.EmployeeId != Guid.Empty)
             {
-                var employeeExists = await _context.Employees.AsNoTracking()
+                var employeeExists = await _context
+                    .Employees.AsNoTracking()
                     .AnyAsync(e => e.EmployeeId == leave.EmployeeId);
                 if (!employeeExists)
                     errors.Add($"Employee with ID {leave.EmployeeId} does not exist.");
             }
 
             // Check overlap only if dates are valid
-            if (leave.EmployeeId != Guid.Empty && leave.StartDate >= DateTime.Today && leave.EndDate >= leave.StartDate)
+            if (
+                leave.EmployeeId != Guid.Empty
+                && leave.StartDate >= DateTime.Today
+                && leave.EndDate >= leave.StartDate
+            )
             {
                 if (await HasLeaveOverlapAsync(leave.EmployeeId, leave.StartDate, leave.EndDate))
-                    errors.Add("Employee already has an approved or pending leave application for this date range.");
+                    errors.Add(
+                        "Employee already has an approved or pending leave application for this date range."
+                    );
             }
 
             // Validate remarks
@@ -298,7 +324,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 if (leave.Remarks.Length > RemarksMaxLength)
                     errors.Add($"Remarks cannot exceed {RemarksMaxLength} characters.");
                 else if (!_remarksRegex.IsMatch(leave.Remarks))
-                    errors.Add("Remarks contain invalid characters. Only letters, numbers, spaces, and basic punctuation are allowed.");
+                    errors.Add(
+                        "Remarks contain invalid characters. Only letters, numbers, spaces, and basic punctuation are allowed."
+                    );
             }
 
             // Validate total days
@@ -306,11 +334,15 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 errors.Add($"Leave cannot exceed {MaxLeaveDurationDays} working days.");
 
             // Only non-sick leaves must be applied in advance
-            if (leave.StartDate.Date == DateTime.Today &&
-                !string.IsNullOrWhiteSpace(leave.LeaveType) &&
-                !string.Equals(leave.LeaveType, "Sick", StringComparison.OrdinalIgnoreCase))
+            if (
+                leave.StartDate.Date == DateTime.Today
+                && !string.IsNullOrWhiteSpace(leave.LeaveType)
+                && !string.Equals(leave.LeaveType, "Sick", StringComparison.OrdinalIgnoreCase)
+            )
             {
-                errors.Add($"Non-sick leaves must be applied at least {MinAdvanceNoticeDays} day in advance.");
+                errors.Add(
+                    $"Non-sick leaves must be applied at least {MinAdvanceNoticeDays} day in advance."
+                );
             }
 
             // Throw all errors together
@@ -338,7 +370,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 throw new ArgumentException("Leave status is required.");
 
             if (!_validLeaveStatuses.Contains(leaveStatus))
-                throw new ArgumentException($"Invalid leave status '{leaveStatus}'. Valid statuses: {string.Join(", ", _validLeaveStatuses)}");
+                throw new ArgumentException(
+                    $"Invalid leave status '{leaveStatus}'. Valid statuses: {string.Join(", ", _validLeaveStatuses)}"
+                );
         }
 
         private void ValidateStatusTransition(string currentStatus, string newStatus)
@@ -347,15 +381,18 @@ namespace PayrollSoftware.Infrastructure.Repositories
             {
                 { "Pending", new[] { "Approved", "Rejected" } },
                 { "Approved", new[] { "Rejected" } },
-                { "Rejected", new[] { "Approved" } }
+                { "Rejected", new[] { "Approved" } },
             };
 
-            if (allowedTransitions.ContainsKey(currentStatus) &&
-                !allowedTransitions[currentStatus].Contains(newStatus))
+            if (
+                allowedTransitions.ContainsKey(currentStatus)
+                && !allowedTransitions[currentStatus].Contains(newStatus)
+            )
             {
                 throw new InvalidOperationException(
-                    $"Cannot change status from '{currentStatus}' to '{newStatus}'. " +
-                    $"Allowed transitions: {string.Join(", ", allowedTransitions[currentStatus])}");
+                    $"Cannot change status from '{currentStatus}' to '{newStatus}'. "
+                        + $"Allowed transitions: {string.Join(", ", allowedTransitions[currentStatus])}"
+                );
             }
         }
 
@@ -365,10 +402,14 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 return;
 
             if (remarks.Length > RemarksMaxLength)
-                throw new ArgumentException($"Remarks cannot exceed {RemarksMaxLength} characters.");
+                throw new ArgumentException(
+                    $"Remarks cannot exceed {RemarksMaxLength} characters."
+                );
 
             if (!_remarksRegex.IsMatch(remarks))
-                throw new ArgumentException("Remarks contain invalid characters. Only letters, numbers, spaces, and basic punctuation are allowed.");
+                throw new ArgumentException(
+                    "Remarks contain invalid characters. Only letters, numbers, spaces, and basic punctuation are allowed."
+                );
         }
 
         private string SanitizeRemarks(string remarks)
@@ -387,7 +428,8 @@ namespace PayrollSoftware.Infrastructure.Repositories
 
         private async Task ValidateEmployeeExistsAsync(Guid employeeId)
         {
-            var exists = await _context.Employees.AsNoTracking()
+            var exists = await _context
+                .Employees.AsNoTracking()
                 .AnyAsync(e => e.EmployeeId == employeeId);
 
             if (!exists)
@@ -402,7 +444,10 @@ namespace PayrollSoftware.Infrastructure.Repositories
 
             while (current <= endDate.Date)
             {
-                if (current.DayOfWeek != DayOfWeek.Saturday && current.DayOfWeek != DayOfWeek.Sunday)
+                if (
+                    current.DayOfWeek != DayOfWeek.Saturday
+                    && current.DayOfWeek != DayOfWeek.Sunday
+                )
                 {
                     totalDays++;
                 }
