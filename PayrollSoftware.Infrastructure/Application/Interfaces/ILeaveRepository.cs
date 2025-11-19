@@ -10,6 +10,7 @@ namespace PayrollSoftware.Infrastructure.Application.Interfaces
         Task<Leave?> GetLeaveByIdAsync(Guid leaveId);
         Task<Leave> ApplyForLeaveAsync(Leave leave);
         Task<Leave> UpdateLeaveStatusAsync(Guid leaveId, string status, string remarks);
+        Task<Leave> UpdateLeaveDetailsAsync(Leave leave);
         Task DeleteLeaveAsync(Guid leaveId);
         Task<List<Leave>> GetLeavesByDateRangeAsync(DateTime startDate, DateTime endDate);
         Task<List<Leave>> GetPendingLeavesAsync();

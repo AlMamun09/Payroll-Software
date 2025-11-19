@@ -133,6 +133,11 @@ namespace PayrollSoftware.Infrastructure.Repositories
             }
 
             allowanceDeduction.IsActive = true;
+
+            // Reset EffectiveFrom to the first day of the current month when reactivating
+            var today = DateTime.Today;
+            allowanceDeduction.EffectiveFrom = new DateTime(today.Year, today.Month, 1);
+
             allowanceDeduction.UpdatedAt = DateTime.UtcNow;
             allowanceDeduction.UpdatedBy = updatedBy;
 
@@ -222,14 +227,18 @@ namespace PayrollSoftware.Infrastructure.Repositories
             if (ad.EffectiveFrom == default)
                 errors.Add("Effective From date is required.");
             else
-                ad.EffectiveFrom = ad.EffectiveFrom.Date; // Normalize to date only
+            {
+                // Normalize to first day of the month
+                ad.EffectiveFrom = new DateTime(ad.EffectiveFrom.Year, ad.EffectiveFrom.Month, 1);
+            }
 
             if (ad.EffectiveTo.HasValue)
             {
-                ad.EffectiveTo = ad.EffectiveTo.Value.Date; // Normalize to date only
+                // Normalize to first day of the month
+                ad.EffectiveTo = new DateTime(ad.EffectiveTo.Value.Year, ad.EffectiveTo.Value.Month, 1);
 
                 if (ad.EffectiveTo.Value < ad.EffectiveFrom)
-                    errors.Add("Effective To date must be after Effective From date.");
+                    errors.Add("Effective To month must be after or equal to Effective From month.");
             }
 
             // Validate Company-Wide vs Employee-Specific

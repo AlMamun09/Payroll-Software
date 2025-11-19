@@ -584,9 +584,20 @@ namespace PayrollSoftware.Web.Controllers
                 if (leave == null)
                     return NotFound();
 
+                // Get employee details
+                var employee = await _context
+                    .Employees.AsNoTracking()
+                    .Where(e => e.EmployeeId == leave.EmployeeId)
+                    .Select(e => new { e.EmployeeCode, e.FullName })
+                    .FirstOrDefaultAsync();
+
+                ViewBag.EmployeeName = employee?.FullName ?? "Unknown";
+
                 await PopulateEmployeesAsync();
                 ViewBag.Title = "Edit Leave";
                 ViewBag.FormAction = Url.Action(nameof(Edit));
+
+                // FIX: Use PartialView so the main layout (navbar/footer) is NOT included
                 return PartialView("Create", MapToDto(leave));
             }
             catch (Exception ex)
@@ -605,21 +616,27 @@ namespace PayrollSoftware.Web.Controllers
                 if (id != leaveDto.LeaveId)
                     return BadRequest(new { success = false, message = "Leave ID mismatch." });
 
-                if (!ModelState.IsValid)
-                {
-                    var errors = ModelState
-                        .Values.SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)
-                        .ToArray();
-                    return BadRequest(new { success = false, message = string.Join("\n", errors) });
-                }
+                // Recalculate TotalDays server-side to be safe
+                leaveDto.TotalDays = CalculateBusinessDays(leaveDto.StartDate, leaveDto.EndDate);
 
-                // Only status/remarks are updated according to repository method signature
-                await _leaveRepository.UpdateLeaveStatusAsync(
-                    leaveDto.LeaveId,
-                    leaveDto.LeaveStatus ?? "Pending",
-                    leaveDto.Remarks ?? string.Empty
-                );
+                // Use the NEW Repository method to update all details (Dates, Type, etc.)
+                var leaveEntity = new Leave
+                {
+                    LeaveId = leaveDto.LeaveId,
+                    EmployeeId = leaveDto.EmployeeId,
+                    LeaveType = leaveDto.LeaveType,
+                    StartDate = leaveDto.StartDate,
+                    EndDate = leaveDto.EndDate,
+                    TotalDays = leaveDto.TotalDays,
+                    Remarks = leaveDto.Remarks,
+                    LeaveStatus = "Pending", // Edit usually resets or keeps it Pending
+                };
+
+                // Assuming you added UpdateLeaveDetailsAsync to Interface and Repo
+                // If strictly using existing repo, you can only update Status.
+                // But to fix "Edit", you should use the new method provided above.
+                await _leaveRepository.UpdateLeaveDetailsAsync(leaveEntity);
+
                 return Json(
                     new
                     {
@@ -629,20 +646,10 @@ namespace PayrollSoftware.Web.Controllers
                     }
                 );
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { success = false, message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { success = false, message = ex.Message });
-            }
             catch (Exception ex)
             {
-                return StatusCode(
-                    500,
-                    new { success = false, message = $"Error updating leave: {ex.Message}" }
-                );
+                // Catch specific exceptions from Repo
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 

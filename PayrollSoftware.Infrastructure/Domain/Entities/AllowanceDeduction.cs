@@ -19,12 +19,13 @@ namespace PayrollSoftware.Infrastructure.Domain.Entities
         public string? CalculationType { get; set; }
         public decimal Percentage { get; set; }
         public decimal FixedAmount { get; set; }
+        
         public DateTime EffectiveFrom { get; set; }
         public DateTime? EffectiveTo { get; set; }
+   
         public bool IsActive { get; set; } = true;
         public bool IsCompanyWide { get; set; }
 
-        // Navigation properties
         public virtual Payroll? Payroll { get; set; }
         public virtual Employee? Employee { get; set; }
 

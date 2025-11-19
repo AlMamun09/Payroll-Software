@@ -12,6 +12,9 @@
         public decimal FixedAmount { get; set; }
         public DateTime EffectiveFrom { get; set; }
         public DateTime? EffectiveTo { get; set; }
+        public string? EffectiveFromMonth { get; set; }
+        public string? EffectiveToMonth { get; set; }
+        
         public bool IsActive { get; set; }
         public bool IsCompanyWide { get; set; }
     }

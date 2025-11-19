@@ -19,12 +19,11 @@
                   <label asp-for="AllowanceDeductionType" class="control-label">
                      Type <span class="text-danger">*</span>
                   </label>
-                  <select asp-for="AllowanceDeductionType" class="form-control select2" 
-  id="AllowanceDeductionType" data-placeholder="Select Type" 
-        style="width:100%;" required>
-       <option value="">-- Select Type --</option>
-      </select>
-   <span asp-validation-for="AllowanceDeductionType" class="text-danger"></span>
+                  <select asp-for="AllowanceDeductionType" class="form-control select2" id="AllowanceDeductionType"
+                     data-placeholder="Select Type" style="width:100%;" required>
+                     <option value="">-- Select Type --</option>
+                  </select>
+                  <span asp-validation-for="AllowanceDeductionType" class="text-danger"></span>
                </div>
 
                <div class="form-group col-md-6">
@@ -43,10 +42,10 @@
                      Calculation Type <span class="text-danger">*</span>
                   </label>
                   <select asp-for="CalculationType" id="CalculationType" class="form-control select2"
-  data-placeholder="Select Calculation Type" style="width:100%;" required>
-    <option value="">-- Select Calculation Type --</option>
-     </select>
-  <span asp-validation-for="CalculationType" class="text-danger"></span>
+                     data-placeholder="Select Calculation Type" style="width:100%;" required>
+                     <option value="">-- Select Calculation Type --</option>
+                  </select>
+                  <span asp-validation-for="CalculationType" class="text-danger"></span>
                </div>
 
                <div class="form-group col-md-6" id="percentageGroup" style="display:none;">
@@ -71,18 +70,19 @@
 
             <div class="row">
                <div class="form-group col-md-6">
-                  <label asp-for="EffectiveFrom" class="control-label">
-                     Effective From <span class="text-danger">*</span>
+                  <label asp-for="EffectiveFromMonth" class="control-label">
+                     Effective From Month <span class="text-danger">*</span>
                   </label>
-                  <input asp-for="EffectiveFrom" type="date" class="form-control" required />
-                  <span asp-validation-for="EffectiveFrom" class="text-danger"></span>
+                  <input asp-for="EffectiveFromMonth" type="month" class="form-control" required />
+                  <span asp-validation-for="EffectiveFromMonth" class="text-danger"></span>
+                  <small class="form-text text-muted">Select the month from which this will be effective</small>
                </div>
 
                <div class="form-group col-md-6">
-                  <label asp-for="EffectiveTo" class="control-label">Effective To</label>
-                  <input asp-for="EffectiveTo" type="date" class="form-control" />
-                  <span asp-validation-for="EffectiveTo" class="text-danger"></span>
-                  <small class="form-text text-muted">Leave blank for ongoing</small>
+                  <label asp-for="EffectiveToMonth" class="control-label">Effective To Month</label>
+                  <input asp-for="EffectiveToMonth" type="month" class="form-control" />
+                  <span asp-validation-for="EffectiveToMonth" class="text-danger"></span>
+                  <small class="form-text text-muted">Leave blank for ongoing (no end month)</small>
                </div>
             </div>
 
@@ -226,6 +226,19 @@
                Swal.fire('Validation Error', 'Please select an employee.', 'error');
                return false;
             }
+         }
+
+         // Validate month inputs
+         const fromMonth = $('input[name="EffectiveFromMonth"]').val();
+         if (!fromMonth) {
+            Swal.fire('Validation Error', 'Please select Effective From Month.', 'error');
+            return false;
+         }
+
+         const toMonth = $('input[name="EffectiveToMonth"]').val();
+         if (toMonth && fromMonth > toMonth) {
+            Swal.fire('Validation Error', 'Effective To Month must be after Effective From Month.', 'error');
+            return false;
          }
 
          // Set submitting flag and disable button

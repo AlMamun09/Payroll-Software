@@ -45,8 +45,9 @@ namespace PayrollSoftware.Web.Controllers
                         a.CalculationType,
                         a.Percentage,
                         a.FixedAmount,
-                        EffectiveFrom = a.EffectiveFrom.ToString("yyyy-MM-dd"),
-                        EffectiveTo = a.EffectiveTo?.ToString("yyyy-MM-dd"),
+                        // Format as YYYY-MM for display
+                        EffectiveFrom = a.EffectiveFrom.ToString("yyyy-MM"),
+                        EffectiveTo = a.EffectiveTo?.ToString("yyyy-MM"),
                         a.IsActive,
                         a.IsCompanyWide,
                         EmployeeName = a.EmployeeId.HasValue
@@ -71,12 +72,17 @@ namespace PayrollSoftware.Web.Controllers
             await PopulateDropdownsAsync();
             ViewBag.Title = "Create Allowance/Deduction";
             ViewBag.FormAction = Url.Action("Create");
+
+            var today = DateTime.Today;
+            var currentMonth = new DateTime(today.Year, today.Month, 1);
+
             return View(
                 "Create",
                 new AllowanceDeductionDto
                 {
                     IsActive = true,
-                    EffectiveFrom = DateTime.Today,
+                    EffectiveFrom = currentMonth,
+                    EffectiveFromMonth = currentMonth.ToString("yyyy-MM"),
                     IsCompanyWide = true,
                 }
             );
@@ -88,6 +94,23 @@ namespace PayrollSoftware.Web.Controllers
         {
             try
             {
+                // Convert month strings to DateTime (first day of the month)
+                if (!string.IsNullOrWhiteSpace(dto.EffectiveFromMonth))
+                {
+                    var fromDate = DateTime.Parse(dto.EffectiveFromMonth + "-01");
+                    dto.EffectiveFrom = new DateTime(fromDate.Year, fromDate.Month, 1);
+                }
+
+                if (!string.IsNullOrWhiteSpace(dto.EffectiveToMonth))
+                {
+                    var toDate = DateTime.Parse(dto.EffectiveToMonth + "-01");
+                    dto.EffectiveTo = new DateTime(toDate.Year, toDate.Month, 1);
+                }
+                else
+                {
+                    dto.EffectiveTo = null;
+                }
+
                 var entity = MapToEntity(dto);
                 entity.AllowanceDeductionId = Guid.NewGuid();
                 var userName = User.Identity?.Name;
@@ -128,6 +151,14 @@ namespace PayrollSoftware.Web.Controllers
 
             await PopulateDropdownsAsync(entity.EmployeeId);
             var dto = MapToDto(entity);
+
+            // Set month properties for form
+            dto.EffectiveFromMonth = entity.EffectiveFrom.ToString("yyyy-MM");
+            if (entity.EffectiveTo.HasValue)
+            {
+                dto.EffectiveToMonth = entity.EffectiveTo.Value.ToString("yyyy-MM");
+            }
+
             ViewBag.Title = "Edit Allowance/Deduction";
             ViewBag.FormAction = Url.Action("Edit");
             return View("Create", dto);
@@ -139,6 +170,23 @@ namespace PayrollSoftware.Web.Controllers
         {
             try
             {
+                // Convert month strings to DateTime (first day of the month)
+                if (!string.IsNullOrWhiteSpace(dto.EffectiveFromMonth))
+                {
+                    var fromDate = DateTime.Parse(dto.EffectiveFromMonth + "-01");
+                    dto.EffectiveFrom = new DateTime(fromDate.Year, fromDate.Month, 1);
+                }
+
+                if (!string.IsNullOrWhiteSpace(dto.EffectiveToMonth))
+                {
+                    var toDate = DateTime.Parse(dto.EffectiveToMonth + "-01");
+                    dto.EffectiveTo = new DateTime(toDate.Year, toDate.Month, 1);
+                }
+                else
+                {
+                    dto.EffectiveTo = null;
+                }
+
                 var entity = MapToEntity(dto);
                 var userName = User.Identity?.Name;
                 await _allowanceDeductionRepository.UpdateAllowanceDeductionAsync(entity, userName);
