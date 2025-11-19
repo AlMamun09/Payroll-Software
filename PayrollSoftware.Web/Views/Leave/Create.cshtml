@@ -27,7 +27,6 @@
                 <input type="hidden" asp-for="LeaveId" />
             }
 
-            <!-- Hidden total days for POST; server still computes its own, this is for validation/UI -->
             <input type="hidden" asp-for="TotalDays" id="TotalDays" />
 
             <div class="row">
@@ -52,7 +51,8 @@
 
                 <div class="form-group col-md-6">
                     <label>Employee Name</label>
-                    <input id="EmployeeName" class="form-control" readonly placeholder="Select Employee ID first" />
+                    <input id="EmployeeName" class="form-control" readonly placeholder="Select Employee ID first"
+                        value="@ViewBag.EmployeeName" />
                     <small class="form-text text-muted">Auto-populated based on Employee ID.</small>
                 </div>
             </div>
@@ -68,31 +68,30 @@
                 </div>
             </div>
 
-            <!-- Hidden Leave Status field - always set to Pending -->
-            <input type="hidden" asp-for="LeaveStatus" id="LeaveStatus" value="Pending" />
+            <input type="hidden" asp-for="LeaveStatus" id="LeaveStatus" value="@(Model?.LeaveStatus ?? "Pending")" />
 
             <div class="row">
                 <div class="form-group col-md-3">
                     <label asp-for="StartDate">Start Date</label>
                     <input asp-for="StartDate" type="date" class="form-control" id="StartDate"
-                        min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        asp-format="{0:yyyy-MM-dd}" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="StartDate" class="text-danger"></span>
                 </div>
                 <div class="form-group col-md-3">
                     <label asp-for="EndDate">End Date</label>
-                    <input asp-for="EndDate" type="date" class="form-control" id="EndDate"
+                    <input asp-for="EndDate" type="date" class="form-control" id="EndDate" asp-format="{0:yyyy-MM-dd}"
                         min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="EndDate" class="text-danger"></span>
                 </div>
                 <div class="form-group col-md-3">
                     <label>Total Days</label>
-                    <input id="TotalDaysPreview" class="form-control" readonly />
+                    <input id="TotalDaysPreview" class="form-control" readonly value="@Model?.TotalDays" />
                     <small id="TotalDaysHint" class="form-text text-muted">Business days (Sun-Thu).</small>
                 </div>
                 <div class="form-group col-md-3">
                     <label>Leave Status</label>
-                    <input id="LeaveStatusDisplay" class="form-control" readonly value="Pending" />
-                    <small class="form-text text-muted">Status is automatically set to Pending.</small>
+                    <input id="LeaveStatusDisplay" class="form-control" readonly
+                        value="@(Model?.LeaveStatus ?? "Pending")" />
                 </div>
             </div>
 
@@ -111,131 +110,106 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        (function () {
-            // Initialize all Select2 dropdowns using common function (auto-detect modal parent)
-            CommonAjax.initSelect2('#EmployeeId, #LeaveType');
+<script>
+    (function () {
+        // Initialize Select2
+        CommonAjax.initSelect2('#EmployeeId, #LeaveType');
 
-            // Load lookup values for Leave Type
-            CommonAjax.loadLookup('LeaveType', '#LeaveType', '@Model?.LeaveType');
+        // Load lookup values for Leave Type and pre-select
+        const currentLeaveType = '@Html.Raw(Model?.LeaveType ?? "")';
+        CommonAjax.loadLookup('LeaveType', '#LeaveType', currentLeaveType);
 
-            // Handle Employee selection – populate name
-            const empNameEl = document.getElementById('EmployeeName');
+        // Handle Employee selection
+        const empNameEl = document.getElementById('EmployeeName');
+        $('#EmployeeId').on('select2:select', function (e) {
+            const selectedOption = e.params.data.element;
+            const empName = selectedOption.getAttribute('data-name') || '';
+            if (empNameEl) empNameEl.value = empName;
+            calcAndPreview();
+        });
 
-            $('#EmployeeId').on('select2:select', function (e) {
-                const selectedOption = e.params.data.element;
-                const empName = selectedOption.getAttribute('data-name') || '';
-                if (empNameEl) empNameEl.value = empName;
-                calcAndPreview();
-            });
+        $('#EmployeeId').on('select2:clear', function () {
+            if (empNameEl) empNameEl.value = '';
+        });
 
-            $('#EmployeeId').on('select2:clear', function () {
-                if (empNameEl) empNameEl.value = '';
-            });
+        // Date and calculation elements
+        const form = document.getElementById('leaveForm');
+        const startEl = document.getElementById('StartDate');
+        const endEl = document.getElementById('EndDate');
+        const totalHidden = document.getElementById('TotalDays');
+        const totalPreview = document.getElementById('TotalDaysPreview');
+        const hint = document.getElementById('TotalDaysHint');
 
-            // Set initial employee name if editing
-            const selectedEmp = $('#EmployeeId option:selected');
-            if (selectedEmp.length && selectedEmp.val()) {
-                const empName = selectedEmp.attr('data-name') || '';
-                if (empNameEl) empNameEl.value = empName;
+        function updateMinEnd() {
+            if (!startEl?.value || !endEl) return;
+            endEl.min = startEl.value;
+            if (endEl.value && endEl.value < startEl.value) {
+                endEl.value = startEl.value;
             }
+        }
 
-            // Date and calculation elements
-            const form = document.getElementById('leaveForm');
-            const startEl = document.getElementById('StartDate');
-            const endEl = document.getElementById('EndDate');
-            const totalHidden = document.getElementById('TotalDays');
-            const totalPreview = document.getElementById('TotalDaysPreview');
-            const hint = document.getElementById('TotalDaysHint');
-
-            // Ensure EndDate is not before StartDate
-            function updateMinEnd() {
-                if (!startEl?.value || !endEl) return;
-                endEl.min = startEl.value;
-                if (endEl.value && endEl.value < startEl.value) {
-                    endEl.value = startEl.value;
-                }
+        function setTotals(val, message, isError) {
+            if (totalHidden) totalHidden.value = (val || val === 0) ? val : '';
+            if (totalPreview) totalPreview.value = (val || val === 0) ? val : '';
+            if (hint) {
+                hint.textContent = message || '';
+                hint.className = 'form-text ' + (isError ? 'text-danger' : (val > 0 ? 'text-success' : 'text-muted'));
             }
+        }
 
-            // Set total days and hint message
-            function setTotals(val, message, isError) {
-                if (totalHidden) totalHidden.value = (val || val === 0) ? val : '';
-                if (totalPreview) totalPreview.value = (val || val === 0) ? val : '';
-                if (hint) {
-                    hint.textContent = message || '';
-                    hint.className = 'form-text ' + (
-                        isError
-                            ? 'text-danger'
-                            : (val > 0 ? 'text-success' : 'text-muted')
-                    );
-                }
+        function calcAndPreview() {
+            const s = startEl?.value, e = endEl?.value;
+            if (!s || !e) return;
+
+            const days = CommonAjax.calculateBusinessDays(s, e);
+            if (days < 0) {
+                setTotals('', 'End date cannot be before start date.', true);
+                return;
             }
+            setTotals(days, days > 0 ? 'Business days (Sun–Thu).' : 'No business days in range.');
+        }
 
-            // Calculate and preview total business days using common function
-            function calcAndPreview() {
-                const s = startEl?.value, e = endEl?.value;
-                if (!s || !e) {
-                    setTotals('', 'Select start and end dates to calculate.');
-                    return;
-                }
-
-                // Use common business days calculation
-                const days = CommonAjax.calculateBusinessDays(s, e);
-                if (days < 0) {
-                    setTotals('', 'End date cannot be before start date.', true);
-                    return;
-                }
-                setTotals(days, days > 0 ? 'Business days (Sun–Thu).' : 'No business days in range.');
-            }
-
-            // Event listeners
-            startEl?.addEventListener('change', () => {
-                updateMinEnd();
-                calcAndPreview();
-            });
-
-            endEl?.addEventListener('change', () => {
-                calcAndPreview();
-            });
-
-            $('#LeaveType').on('select2:select', () => {
-                calcAndPreview();
-            });
-
-            // Use common form submission handler
-            CommonAjax.submitForm(form, {
-                successTitle: 'Success',
-                errorTitle: 'Validation Error',
-                beforeSubmit: function () {
-                    // Ensure calculation is done before submit
-                    calcAndPreview();
-                },
-                onSuccess: function (data) {
-                    // If in modal, close and refresh list; otherwise navigate to list page
-                    if (typeof $('#leaveModal')?.modal === 'function' && $('#leaveModal').length) {
-                        $('#leaveModal').modal('hide');
-                        if (window.leaveTableReload) {
-                            window.leaveTableReload();
-                        }
-                    } else {
-                        window.location.href = '@Url.Action("PendingLeaves", "Leave")';
-                    }
-                }
-            });
-
-            // Cancel handling: close modal if present, else go back to list
-            document.getElementById('btnCancel')?.addEventListener('click', function () {
-                if (typeof $('#leaveModal')?.modal === 'function' && $('#leaveModal').length) {
-                    $('#leaveModal').modal('hide');
-                } else {
-                    window.location.href = '@Url.Action("Create", "Leave")';
-                }
-            });
-
-            // Initial setup
+        // Event listeners
+        startEl?.addEventListener('change', () => {
             updateMinEnd();
             calcAndPreview();
-        })();
-    </script>
-}
+        });
+        endEl?.addEventListener('change', () => {
+            calcAndPreview();
+        });
+        $('#LeaveType').on('select2:select', () => {
+            calcAndPreview();
+        });
+
+        CommonAjax.submitForm(form, {
+            successTitle: 'Success',
+            errorTitle: 'Validation Error',
+            beforeSubmit: function () {
+                calcAndPreview();
+            },
+            onSuccess: function (data) {
+                // Close modal if exists
+                if (typeof $('#leaveModal')?.modal === 'function' && $('#leaveModal').length) {
+                    $('#leaveModal').modal('hide');
+                    if (window.leaveTableReload) window.leaveTableReload();
+                } else {
+                    window.location.href = '@Url.Action("PendingLeaves", "Leave")';
+                }
+            }
+        });
+
+        document.getElementById('btnCancel')?.addEventListener('click', function () {
+            if (typeof $('#leaveModal')?.modal === 'function' && $('#leaveModal').length) {
+                $('#leaveModal').modal('hide');
+            } else {
+                window.location.href = '@Url.Action("Index", "Leave")';
+            }
+        });
+
+        // Initial Setup
+        updateMinEnd();
+        if (startEl?.value && endEl?.value) {
+            calcAndPreview();
+        }
+    })();
+</script>

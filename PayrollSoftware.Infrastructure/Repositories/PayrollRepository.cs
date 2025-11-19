@@ -175,10 +175,20 @@ namespace PayrollSoftware.Infrastructure.Repositories
                     amount = Math.Round((ad.Percentage / 100m) * basicSalary, 2);
                 }
 
+                // Apply allowances only if present days >= 7
+                // Deductions are always applied regardless of present days
                 if (ad.AllowanceDeductionType == "Allowance")
-                    totalAllowances += amount;
+                {
+                    if (presentDays >= 7)
+                    {
+                        totalAllowances += amount;
+                    }
+                    // If present days < 7, allowance is not applied
+                }
                 else if (ad.AllowanceDeductionType == "Deduction")
+                {
                     totalDeductions += amount;
+                }
             }
 
             // Step 8: Calculate final net salary
