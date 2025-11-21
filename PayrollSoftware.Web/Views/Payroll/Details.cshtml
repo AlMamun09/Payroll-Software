@@ -96,8 +96,9 @@
                                     <h3 class="card-title"><i class="fas fa-calendar-check"></i> Attendance Summary</h3>
                                 </div>
                                 <div class="card-body">
+
                                     <div class="row">
-                                        <div class="col-md-2">
+                                        <div class="col-md-4">
                                             <div class="info-box bg-light">
                                                 <span class="info-box-icon"><i class="fas fa-calendar-alt"></i></span>
                                                 <div class="info-box-content">
@@ -106,7 +107,8 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+
+                                        <div class="col-md-4">
                                             <div class="info-box bg-success">
                                                 <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
                                                 <div class="info-box-content">
@@ -115,7 +117,8 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+
+                                        <div class="col-md-4">
                                             <div class="info-box bg-info">
                                                 <span class="info-box-icon"><i class="fas fa-umbrella-beach"></i></span>
                                                 <div class="info-box-content">
@@ -124,16 +127,21 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                    </div>
+
+                                    <div class="row mt-2">
+                                        <div class="col-md-4">
                                             <div class="info-box bg-warning">
-                                                <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                                                <span class="info-box-icon"><i
+                                                        class="fas fa-exclamation-triangle"></i></span>
                                                 <div class="info-box-content">
                                                     <span class="info-box-text">Unpaid Leave</span>
                                                     <span class="info-box-number">@Model.UnpaidLeaveDays</span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+
+                                        <div class="col-md-4">
                                             <div class="info-box bg-danger">
                                                 <span class="info-box-icon"><i class="fas fa-times-circle"></i></span>
                                                 <div class="info-box-content">
@@ -142,7 +150,8 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+
+                                        <div class="col-md-4">
                                             <div class="info-box bg-primary">
                                                 <span class="info-box-icon"><i class="fas fa-coins"></i></span>
                                                 <div class="info-box-content">
@@ -152,10 +161,12 @@
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
                     </div>
+
 
                     <!-- Salary Breakdown -->
                     <div class="row mt-3">
@@ -188,7 +199,8 @@
                                                 <td class="text-right">
                                                     @{
                                                         var proRatedSalary = Model.TotalDays > 0
-                                                        ? Math.Round((Model.BasicSalary / Model.TotalDays) * Model.PayableDays, 2)
+                                                        ? Math.Round((Model.BasicSalary / Model.TotalDays) *
+                                                        Model.PayableDays, 2)
                                                         : 0;
                                                     }
                                                     @proRatedSalary.ToString("N2")
@@ -271,8 +283,9 @@
                                                                 }
                                                                 else
                                                                 {
-                                                                    @Math.Round((item.Percentage / 100m) * Model.BasicSalary, 2).ToString("N2")
-                                                                }
+                                                                    @Math.Round((item.Percentage / 100m) * Model.BasicSalary,
+                                                                    2).ToString("N2")
+                                                                                                        }
                                                             </td>
                                                         </tr>
                                                     }
@@ -325,8 +338,9 @@
                                                                 }
                                                                 else
                                                                 {
-                                                                    @Math.Round((item.Percentage / 100m) * Model.BasicSalary, 2).ToString("N2")
-                                                                }
+                                                                    @Math.Round((item.Percentage / 100m) * Model.BasicSalary,
+                                                                    2).ToString("N2")
+                                                                                                        }
                                                             </td>
                                                         </tr>
                                                     }
@@ -349,18 +363,15 @@
                         <div class="col-md-12 text-right">
                             @if (Model.PaymentStatus != "Paid")
                             {
-                                <form method="post" asp-action="MarkPaid" asp-route-id="@Model.PayrollId" style="display: inline;">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-success"
-                                            onclick="return confirm('Mark this payroll as paid and generate salary slip?')">
-                                        <i class="fas fa-dollar-sign"></i> Mark as Paid & Generate Slip
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-success js-mark-paid"
+                                    data-payroll-id="@Model.PayrollId">
+                                    <i class="fas fa-dollar-sign"></i> Mark as Paid & Generate Slip
+                                </button>
                             }
                             else
                             {
                                 <a href="@Url.Action("ViewSalarySlip", "Payroll", new { id = Model.PayrollId })"
-                                   class="btn btn-info">
+                                    class="btn btn-info">
                                     <i class="fas fa-file-invoice"></i> View Salary Slip
                                 </a>
                             }
@@ -374,3 +385,60 @@
         </div>
     </div>
 </div>
+
+<!-- Hidden anti-forgery form for AJAX -->
+<form id="__afForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
+
+        $(function () {
+            $('.js-mark-paid').on('click', function () {
+                const payrollId = $(this).data('payroll-id');
+
+                Swal.fire({
+                    title: 'Mark as Paid?',
+                    text: 'This will mark the payroll as paid and generate a salary slip',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, mark as paid!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("MarkPaid", "Payroll")/' + payrollId,
+                            type: 'POST',
+                            headers: {
+                                'RequestVerificationToken': window.__AntiForgeryToken
+                            },
+                            success: function (response) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: response.message || 'Payroll marked as paid and salary slip generated successfully!',
+                                    confirmButtonColor: '#3085d6'
+                                }).then(() => {
+                                    // Reload page to show updated status
+                                    window.location.reload();
+                                });
+                            },
+                            error: function (xhr) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: xhr.responseJSON?.message || 'Error marking payroll as paid',
+                                    confirmButtonColor: '#3085d6'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}
