@@ -212,10 +212,6 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.HasKey("AllowanceDeductionId");
 
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("PayrollId");
-
                     b.ToTable("AllowanceDeductions");
                 });
 
@@ -265,10 +261,6 @@ namespace PayrollSoftware.Data.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("AttendanceId");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("ShiftId");
 
                     b.ToTable("Attendances");
                 });
@@ -344,8 +336,6 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.HasKey("EmployeeId");
 
-                    b.HasIndex("ShiftId");
-
                     b.ToTable("Employees");
                 });
 
@@ -389,8 +379,6 @@ namespace PayrollSoftware.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("LeaveId");
-
-                    b.HasIndex("EmployeeId");
 
                     b.ToTable("Leaves");
                 });
@@ -497,8 +485,6 @@ namespace PayrollSoftware.Data.Migrations
 
                     b.HasKey("PayrollId");
 
-                    b.HasIndex("EmployeeId");
-
                     b.ToTable("Payrolls");
                 });
 
@@ -545,10 +531,6 @@ namespace PayrollSoftware.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("SalarySlipId");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("PayrollId");
 
                     b.ToTable("SalarySlips");
                 });
@@ -708,90 +690,6 @@ namespace PayrollSoftware.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.AllowanceDeduction", b =>
-                {
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId");
-
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Payroll", "Payroll")
-                        .WithMany()
-                        .HasForeignKey("PayrollId");
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Payroll");
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Attendance", b =>
-                {
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Shift", "Shift")
-                        .WithMany()
-                        .HasForeignKey("ShiftId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Shift");
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Employee", b =>
-                {
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Shift", "Shift")
-                        .WithMany()
-                        .HasForeignKey("ShiftId");
-
-                    b.Navigation("Shift");
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Leave", b =>
-                {
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Payroll", b =>
-                {
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.SalarySlip", b =>
-                {
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PayrollSoftware.Infrastructure.Domain.Entities.Payroll", "Payroll")
-                        .WithMany()
-                        .HasForeignKey("PayrollId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Payroll");
                 });
 #pragma warning restore 612, 618
         }
