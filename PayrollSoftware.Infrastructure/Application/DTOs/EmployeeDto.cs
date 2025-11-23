@@ -22,6 +22,7 @@ namespace PayrollSoftware.Infrastructure.Application.DTOs
         public string? BankAccountNumber { get; set; }
         public string? MobileNumber { get; set; }
         public string? Status { get; set; }
+        public int? MachineCode { get; set; }
 
         // For list display
         public string? DepartmentName { get; set; }

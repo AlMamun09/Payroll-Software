@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 using PayrollSoftware.Data;
 using PayrollSoftware.Infrastructure.Application.Interfaces;
 using PayrollSoftware.Infrastructure.Domain.Entities;
-using System.Text.RegularExpressions;
 
 namespace PayrollSoftware.Infrastructure.Repositories
 {
@@ -42,6 +42,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 employee.EmployeeCode = FormatEmployeeCode(employee.EmployeeNumericId);
             }
 
+            // Set MachineCode equal to EmployeeNumericId
+            employee.MachineCode = employee.EmployeeNumericId;
+
             _context.Employees.Add(employee);
             await _context.SaveChangesAsync();
         }
@@ -70,6 +73,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
             {
                 employee.EmployeeCode = existingEmployee.EmployeeCode;
             }
+
+            // Set MachineCode equal to EmployeeNumericId (sync on edit as well)
+            employee.MachineCode = employee.EmployeeNumericId;
 
             _context.Employees.Update(employee);
             await _context.SaveChangesAsync();
@@ -105,11 +111,17 @@ namespace PayrollSoftware.Infrastructure.Repositories
             }
             catch (DbUpdateException ex)
             {
-                throw new Exception($"An error occurred while updating employee status: {ex.Message}", ex);
+                throw new Exception(
+                    $"An error occurred while updating employee status: {ex.Message}",
+                    ex
+                );
             }
             catch (Exception ex)
             {
-                throw new Exception($"An error occurred while toggling employee status: {ex.Message}", ex);
+                throw new Exception(
+                    $"An error occurred while toggling employee status: {ex.Message}",
+                    ex
+                );
             }
         }
 

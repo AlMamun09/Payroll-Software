@@ -8,6 +8,7 @@ namespace PayrollSoftware.Infrastructure.Repositories
     public class AttendanceRepository : IAttendanceRepository
     {
         public readonly ApplicationDbContext _context;
+
         public AttendanceRepository(ApplicationDbContext context)
         {
             _context = context;
@@ -20,7 +21,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
 
         public async Task<Attendance?> GetAttendanceByIdAsync(Guid attendanceId)
         {
-            return await Task.FromResult(_context.Attendances.FirstOrDefault(a => a.AttendanceId == attendanceId));
+            return await Task.FromResult(
+                _context.Attendances.FirstOrDefault(a => a.AttendanceId == attendanceId)
+            );
         }
 
         public async Task AddAttendanceAsync(Attendance attendance)
@@ -41,8 +44,6 @@ namespace PayrollSoftware.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        // --- Validation and Business Rules ---
-
         private async Task ValidateAttendanceAsync(Attendance attendance, bool isNew)
         {
             if (attendance == null)
@@ -54,9 +55,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
             attendance.AttendanceDate = attendance.AttendanceDate.Date;
 
             // Employee must exist
-            var employee = await _context.Employees
-                 .AsNoTracking()
-                 .FirstOrDefaultAsync(e => e.EmployeeId == attendance.EmployeeId);
+            var employee = await _context
+                .Employees.AsNoTracking()
+                .FirstOrDefaultAsync(e => e.EmployeeId == attendance.EmployeeId);
 
             if (employee == null)
             {
@@ -67,29 +68,40 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 // Joining Date Restriction: Disallow attendance before employee's joining date
                 if (attendance.AttendanceDate < employee.JoiningDate.Date)
                 {
-                    errors.Add($"Attendance date cannot be before employee's joining date ({employee.JoiningDate:yyyy-MM-dd}).");
+                    errors.Add(
+                        $"Attendance date cannot be before employee's joining date ({employee.JoiningDate:yyyy-MM-dd})."
+                    );
                 }
 
                 // Attendance Validation: Prevent attendance if employee is resigned or on leave
-                if (employee.Status != null &&
-                    (employee.Status.Equals("Resigned", StringComparison.OrdinalIgnoreCase) ||
-                     employee.Status.Equals("On Leave", StringComparison.OrdinalIgnoreCase)))
+                if (
+                    employee.Status != null
+                    && (
+                        employee.Status.Equals("Resigned", StringComparison.OrdinalIgnoreCase)
+                        || employee.Status.Equals("On Leave", StringComparison.OrdinalIgnoreCase)
+                    )
+                )
                 {
-                    errors.Add("Cannot submit attendance for an employee who is resigned or on leave.");
+                    errors.Add(
+                        "Cannot submit attendance for an employee who is resigned or on leave."
+                    );
                 }
 
-
                 // Attendance Validation: Prevent attendance if employee is on approved leave
-                var isOnLeave = await _context.Leaves
-                  .AsNoTracking()
-                    .AnyAsync(l => l.EmployeeId == attendance.EmployeeId
+                var isOnLeave = await _context
+                    .Leaves.AsNoTracking()
+                    .AnyAsync(l =>
+                        l.EmployeeId == attendance.EmployeeId
                         && l.LeaveStatus == "Approved"
                         && attendance.AttendanceDate >= l.StartDate.Date
-                        && attendance.AttendanceDate <= l.EndDate.Date);
+                        && attendance.AttendanceDate <= l.EndDate.Date
+                    );
 
                 if (isOnLeave)
                 {
-                    errors.Add($"Cannot submit attendance for {attendance.AttendanceDate:yyyy-MM-dd}. Employee is on approved leave for this date.");
+                    errors.Add(
+                        $"Cannot submit attendance for {attendance.AttendanceDate:yyyy-MM-dd}. Employee is on approved leave for this date."
+                    );
                 }
 
                 // Shift Information: Automatically assign shift based on employee details
@@ -106,7 +118,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
                     // Employee has no assigned shift
                     if (attendance.ShiftId == Guid.Empty)
                     {
-                        errors.Add("Employee has no assigned shift. Please assign a shift to the employee first.");
+                        errors.Add(
+                            "Employee has no assigned shift. Please assign a shift to the employee first."
+                        );
                     }
                 }
             }
@@ -114,9 +128,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
             // Shift must exist and be active
             if (attendance.ShiftId != Guid.Empty)
             {
-                var shift = await _context.Shifts
-                     .AsNoTracking()
-              .FirstOrDefaultAsync(s => s.ShiftId == attendance.ShiftId);
+                var shift = await _context
+                    .Shifts.AsNoTracking()
+                    .FirstOrDefaultAsync(s => s.ShiftId == attendance.ShiftId);
 
                 if (shift == null)
                 {
@@ -128,34 +142,22 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 }
             }
 
-            // In/Out Time Validation: Both InTime and OutTime are required (unless marking absent)
-            if (attendance.InTime.HasValue || attendance.OutTime.HasValue)
+            // --- FIXED: Relaxed In/Out Time Validation ---
+            // If InTime is present, we check logic. We NO LONGER force OutTime to be present.
+            if (attendance.InTime.HasValue)
             {
-                // If one is provided, both must be provided
-                if (!attendance.InTime.HasValue)
+                // Only validate duration if BOTH InTime and OutTime exist.
+                // If OutTime is null, it's considered an "Incomplete" punch (WorkingHours = 0) which is valid.
+                if (attendance.OutTime.HasValue)
                 {
-                    errors.Add("InTime is required when OutTime is provided.");
-                }
-                if (!attendance.OutTime.HasValue)
-                {
-                    errors.Add("OutTime is required when InTime is provided.");
-                }
-
-                // Ensure OutTime >= InTime (unless it's an overnight shift)
-                if (attendance.InTime.HasValue && attendance.OutTime.HasValue)
-                {
-                    // If OutTime is less than InTime, it means overnight shift (crossing midnight)
-                    // This is valid, so we don't need to throw an error
-                    // However, we can add a check to ensure the difference is reasonable (e.g., max 24 hours)
                     var timeDiff = attendance.OutTime.Value - attendance.InTime.Value;
 
+                    // Handle overnight shift crossing midnight
                     if (timeDiff < TimeSpan.Zero)
                     {
-                        // Overnight shift - add 24 hours to calculate properly
                         timeDiff = timeDiff.Add(TimeSpan.FromHours(24));
                     }
 
-                    // Ensure working hours don't exceed 24 hours
                     if (timeDiff > TimeSpan.FromHours(24))
                     {
                         errors.Add("Working hours cannot exceed 24 hours.");
@@ -166,14 +168,18 @@ namespace PayrollSoftware.Infrastructure.Repositories
             // Check for duplicate attendance for same employee on same date (only for new records)
             if (isNew)
             {
-                var duplicateExists = await _context.Attendances
-                      .AsNoTracking()
-                      .AnyAsync(a => a.EmployeeId == attendance.EmployeeId
-                      && a.AttendanceDate.Date == attendance.AttendanceDate.Date);
+                var duplicateExists = await _context
+                    .Attendances.AsNoTracking()
+                    .AnyAsync(a =>
+                        a.EmployeeId == attendance.EmployeeId
+                        && a.AttendanceDate.Date == attendance.AttendanceDate.Date
+                    );
 
                 if (duplicateExists)
                 {
-                    errors.Add($"Attendance record already exists for this employee on {attendance.AttendanceDate:yyyy-MM-dd}.");
+                    errors.Add(
+                        $"Attendance record already exists for this employee on {attendance.AttendanceDate:yyyy-MM-dd}."
+                    );
                 }
             }
 
@@ -215,9 +221,9 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 attendance.WorkingHours = (decimal)timeDiff.TotalHours;
 
                 // 3. Late Entry & Early Leave: Auto-calculate from shift start/end times
-                var shift = await _context.Shifts
-                     .AsNoTracking()
-                     .FirstOrDefaultAsync(s => s.ShiftId == attendance.ShiftId);
+                var shift = await _context
+                    .Shifts.AsNoTracking()
+                    .FirstOrDefaultAsync(s => s.ShiftId == attendance.ShiftId);
 
                 if (shift != null)
                 {
@@ -286,6 +292,43 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 attendance.EarlyLeave = null;
             }
         }
+
+        public async Task<Guid> SaveImportFileAsync(AttendanceImportFile importFile)
+        {
+            _context.AttendanceImportFiles.Add(importFile);
+            await _context.SaveChangesAsync();
+            return importFile.ImportId;
+        }
+
+        public async Task UpdateImportProgressAsync(
+            Guid importId,
+            int processed,
+            int total,
+            string status,
+            string? errors = null
+        )
+        {
+            var file = await _context.AttendanceImportFiles.FindAsync(importId);
+            if (file != null)
+            {
+                file.ProcessedRows = processed;
+                if (total > 0)
+                    file.TotalRows = total;
+                file.Status = status;
+                if (errors != null)
+                    file.ErrorLog = errors;
+                if (status == "Completed" || status == "Failed")
+                    file.CompletedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<AttendanceImportFile?> GetImportStatusAsync(Guid importId)
+        {
+            return await _context
+                .AttendanceImportFiles.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.ImportId == importId);
+        }
     }
 }
-
