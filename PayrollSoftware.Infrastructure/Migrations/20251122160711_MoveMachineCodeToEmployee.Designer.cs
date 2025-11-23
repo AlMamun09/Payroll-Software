@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PayrollSoftware.Data;
 
@@ -11,9 +12,11 @@ using PayrollSoftware.Data;
 namespace PayrollSoftware.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251122160711_MoveMachineCodeToEmployee")]
+    partial class MoveMachineCodeToEmployee
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -263,41 +266,6 @@ namespace PayrollSoftware.Data.Migrations
                     b.HasKey("AttendanceId");
 
                     b.ToTable("Attendances");
-                });
-
-            modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.AttendanceImportFile", b =>
-                {
-                    b.Property<Guid>("ImportId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ErrorLog")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("FileContent")
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("FileName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProcessedRows")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TotalRows")
-                        .HasColumnType("int");
-
-                    b.HasKey("ImportId");
-
-                    b.ToTable("AttendanceImportFiles");
                 });
 
             modelBuilder.Entity("PayrollSoftware.Infrastructure.Domain.Entities.Employee", b =>

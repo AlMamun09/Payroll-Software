@@ -23,6 +23,7 @@ namespace PayrollSoftware.Infrastructure.Domain.Entities
         public string? AccountHolderName { get; set; }
         public string? BankAndBranchName { get; set; }
         public string? BankAccountNumber { get; set; }
+        public int? MachineCode { get; set; }
 
         // Audit fields
         public DateTime CreatedAt { get; set; }

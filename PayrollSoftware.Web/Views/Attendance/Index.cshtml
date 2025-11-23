@@ -1,177 +1,342 @@
 @{
-  ViewData["Title"] = "Attendance Management";
+    ViewData["Title"] = "Attendance Management";
 }
 
 <link rel="stylesheet" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css" />
 
 <div class="card" id="attendanceCard" data-list-url="@Url.Action("GetAttendancesJson", "Attendance")"
-  data-delete-template="@Url.Action("Delete", "Attendance")/">
+     data-delete-template="@Url.Action("Delete", "Attendance")/">
 
-  <div class="card-header">
-    <h3 class="card-title m-0">
-      <i class="fas fa-user-check mr-2"></i>Attendance Management
-    </h3>
-    <div class="card-tools">
-      <a href="@Url.Action("Create", "Attendance")" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Record Attendance
-      </a>
-    </div>
-  </div>
-
-  <div class="card-body">
-    <div class="row mb-3">
-      <div class="col-md-3">
-        <label>Filter by Status</label>
-        <select id="statusFilter" class="form-control">
-          <option value="">All Status</option>
-          <option value="Present">Present</option>
-          <option value="Absent">Absent</option>
-        </select>
-      </div>
-      <div class="col-md-3">
-        <label>Filter by Date</label>
-        <input type="date" id="dateFilter" class="form-control" />
-      </div>
+    <div class="card-header">
+        <h3 class="card-title m-0">
+            <i class="fas fa-user-check mr-2"></i>Attendance Management
+        </h3>
+        <div class="card-tools">
+            <!-- Existing Manual Create Button -->
+            <a href="@Url.Action("Create", "Attendance")" class="btn btn-primary mr-1">
+                <i class="fas fa-plus"></i> Record Attendance
+            </a>
+            <!-- NEW: Import Excel Button -->
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#importModal">
+                <i class="fas fa-file-excel"></i> Import Excel
+            </button>
+        </div>
     </div>
 
-    <table id="attendanceTable" class="table table-bordered table-hover w-100">
-      <thead>
-        <tr>
-          <th>Employee Code</th>
-          <th>Employee Name</th>
-          <th>Shift</th>
-          <th>Date</th>
-          <th>In Time</th>
-          <th>Out Time</th>
-          <th>Working Hours</th>
-          <th>Late Entry</th>
-          <th>Early Leave</th>
-          <th>Status</th>
-          <th style="width:100px;" class="text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Data will be loaded via AJAX -->
-      </tbody>
-    </table>
-  </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label>Filter by Status</label>
+                <select id="statusFilter" class="form-control">
+                    <option value="">All Status</option>
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label>Filter by Employee</label>
+                <input type="text" id="employeeFilter" class="form-control" placeholder="Search Name or Code..." />
+            </div>
+            <div class="col-md-3">
+                <label>Filter by Date</label>
+                <input type="date" id="dateFilter" class="form-control" />
+            </div>
+        </div>
+
+        <table id="attendanceTable" class="table table-bordered table-hover w-100">
+            <thead>
+                <tr>
+                    <th>Employee Code</th>
+                    <th>Employee Name</th>
+                    <th>Shift</th>
+                    <th>Date</th>
+                    <th>In Time</th>
+                    <th>Out Time</th>
+                    <th>Working Hours</th>
+                    <th>Late Entry</th>
+                    <th>Early Leave</th>
+                    <th>Status</th>
+                    <th style="width:100px;" class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be loaded via AJAX -->
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Hidden anti-forgery form to extract token for AJAX -->
 <form id="__afForm" method="post" style="display:none;">
-  @Html.AntiForgeryToken()
+    @Html.AntiForgeryToken()
 </form>
 
+<!-- NEW: Import Modal with Progress Bar -->
+<div class="modal fade" id="importModal" data-backdrop="static" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Import Attendance Data</h5>
+                <!-- Hide close button during upload to prevent interrupting background process UI -->
+                <button type="button" class="close" data-dismiss="modal" id="headerCloseBtn"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Step 1: Upload Form -->
+                <div id="uploadStep">
+                    <form id="importForm" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <div class="form-group">
+                            <label>Select Excel File (.xlsx)</label>
+                            <input type="file" name="ExcelFile" class="form-control-file" accept=".xlsx, .xls" required />
+                            <small class="text-muted d-block mt-2">
+                                Required Columns: <b>Mid</b> (Machine ID), <b>Date</b>, <b>Time</b>
+                            </small>
+                        </div>
+                    </form>
+                    <div id="uploadError" class="alert alert-danger d-none mt-2"></div>
+                </div>
+
+                <!-- Step 2: Progress Bar (Hidden initially) -->
+                <div id="progressStep" style="display:none;">
+                    <p class="text-center font-weight-bold" id="progressText">Starting Upload...</p>
+                    <div class="progress">
+                        <div id="importProgressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                             role="progressbar" style="width: 0%">
+                            0%
+                        </div>
+                    </div>
+                    <div class="text-center mt-2 small text-muted">
+                        Do not close this window. Processing in background...
+                    </div>
+                </div>
+
+                <!-- Step 3: Result (Hidden initially) -->
+                <div id="resultStep" style="display:none;">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle mr-1"></i> Import Completed Successfully!
+                    </div>
+                    <div id="resultSummary" class="text-muted small"></div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="btnClose">Close</button>
+                <button type="button" class="btn btn-primary" id="btnUpload" onclick="startUpload()">Upload & Process</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
-  <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+    <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
 
-  <script>
-    window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
+    <script>
+        window.__AntiForgeryToken = document.querySelector('#__afForm input[name="__RequestVerificationToken"]').value;
+        let pollInterval;
 
-    $(function () {
-      const $card = $('#attendanceCard');
-      const listUrl = $card.data('list-url');
-      const deleteTemplate = $card.data('delete-template');
+        $(function () {
+          const $card = $('#attendanceCard');
+          const listUrl = $card.data('list-url');
 
-      // Initialize DataTable
-      const dataTable = $('#attendanceTable').DataTable({
-        processing: true,
-        serverSide: false,
-        ajax: {
-          url: listUrl,
-          type: 'GET',
-          dataSrc: 'data',
-          data: function (d) {
-            d.statusFilter = $('#statusFilter').val();
-            d.dateFilter = $('#dateFilter').val();
-          },
-          error: function (xhr, error, thrown) {
-            console.error('DataTables Ajax Error:', xhr.responseText);
-          }
-        },
-        columns: [
-          { data: 'employeeCode', className: 'text-center' },
-          { data: 'employeeName' },
-          { data: 'shiftName', className: 'text-center' },
-          {
-            data: 'attendanceDate',
-            render: function (data) {
-              return data ? new Date(data).toLocaleDateString() : '';
-            }
-          },
-          {
-            data: 'inTime',
-            className: 'text-center',
-            render: function (data) {
-              return data || '-';
-            }
-          },
-          {
-            data: 'outTime',
-            className: 'text-center',
-            render: function (data) {
-              return data || '-';
-            }
-          },
-          {
-            data: 'workingHours',
-            className: 'text-center',
-            render: function (data) {
-              return data ? parseFloat(data).toFixed(2) + ' hrs' : '0.00 hrs';
-            }
-          },
-          {
-            data: 'lateEntry',
-            className: 'text-center',
-            render: function (data) {
-              return data ? `<span class="badge badge-warning">${data}</span>` : '-';
-            }
-          },
-          {
-            data: 'earlyLeave',
-            className: 'text-center',
-            render: function (data) {
-              return data ? `<span class="badge badge-info">${data}</span>` : '-';
-            }
-          },
-          {
-            data: 'status',
-            className: 'text-center',
-            render: function (data) {
-              const statusClass = {
-                'Present': 'success',
-                'Absent': 'danger'
-              }[data] || 'secondary';
-
-              return `<span class="badge badge-${statusClass}">${data}</span>`;
-            }
-          },
-          {
-            data: 'attendanceId',
-            render: function (data) {
-              const editUrl = '@Url.Action("Edit", "Attendance")/' + data;
-              return `
-                                    <div class="text-center">
-                                        <a href="${editUrl}" class="btn btn-sm btn-info mr-1" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    </div>`;
+          // Initialize DataTable
+          const dataTable = $('#attendanceTable').DataTable({
+            processing: true,
+            serverSide: false,
+            ajax: {
+              url: listUrl,
+              type: 'GET',
+              dataSrc: 'data',
+              data: function (d) {
+                d.statusFilter = $('#statusFilter').val();
+                d.dateFilter = $('#dateFilter').val();
+                d.employeeFilter = $('#employeeFilter').val();
+              },
+              error: function (xhr, error, thrown) {
+                console.error('DataTables Ajax Error:', xhr.responseText);
+              }
             },
-            orderable: false,
-            className: 'text-center'
-          }
-        ],
-        order: [[3, 'desc']], // Default sort: Date descending
-        language: {
-          emptyTable: "No attendance records found",
-          zeroRecords: "No matching attendance records found"
-        }
-      });
+            columns: [
+              { data: 'employeeCode', className: 'text-center' },
+              { data: 'employeeName' },
+              { data: 'shiftName', className: 'text-center' },
+              {
+                data: 'attendanceDate',
+                render: function (data) {
+                  return data ? new Date(data).toLocaleDateString() : '';
+                }
+              },
+              { data: 'inTime', className: 'text-center', render: function (d) { return d || '-'; } },
+              { data: 'outTime', className: 'text-center', render: function (d) { return d || '-'; } },
+              {
+                data: 'workingHours',
+                className: 'text-center',
+                render: function (data) {
+                  return data ? parseFloat(data).toFixed(2) + ' hrs' : '0.00 hrs';
+                }
+              },
+              {
+                data: 'lateEntry',
+                className: 'text-center',
+                render: function (data) {
+                  return data ? `<span class="badge badge-warning">${data}</span>` : '-';
+                }
+              },
+              {
+                data: 'earlyLeave',
+                className: 'text-center',
+                render: function (data) {
+                  return data ? `<span class="badge badge-info">${data}</span>` : '-';
+                }
+              },
+              {
+                data: 'status',
+                className: 'text-center',
+                render: function (data) {
+                  const statusClass = { 'Present': 'success', 'Absent': 'danger' }[data] || 'secondary';
+                  return `<span class="badge badge-${statusClass}">${data}</span>`;
+                }
+              },
+              {
+                data: 'attendanceId',
+                render: function (data) {
+                  const editUrl = '@Url.Action("Edit", "Attendance")/' + data;
+                  return `<div class="text-center">
+                            <a href="${editUrl}" class="btn btn-sm btn-info mr-1" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                          </div>`;
+                },
+                orderable: false,
+                className: 'text-center'
+              }
+            ],
+            order: [[3, 'desc']],
+            language: {
+              emptyTable: "No attendance records found",
+              zeroRecords: "No matching attendance records found"
+            }
+          });
 
-      // Filter functionality
-      $('#statusFilter, #dateFilter').change(function () {
-        dataTable.ajax.reload();
-      });
-    });
-  </script>
+          $('#statusFilter, #dateFilter, #employeeFilter').on('change keyup', function () {
+            dataTable.ajax.reload();
+          });
+
+          // Reset modal when closed
+          $('#importModal').on('hidden.bs.modal', function () {
+            resetModal();
+          });
+        });
+
+        // --- IMPORT & PROGRESS BAR LOGIC ---
+
+        function startUpload() {
+            var form = document.getElementById('importForm');
+            var fileInput = form.querySelector('input[name="ExcelFile"]');
+
+            if (!fileInput.files.length) {
+                alert("Please select a file first.");
+                return;
+            }
+
+            var formData = new FormData(form);
+
+            // 1. Switch UI to Progress Mode
+            $('#uploadStep').hide();
+            $('#progressStep').show();
+            $('#btnUpload').hide();
+            // Disable close buttons to prevent closing while processing
+            $('#btnClose').prop('disabled', true);
+            $('#headerCloseBtn').hide();
+            $('#uploadError').addClass('d-none');
+
+            // 2. Upload File & Start Background Job
+            $.ajax({
+                url: '@Url.Action("UploadImport", "Attendance")',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(resp) {
+                    if(resp.success) {
+                        // File uploaded securely to DB. Start polling for progress.
+                        pollProgress(resp.importId);
+                    } else {
+                        // Upload failed immediately
+                        showError(resp.message);
+                    }
+                },
+                error: function(xhr) {
+                    showError("Server Upload Error: " + xhr.responseText);
+                }
+            });
+        }
+
+        function pollProgress(importId) {
+            // Poll every 1 second
+            pollInterval = setInterval(function() {
+                $.get('@Url.Action("CheckProgress", "Attendance")?importId=' + importId, function(data) {
+
+                    // Update Bar
+                    $('#importProgressBar').css('width', data.percentage + '%').text(data.percentage + '%');
+                    $('#progressText').text(`${data.status} (${data.processed} / ${data.total} rows)`);
+
+                    if(data.status === 'Completed') {
+                        clearInterval(pollInterval);
+                        showSuccess(data);
+                    }
+                    else if(data.status === 'Failed') {
+                        clearInterval(pollInterval);
+                        showError("Processing Failed: " + (data.errors || "Unknown error"));
+                    }
+                }).fail(function() {
+                    // If network glitch during polling, just log it, don't stop unless many fails
+                    console.warn("Polling failed temporarily...");
+                });
+            }, 1000);
+        }
+
+        function showSuccess(data) {
+            $('#progressStep').hide();
+            $('#resultStep').show();
+            $('#btnClose').prop('disabled', false);
+            $('#headerCloseBtn').show();
+
+            // Show details if any warnings exist (passed via ErrorLog in success state)
+            if (data.errors) {
+                 $('#resultSummary').html(`<div class="alert alert-warning mt-2">Completed with warnings:<br>${data.errors}</div>`);
+            } else {
+                 $('#resultSummary').text(`Processed ${data.total} rows successfully.`);
+            }
+
+            // Refresh the main table to show new data
+            $('#attendanceTable').DataTable().ajax.reload();
+        }
+
+        function showError(msg) {
+            $('#uploadStep').show();
+            $('#progressStep').hide();
+            $('#resultStep').hide();
+            $('#btnUpload').show();
+            $('#btnClose').prop('disabled', false);
+            $('#headerCloseBtn').show();
+            $('#uploadError').removeClass('d-none').text(msg);
+        }
+
+        function resetModal() {
+            clearInterval(pollInterval);
+            $('#uploadStep').show();
+            $('#progressStep').hide();
+            $('#resultStep').hide();
+            $('#btnUpload').show();
+            $('#btnClose').prop('disabled', false);
+            $('#headerCloseBtn').show();
+            $('#uploadError').addClass('d-none');
+
+            // Clear file input
+            document.getElementById('importForm').reset();
+            $('#importProgressBar').css('width', '0%').text('0%');
+            $('#progressText').text('Starting Upload...');
+        }
+    </script>
 }

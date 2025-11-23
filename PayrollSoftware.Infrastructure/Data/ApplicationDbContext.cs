@@ -18,5 +18,6 @@ namespace PayrollSoftware.Data
         public DbSet<AllowanceDeduction> AllowanceDeductions { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<Lookup> Lookups { get; set; }
+        public DbSet<AttendanceImportFile> AttendanceImportFiles { get; set; }
     }
 }

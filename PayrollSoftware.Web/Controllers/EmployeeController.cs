@@ -39,26 +39,33 @@ namespace PayrollSoftware.Web.Controllers
                 if (!string.IsNullOrWhiteSpace(statusFilter))
                 {
                     employees = employees
-                        .Where(e => string.Equals(e.Status, statusFilter, StringComparison.OrdinalIgnoreCase))
+                        .Where(e =>
+                            string.Equals(
+                                e.Status,
+                                statusFilter,
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
                         .ToList();
                 }
 
-
                 // Since Department and Designation are now stored as lookup values (not IDs),
                 // they can be displayed directly
-                var data = employees.Select(e => new
-                {
-                    e.EmployeeId,
-                    e.EmployeeCode,
-                    e.FullName,
-                    e.Gender,
-                    e.DateOfBirth,
-                    e.Department,
-                    DepartmentName = e.Department ?? "-", // Department is already the display name
-                    e.Designation,
-                    DesignationName = e.Designation ?? "-", // Designation is already the display name
-                    e.Status
-                }).ToList();
+                var data = employees
+                    .Select(e => new
+                    {
+                        e.EmployeeId,
+                        e.EmployeeCode,
+                        e.FullName,
+                        e.Gender,
+                        e.DateOfBirth,
+                        e.Department,
+                        DepartmentName = e.Department ?? "-", // Department is already the display name
+                        e.Designation,
+                        DesignationName = e.Designation ?? "-", // Designation is already the display name
+                        e.Status,
+                    })
+                    .ToList();
 
                 return Json(new { data });
             }
@@ -76,7 +83,12 @@ namespace PayrollSoftware.Web.Controllers
             ViewBag.FormAction = Url.Action("Create");
             return View(
                 "Create",
-                new EmployeeDto { DateOfBirth = DateTime.Today, JoiningDate = DateTime.Today, Status = "Active" }
+                new EmployeeDto
+                {
+                    DateOfBirth = DateTime.Today,
+                    JoiningDate = DateTime.Today,
+                    Status = "Active",
+                }
             );
         }
 
@@ -194,11 +206,19 @@ namespace PayrollSoftware.Web.Controllers
                 await _employeeRepository.ToggleEmployeeStatusAsync(id);
 
                 var newStatus = employee.Status == "Active" ? "Inactive" : "Active";
-                var statusMessage = newStatus == "Inactive"
-              ? "Employee has been marked as Inactive."
-                : "Employee has been reactivated.";
+                var statusMessage =
+                    newStatus == "Inactive"
+                        ? "Employee has been marked as Inactive."
+                        : "Employee has been reactivated.";
 
-                return Json(new { success = true, message = statusMessage, newStatus });
+                return Json(
+                    new
+                    {
+                        success = true,
+                        message = statusMessage,
+                        newStatus,
+                    }
+                );
             }
             catch (ArgumentException ex)
             {
@@ -207,9 +227,13 @@ namespace PayrollSoftware.Web.Controllers
             catch (Exception ex)
             {
                 return StatusCode(
-                            500,
-                         new { success = false, message = $"Error updating employee status: {ex.Message}" }
-          );
+                    500,
+                    new
+                    {
+                        success = false,
+                        message = $"Error updating employee status: {ex.Message}",
+                    }
+                );
             }
         }
 
@@ -219,7 +243,7 @@ namespace PayrollSoftware.Web.Controllers
             {
                 EmployeeId = dto.EmployeeId,
                 Designation = dto.Designation, // Store lookup value directly
-                Department = dto.Department,   // Store lookup value directly
+                Department = dto.Department, // Store lookup value directly
                 ShiftId = dto.ShiftId,
                 EmployeeNumericId = dto.EmployeeNumericId,
                 EmployeeCode = dto.EmployeeCode,
@@ -235,6 +259,7 @@ namespace PayrollSoftware.Web.Controllers
                 BankAccountNumber = dto.BankAccountNumber,
                 MobileNumber = dto.MobileNumber,
                 Status = dto.Status,
+                MachineCode = dto.MachineCode,
             };
         }
 
@@ -260,16 +285,17 @@ namespace PayrollSoftware.Web.Controllers
                 BankAccountNumber = entity.BankAccountNumber,
                 MobileNumber = entity.MobileNumber,
                 Status = entity.Status,
+                MachineCode = entity.MachineCode,
             };
         }
 
         private async Task PopulateDropdownsAsync()
         {
             ViewBag.Shifts = await _context
-      .Shifts.AsNoTracking()
-                  .Where(s => s.IsActive)
-          .OrderBy(s => s.ShiftName)
-    .ToListAsync();
+                .Shifts.AsNoTracking()
+                .Where(s => s.IsActive)
+                .OrderBy(s => s.ShiftName)
+                .ToListAsync();
         }
     }
 }
