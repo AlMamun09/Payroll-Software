@@ -36,6 +36,8 @@
           <option value="Designation">Designation</option>
           <option value="CalculationType">Calculation Type</option>
           <option value="AllowanceDeductionType">Allowance/Deduction Type</option>
+          <option value="Weekend">Weekend</option>
+
         </select>
       </div>
       <div class="col-md-3">
@@ -132,19 +134,19 @@
             render: function (data, type, row) {
               const statusBtn = row.isActive
                 ? `<button class="btn btn-sm btn-danger js-deactivate" data-id="${data}" title="Deactivate">
-           <i class="fas fa-toggle-off"></i>
-            </button>`
+                 <i class="fas fa-toggle-off"></i>
+                  </button>`
                 : `<button class="btn btn-sm btn-success js-activate" data-id="${data}" title="Activate">
-                  <i class="fas fa-toggle-on"></i>
-           </button>`;
+                        <i class="fas fa-toggle-on"></i>
+                 </button>`;
 
               return `
-              <div class="btn-group btn-group-sm">
-              <a href="${routes.edit(data)}" class="btn btn-info" title="Edit">
-               <i class="fas fa-edit"></i>
-              </a>
-              ${statusBtn}
-            </div>`;
+                    <div class="btn-group btn-group-sm">
+                    <a href="${routes.edit(data)}" class="btn btn-info" title="Edit">
+                     <i class="fas fa-edit"></i>
+                    </a>
+                    ${statusBtn}
+                  </div>`;
             },
             orderable: false
           }

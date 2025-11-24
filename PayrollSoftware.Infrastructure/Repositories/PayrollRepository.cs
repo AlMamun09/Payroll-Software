@@ -8,10 +8,12 @@ namespace PayrollSoftware.Infrastructure.Repositories
     public class PayrollRepository : IPayrollRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILookupRepository _lookupRepository;
 
-        public PayrollRepository(ApplicationDbContext context)
+        public PayrollRepository(ApplicationDbContext context, ILookupRepository lookupRepository)
         {
             _context = context;
+            _lookupRepository = lookupRepository;
         }
 
         public async Task<List<Payroll>> GetAllPayrollsAsync()
@@ -63,10 +65,26 @@ namespace PayrollSoftware.Infrastructure.Repositories
                     .FirstOrDefaultAsync(e => e.EmployeeId == employeeId, ct)
                 ?? throw new ArgumentException("Employee not found");
 
-            // Step 1: Calculate total days between start and end date
+            // Step 1: Fetch weekend days from Lookup table
+            var weekendLookups = await _lookupRepository.GetLookupsByTypeAsync("Weekend");
+            var weekendDays = weekendLookups
+                .Where(l => l.IsActive)
+                .Select(l => l.LookupValue)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            // Step 2: Calculate total days and total weekend days in the period
             var totalDays = (periodEnd.Date - periodStart.Date).Days + 1;
 
-            // Step 2: Calculate unpaid leave days
+            int totalWeekendDays = 0;
+            for (var date = periodStart.Date; date <= periodEnd.Date; date = date.AddDays(1))
+            {
+                if (weekendDays.Contains(date.DayOfWeek.ToString()))
+                {
+                    totalWeekendDays++;
+                }
+            }
+
+            // Step 3: Calculate unpaid leave days
             var unpaidLeaveDays = await _context
                 .Leaves.AsNoTracking()
                 .Where(l =>
@@ -90,7 +108,7 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 totalUnpaidDays += (leaveEnd - leaveStart).Days + 1;
             }
 
-            // Step 3: Calculate absent days (days not marked as Present in Attendance)
+            // Step 4: Calculate present days (days marked as Present in Attendance)
             var presentDays = await _context
                 .Attendances.AsNoTracking()
                 .Where(a =>
@@ -103,7 +121,7 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 .Distinct()
                 .CountAsync(ct);
 
-            // Get paid leave days (these count as present)
+            // Step 5: Get paid leave days (these count as present)
             var paidLeaveDays = await _context
                 .Leaves.AsNoTracking()
                 .Where(l =>
@@ -127,27 +145,33 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 totalPaidLeaveDays += (leaveEnd - leaveStart).Days + 1;
             }
 
-            // Total working days = present days + paid leave days
-            var totalWorkingDays = presentDays + totalPaidLeaveDays;
+            // Step 6: Calculate working days (total days - weekends)
+            var totalWorkingDays = totalDays - totalWeekendDays;
 
-            // Absent days = total days - working days - unpaid leave days
-            var absentDays = totalDays - totalWorkingDays - totalUnpaidDays;
+            // Step 7: Calculate expected attendance days (working days - paid leave days - unpaid leave days)
+            var expectedAttendanceDays = totalWorkingDays - totalPaidLeaveDays - totalUnpaidDays;
+            if (expectedAttendanceDays < 0)
+                expectedAttendanceDays = 0;
+
+            // Step 8: Calculate absent days (expected attendance days - present days)
+            // Weekends are now excluded from this calculation
+            var absentDays = expectedAttendanceDays - presentDays;
             if (absentDays < 0)
                 absentDays = 0;
 
-            // Step 4: Calculate payable days
+            // Step 9: Calculate payable days (total days - unpaid leave days - absent days)
             var payableDays = totalDays - totalUnpaidDays - absentDays;
             if (payableDays < 0)
                 payableDays = 0;
 
-            // Step 5: Get BasicSalary from Employee
+            // Step 10: Get BasicSalary from Employee
             var basicSalary = employee.BasicSalary;
 
-            // Step 6: Calculate pro-rated salary based on payable days
+            // Step 11: Calculate pro-rated salary based on payable days
             var dailyRate = totalDays > 0 ? basicSalary / totalDays : 0m;
             var proRatedSalary = Math.Round(dailyRate * payableDays, 2);
 
-            // Step 7: Get active allowances and deductions
+            // Step 12: Get active allowances and deductions
             var allowancesDeductions = await _context
                 .AllowanceDeductions.AsNoTracking()
                 .Where(ad =>
@@ -191,7 +215,7 @@ namespace PayrollSoftware.Infrastructure.Repositories
                 }
             }
 
-            // Step 8: Calculate final net salary
+            // Step 13: Calculate final net salary
             // Net Salary = Pro-rated Basic Salary + Allowances - Deductions
             var netSalary = proRatedSalary + totalAllowances - totalDeductions;
 
