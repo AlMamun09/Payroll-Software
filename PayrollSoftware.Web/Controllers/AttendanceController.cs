@@ -6,6 +6,7 @@ using PayrollSoftware.Data;
 using PayrollSoftware.Infrastructure.Application.DTOs;
 using PayrollSoftware.Infrastructure.Application.Interfaces;
 using PayrollSoftware.Infrastructure.Domain.Entities;
+using PayrollSoftware.Infrastructure.Services.Interfaces;
 
 namespace PayrollSoftware.Web.Controllers
 {
@@ -14,19 +15,19 @@ namespace PayrollSoftware.Web.Controllers
         private readonly IAttendanceRepository _attendanceRepository;
         private readonly ILeaveRepository _leaveRepository;
         private readonly ApplicationDbContext _context;
-        private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly IAttendanceImportService _attendanceImportService;
 
         public AttendanceController(
             IAttendanceRepository attendanceRepository,
             ILeaveRepository leaveRepository,
             ApplicationDbContext context,
-            IServiceScopeFactory serviceScopeFactory
+            IAttendanceImportService attendanceImportService
         )
         {
             _attendanceRepository = attendanceRepository;
             _leaveRepository = leaveRepository;
             _context = context;
-            _serviceScopeFactory = serviceScopeFactory;
+            _attendanceImportService = attendanceImportService;
         }
 
         // GET: /Attendance
@@ -603,399 +604,35 @@ namespace PayrollSoftware.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UploadImport(AttendanceImportDto model)
         {
-            if (model.ExcelFile == null || model.ExcelFile.Length == 0)
-                return Json(new { success = false, message = "No file selected." });
+            var result = await _attendanceImportService.UploadImportAsync(model);
 
-            // A. Convert IFormFile to Byte Array
-            byte[] fileBytes;
-            using (var ms = new MemoryStream())
+            if (result.Success)
             {
-                await model.ExcelFile.CopyToAsync(ms);
-                fileBytes = ms.ToArray();
+                return Json(new { success = true, importId = result.ImportId });
             }
 
-            // B. Save to DB (The "Backup" Step)
-            var importFile = new AttendanceImportFile
-            {
-                ImportId = Guid.NewGuid(),
-                FileName = model.ExcelFile.FileName,
-                FileContent = fileBytes,
-                Status = "Pending",
-                TotalRows = 0,
-                ProcessedRows = 0,
-            };
-
-            await _attendanceRepository.SaveImportFileAsync(importFile);
-
-            // C. Start Background Processing (Fire and Forget)
-            // We pass the ID to a separate method that runs in the background
-            _ = Task.Run(() => ProcessImportBackground(importFile.ImportId));
-
-            // D. Return ID to Frontend immediately
-            return Json(new { success = true, importId = importFile.ImportId });
+            return Json(new { success = false, message = result.Message });
         }
 
         // 2. POLLING ENDPOINT (Frontend calls this every 1s)
         [HttpGet]
         public async Task<IActionResult> CheckProgress(Guid importId)
         {
-            var file = await _attendanceRepository.GetImportStatusAsync(importId);
-            if (file == null)
+            var result = await _attendanceImportService.CheckProgressAsync(importId);
+
+            if (result.Status == "NotFound")
                 return NotFound();
-
-            // Calculate Percentage
-            int pct = 0;
-            if (file.TotalRows > 0)
-                pct = (int)((double)file.ProcessedRows / file.TotalRows * 100);
-
-            // Cap at 100 if completed
-            if (file.Status == "Completed")
-                pct = 100;
 
             return Json(
                 new
                 {
-                    status = file.Status,
-                    percentage = pct,
-                    processed = file.ProcessedRows,
-                    total = file.TotalRows,
-                    errors = file.ErrorLog,
+                    status = result.Status,
+                    percentage = result.Percentage,
+                    processed = result.Processed,
+                    total = result.Total,
+                    errors = result.Errors,
                 }
             );
-        }
-
-        // 3. BACKGROUND WORKER (Private)
-
-        private async Task ProcessImportBackground(Guid importId)
-        {
-            using (var scope = _serviceScopeFactory.CreateScope())
-            {
-                var repo = scope.ServiceProvider.GetRequiredService<IAttendanceRepository>();
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-                var importFile = await repo.GetImportStatusAsync(importId);
-                if (importFile == null)
-                    return;
-
-                await repo.UpdateImportProgressAsync(importId, 0, 0, "Processing");
-
-                var errors = new List<string>();
-                var rawPunches = new List<(Guid EmployeeId, DateTime Timestamp)>();
-                var debugInfo = new List<string>(); // ADD: Debug tracking
-
-                try
-                {
-                    System.Text.Encoding.RegisterProvider(
-                        System.Text.CodePagesEncodingProvider.Instance
-                    );
-
-                    using (var stream = new MemoryStream(importFile.FileContent))
-                    using (var reader = ExcelReaderFactory.CreateReader(stream))
-                    {
-                        var result = reader.AsDataSet();
-                        var dataTable = result.Tables[0];
-                        int totalRows = dataTable.Rows.Count - 1;
-
-                        await repo.UpdateImportProgressAsync(importId, 0, totalRows, "Processing");
-
-                        // Headers
-                        var headers = dataTable
-                            .Rows[0]
-                            .ItemArray.Select(x => x?.ToString()?.Trim().ToLower())
-                            .ToList();
-
-                        int midIndex = headers.IndexOf("mid");
-                        int dateIndex = headers.IndexOf("date");
-                        int timeIndex = headers.IndexOf("time");
-
-                        if (midIndex == -1 || dateIndex == -1 || timeIndex == -1)
-                        {
-                            throw new Exception("Missing required columns: Mid, Date, Time");
-                        }
-
-                        // **FIX 1**: Load ALL employees with MachineCode (not just Active)
-                        // This ensures we can see ALL machine codes that exist
-                        var allEmployeesWithMachineCode = await context
-                            .Employees.AsNoTracking()
-                            .Where(e => e.MachineCode.HasValue)
-                            .Select(e => new
-                            {
-                                e.MachineCode,
-                                e.EmployeeId,
-                                e.Status,
-                                e.FullName,
-                            })
-                            .ToListAsync();
-
-                        // **FIX 2**: Only use Active employees for actual import
-                        var employeeLookup = allEmployeesWithMachineCode
-                            .Where(e => e.Status == "Active")
-                            .ToDictionary(e => e.MachineCode!.Value, e => e.EmployeeId);
-
-                        // **DEBUG**: Log available machine codes
-                        debugInfo.Add(
-                            $"Total employees with MachineCode: {allEmployeesWithMachineCode.Count}"
-                        );
-                        debugInfo.Add($"Active employees: {employeeLookup.Count}");
-                        debugInfo.Add(
-                            $"Machine Codes: {string.Join(", ", employeeLookup.Keys.OrderBy(x => x))}"
-                        );
-
-                        var invalidMids = new HashSet<int>(); // Track invalid MIDs
-
-                        for (int i = 1; i < dataTable.Rows.Count; i++)
-                        {
-                            var row = dataTable.Rows[i];
-                            string midString = row[midIndex]?.ToString()?.Trim();
-
-                            if (int.TryParse(midString, out int mid))
-                            {
-                                DateTime datePart = DateTime.MinValue;
-                                TimeSpan timePart = TimeSpan.Zero;
-                                bool isDateValid = false;
-                                bool isTimeValid = false;
-
-                                // --- ROBUST DATE PARSING (IMPROVED) ---
-                                var dateCell = row[dateIndex];
-
-                                if (dateCell is DateTime dt)
-                                {
-                                    datePart = dt.Date; // **FIX**: Ensure date only
-                                    isDateValid = true;
-                                }
-                                else if (dateCell is double serialDate)
-                                {
-                                    try
-                                    {
-                                        datePart = DateTime.FromOADate(serialDate).Date; // **FIX**: Date only
-                                        isDateValid = true;
-                                    }
-                                    catch { }
-                                }
-                                else if (dateCell != null)
-                                {
-                                    string dateStr = dateCell.ToString().Trim();
-
-                                    // **FIX 3**: Add more date formats including d/M/yyyy
-                                    string[] formats =
-                                    {
-                                        "yyyy-MM-dd",
-                                        "dd/MM/yyyy",
-                                        "d/M/yyyy", // Single digit day/month
-                                        "MM/dd/yyyy",
-                                        "M/d/yyyy", // Single digit month/day
-                                        "yyyy/MM/dd",
-                                        "dd-MM-yyyy",
-                                        "d-M-yyyy",
-                                        "MM-dd-yyyy",
-                                        "M-d-yyyy",
-                                    };
-
-                                    if (
-                                        DateTime.TryParseExact(
-                                            dateStr,
-                                            formats,
-                                            System.Globalization.CultureInfo.InvariantCulture,
-                                            System.Globalization.DateTimeStyles.None,
-                                            out var parsedDate
-                                        )
-                                    )
-                                    {
-                                        datePart = parsedDate.Date; // **FIX**: Date only
-                                        isDateValid = true;
-                                    }
-                                    // Fallback to general parsing if specific formats fail
-                                    else if (DateTime.TryParse(dateStr, out parsedDate))
-                                    {
-                                        datePart = parsedDate.Date; // **FIX**: Date only
-                                        isDateValid = true;
-                                    }
-                                }
-
-                                // --- ROBUST TIME PARSING (same as before) ---
-                                var timeCell = row[timeIndex];
-                                if (timeCell is DateTime dtTime)
-                                {
-                                    timePart = dtTime.TimeOfDay;
-                                    isTimeValid = true;
-                                }
-                                else if (timeCell is TimeSpan ts)
-                                {
-                                    timePart = ts;
-                                    isTimeValid = true;
-                                }
-                                else if (timeCell is double serialTime)
-                                {
-                                    try
-                                    {
-                                        timePart = DateTime.FromOADate(serialTime).TimeOfDay;
-                                        isTimeValid = true;
-                                    }
-                                    catch { }
-                                }
-                                else if (timeCell != null)
-                                {
-                                    string timeStr = timeCell.ToString().Trim();
-                                    if (TimeSpan.TryParse(timeStr, out var parsedTime))
-                                    {
-                                        timePart = parsedTime;
-                                        isTimeValid = true;
-                                    }
-                                    else if (DateTime.TryParse(timeStr, out var parsedDateTime))
-                                    {
-                                        timePart = parsedDateTime.TimeOfDay;
-                                        isTimeValid = true;
-                                    }
-                                }
-
-                                // --- COMBINE AND SAVE ---
-                                if (isDateValid && isTimeValid)
-                                {
-                                    if (employeeLookup.TryGetValue(mid, out Guid realEmployeeId))
-                                    {
-                                        rawPunches.Add(
-                                            (realEmployeeId, datePart.Date.Add(timePart))
-                                        );
-                                    }
-                                    else
-                                    {
-                                        // **DEBUG**: Track invalid MIDs
-                                        if (invalidMids.Add(mid))
-                                        {
-                                            // Check if MID exists but employee is inactive
-                                            var inactiveEmp =
-                                                allEmployeesWithMachineCode.FirstOrDefault(e =>
-                                                    e.MachineCode == mid
-                                                );
-
-                                            if (inactiveEmp != null)
-                                            {
-                                                debugInfo.Add(
-                                                    $"MID {mid} belongs to {inactiveEmp.Status} employee: {inactiveEmp.FullName}"
-                                                );
-                                            }
-                                            else
-                                            {
-                                                debugInfo.Add($"MID {mid} not found in system");
-                                            }
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    // **DEBUG**: Track date/time parsing failures
-                                    if (!isDateValid)
-                                        debugInfo.Add($"Row {i}: Invalid date format - {dateCell}");
-                                    if (!isTimeValid)
-                                        debugInfo.Add($"Row {i}: Invalid time format - {timeCell}");
-                                }
-                            }
-
-                            if (i % 50 == 0)
-                                await repo.UpdateImportProgressAsync(
-                                    importId,
-                                    i,
-                                    totalRows,
-                                    "Processing"
-                                );
-                        }
-                    }
-
-                    // --- SAVE TO DB ---
-                    var grouped = rawPunches
-                        .GroupBy(x => new { x.EmployeeId, Date = x.Timestamp.Date })
-                        .ToList();
-                    int savedCount = 0;
-                    int totalGroups = grouped.Count;
-
-                    await repo.UpdateImportProgressAsync(importId, 0, totalGroups, "Saving...");
-
-                    if (totalGroups == 0)
-                    {
-                        // **FIX 4**: Include debug info in error message
-                        var errorMessage =
-                            "No valid records found. Check Date Formats and Machine IDs.\n\n"
-                            + "Debug Info:\n"
-                            + string.Join("\n", debugInfo.Take(20));
-
-                        await repo.UpdateImportProgressAsync(
-                            importId,
-                            0,
-                            0,
-                            "Completed",
-                            errorMessage
-                        );
-                        return;
-                    }
-
-                    foreach (var record in grouped)
-                    {
-                        bool exists = await context.Attendances.AnyAsync(a =>
-                            a.EmployeeId == record.Key.EmployeeId
-                            && a.AttendanceDate == record.Key.Date
-                        );
-
-                        if (!exists)
-                        {
-                            var attendance = new Attendance
-                            {
-                                AttendanceId = Guid.NewGuid(),
-                                EmployeeId = record.Key.EmployeeId,
-                                AttendanceDate = record.Key.Date,
-                                InTime = record.Min(x => x.Timestamp).TimeOfDay,
-                                OutTime = record.Max(x => x.Timestamp).TimeOfDay,
-                                ShiftId = Guid.Empty,
-                            };
-
-                            if (attendance.InTime == attendance.OutTime)
-                                attendance.OutTime = null;
-
-                            try
-                            {
-                                await repo.AddAttendanceAsync(attendance);
-                            }
-                            catch (Exception ex)
-                            {
-                                errors.Add(
-                                    $"Emp {record.Key.EmployeeId} on {record.Key.Date:dd/MM}: {ex.Message}"
-                                );
-                            }
-                        }
-
-                        savedCount++;
-                        if (savedCount % 10 == 0)
-                            await repo.UpdateImportProgressAsync(
-                                importId,
-                                savedCount,
-                                totalGroups,
-                                "Saving..."
-                            );
-                    }
-
-                    // **FIX 5**: Add debug summary to completion message
-                    var completionMessage =
-                        errors.Count > 0
-                            ? string.Join(" | ", errors.Take(5))
-                            : $"Import successful. Processed {totalGroups} attendance records.";
-
-                    await repo.UpdateImportProgressAsync(
-                        importId,
-                        totalGroups,
-                        totalGroups,
-                        "Completed",
-                        completionMessage
-                    );
-                }
-                catch (Exception ex)
-                {
-                    var errorMsg = ex.Message;
-                    if (debugInfo.Any())
-                    {
-                        errorMsg += "\n\nDebug Info:\n" + string.Join("\n", debugInfo.Take(10));
-                    }
-                    await repo.UpdateImportProgressAsync(importId, 0, 0, "Failed", errorMsg);
-                }
-            }
         }
     }
 }

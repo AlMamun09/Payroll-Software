@@ -36,8 +36,6 @@ builder
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IEmailService, EmailService>();
-//builder.Services.AddScoped<IDesignationRepository, DesignationRepository>();
-//builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<ILeaveRepository, LeaveRepository>();
@@ -46,6 +44,7 @@ builder.Services.AddScoped<IAllowanceDeductionRepository, AllowanceDeductionRepo
 builder.Services.AddScoped<IPayrollRepository, PayrollRepository>();
 builder.Services.AddScoped<ISalarySlipRepository, SalarySlipRepository>();
 builder.Services.AddScoped<ILookupRepository, LookupRepository>();
+builder.Services.AddScoped<IAttendanceImportService, AttendanceImportService>();
 
 var app = builder.Build();
 

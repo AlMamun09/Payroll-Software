@@ -99,9 +99,9 @@
               const paidBtn = row.paymentStatus === 'Paid' ? '' : `<button class="btn btn-sm btn-success js-paid" data-id="${id}" title="Mark Paid"><i class="fas fa-dollar-sign"></i></button>`;
 
               return `<div class="text-center">
-                  <a class="btn btn-sm btn-info mr-1" href="@Url.Action("Details", "Payroll")/${id}" title="Details"><i class="fas fa-info-circle"></i></a>
-                  ${paidBtn}
-                 </div>`;
+                    <a class="btn btn-sm btn-info mr-1" href="@Url.Action("Details", "Payroll")/${id}" title="Details"><i class="fas fa-info-circle"></i></a>
+                    ${paidBtn}
+                   </div>`;
             },
             orderable: false,
             className: 'text-center'
@@ -171,9 +171,16 @@
             confirmButtonColor: '#3085d6',
             timer: 2000,
             timerProgressBar: true
+          }).then(() => {
+            // Navigate to the payroll details page
+            if (r.redirectUrl) {
+              window.location.href = r.redirectUrl;
+            } else {
+              // Fallback: reload the table if no redirect URL
+              table.ajax.reload(null, false);
+              $('#employeeSelect').val('').trigger('change');
+            }
           });
-          table.ajax.reload();
-          $('#employeeSelect').val('');
         })
           .fail(x => {
             Swal.fire({

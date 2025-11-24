@@ -2,7 +2,6 @@
 using PayrollSoftware.Infrastructure.Application.DTOs;
 using PayrollSoftware.Infrastructure.Application.Interfaces;
 using PayrollSoftware.Infrastructure.Domain.Entities;
-using System.Linq;
 
 namespace PayrollSoftware.Web.Controllers
 {
@@ -64,7 +63,7 @@ namespace PayrollSoftware.Web.Controllers
                     LookupType = dto.LookupType,
                     LookupValue = dto.LookupValue,
                     DisplayOrder = dto.DisplayOrder,
-                    IsActive = dto.IsActive
+                    IsActive = dto.IsActive,
                 };
 
                 await _lookupRepository.AddLookupAsync(entity);
@@ -88,7 +87,8 @@ namespace PayrollSoftware.Web.Controllers
         public async Task<IActionResult> Edit(Guid id)
         {
             var entity = await _lookupRepository.GetLookupByIdAsync(id);
-            if (entity == null) return NotFound();
+            if (entity == null)
+                return NotFound();
 
             ViewBag.Title = "Edit Lookup";
             ViewBag.FormAction = Url.Action("Edit");
@@ -100,7 +100,7 @@ namespace PayrollSoftware.Web.Controllers
                 LookupType = entity.LookupType,
                 LookupValue = entity.LookupValue,
                 DisplayOrder = entity.DisplayOrder,
-                IsActive = entity.IsActive
+                IsActive = entity.IsActive,
             };
 
             return View("Create", dto);
@@ -118,7 +118,7 @@ namespace PayrollSoftware.Web.Controllers
                     LookupType = dto.LookupType,
                     LookupValue = dto.LookupValue,
                     DisplayOrder = dto.DisplayOrder,
-                    IsActive = dto.IsActive
+                    IsActive = dto.IsActive,
                 };
 
                 await _lookupRepository.UpdateLookupAsync(entity);
@@ -193,7 +193,8 @@ namespace PayrollSoftware.Web.Controllers
                 "Department",
                 "Designation",
                 "CalculationType",
-                "AllowanceDeductionType"
+                "AllowanceDeductionType",
+                "Weekend",
             };
         }
     }

@@ -156,6 +156,7 @@ namespace PayrollSoftware.Web.Controllers
                         success = true,
                         message = $"Payroll for {monthDate:MMMM yyyy} processed successfully.",
                         id = payroll.PayrollId,
+                        redirectUrl = Url.Action("Details", "Payroll", new { id = payroll.PayrollId })
                     }
                 );
             }
@@ -271,7 +272,9 @@ namespace PayrollSoftware.Web.Controllers
                     ViewBag.EmployeeCode = employee.EmployeeCode;
                     ViewBag.EmployeeName = employee.FullName;
                     ViewBag.Department = employee.Department;
+                    ViewBag.DepartmentName = employee.Department;
                     ViewBag.Designation = employee.Designation;
+                    ViewBag.DesignationName = employee.Designation;
                 }
 
                 // Get allowances and deductions applied during this period
@@ -334,7 +337,9 @@ namespace PayrollSoftware.Web.Controllers
                 ViewBag.AccountNumber = employee.BankAccountNumber;
                 ViewBag.BankName = employee.BankAndBranchName;
                 ViewBag.Department = employee.Department;
+                ViewBag.DepartmentName = employee.Department;
                 ViewBag.Designation = employee.Designation;
+                ViewBag.DesignationName = employee.Designation;
 
                 // Get allowances and deductions applied during this period
                 var allowancesDeductions = await _context
