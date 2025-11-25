@@ -1,459 +1,479 @@
 ﻿@model PayrollSoftware.Infrastructure.Application.DTOs.AttendanceDto
 @{
-  ViewData["Title"] = ViewBag?.Title ?? "Attendance";
-  var formAction = ViewBag?.FormAction as string ?? Url.Action("Create", "Attendance");
+    ViewData["Title"] = ViewBag?.Title ?? "Attendance";
+    var formAction = ViewBag?.FormAction as string ?? Url.Action("Create", "Attendance");
 }
 
 <!-- Select2 CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
 
 <div class="card">
-  <div class="card-header">
-    <h3 class="card-title m-0">
-      <i class="fas fa-user-check mr-2"></i>@ViewData["Title"]
-    </h3>
-  </div>
-  <div class="card-body">
-    <form id="attendanceForm" method="post" action="@formAction">
-      @Html.AntiForgeryToken()
-      <input type="hidden" asp-for="AttendanceId" />
+    <div class="card-header">
+        <h3 class="card-title m-0">
+            <i class="fas fa-user-check mr-2"></i>@ViewData["Title"]
+        </h3>
+    </div>
+    <div class="card-body">
+        <form id="attendanceForm" method="post" action="@formAction">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="AttendanceId" />
 
-      <div class="row">
-        <!-- Employee Selection -->
-        <div class="form-group col-md-6">
-          <label asp-for="EmployeeId">Employee Code <span class="text-danger">*</span></label>
-          <select asp-for="EmployeeId" class="form-control select2" id="EmployeeId" data-placeholder="Select Employee"
-            style="width:100%;" required>
-            <option value="">-- Select Employee --</option>
-            @if (ViewBag.Employees != null)
-            {
-              foreach (var e in (IEnumerable<dynamic>)ViewBag.Employees)
-              {
-                var isActive = string.Equals(e.Status?.ToString(), "Active", StringComparison.OrdinalIgnoreCase);
-                if (isActive || Model?.EmployeeId == (Guid)e.EmployeeId)
-                {
-                  <option value="@e.EmployeeId" data-name="@e.FullName" data-shift-id="@e.ShiftId"
-                    data-joining-date="@e.JoiningDate.ToString("yyyy-MM-dd")" data-status="@e.Status"
-                    selected="@(Model?.EmployeeId == (Guid)e.EmployeeId)">
-                    @e.EmployeeCode - @e.FullName
-                  </option>
-                }
-              }
-            }
-          </select>
-          <span asp-validation-for="EmployeeId" class="text-danger"></span>
-        </div>
+            <div class="row">
+                <!-- LEFT COLUMN: Employee & Shift Information -->
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Employee & Shift Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Employee Selection -->
+                            <div class="form-group">
+                                <label asp-for="EmployeeId">Employee Code <span class="text-danger">*</span></label>
+                                <select asp-for="EmployeeId" class="form-control select2" id="EmployeeId" data-placeholder="Select Employee"
+                                        style="width:100%;" required>
+                                    <option value="">-- Select Employee --</option>
+                                    @if (ViewBag.Employees != null)
+                                    {
+                                        foreach (var e in (IEnumerable<dynamic>)ViewBag.Employees)
+                                        {
+                                            var isActive = string.Equals(e.Status?.ToString(), "Active", StringComparison.OrdinalIgnoreCase);
+                                            if (isActive || Model?.EmployeeId == (Guid)e.EmployeeId)
+                                            {
+                                                <option value="@e.EmployeeId" data-name="@e.FullName" data-shift-id="@e.ShiftId"
+                                                        data-joining-date="@e.JoiningDate.ToString("yyyy-MM-dd")" data-status="@e.Status"
+                                                        selected="@(Model?.EmployeeId == (Guid)e.EmployeeId)">
+                                                    @e.EmployeeCode - @e.FullName
+                                                </option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="EmployeeId" class="text-danger"></span>
+                            </div>
 
-        <!-- Employee Name (Auto-filled, Read-only) -->
-        <div class="form-group col-md-6">
-          <label>Employee Name</label>
-          <input id="EmployeeNameDisplay" class="form-control" readonly placeholder="Select employee first" />
-        </div>
+                            <!-- Employee Name (Auto-filled, Read-only) -->
+                            <div class="form-group">
+                                <label>Employee Name</label>
+                                <input id="EmployeeNameDisplay" class="form-control" readonly placeholder="Select employee first" />
+                            </div>
 
-        <!-- Attendance Date -->
-        <div class="form-group col-md-4">
-          <label asp-for="AttendanceDate">Attendance Date <span class="text-danger">*</span></label>
-          <input asp-for="AttendanceDate" type="date" class="form-control" id="AttendanceDate"
-            max="@DateTime.Today.ToString("yyyy-MM-dd")" required />
-          <span asp-validation-for="AttendanceDate" class="text-danger"></span>
-          <small id="DateWarning" class="form-text text-danger" style="display:none;"></small>
-        </div>
+                            <!-- Attendance Date -->
+                            <div class="form-group">
+                                <label asp-for="AttendanceDate">Attendance Date <span class="text-danger">*</span></label>
+                                <input asp-for="AttendanceDate" type="date" class="form-control" id="AttendanceDate"
+                                       max="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                                <span asp-validation-for="AttendanceDate" class="text-danger"></span>
+                                <small id="DateWarning" class="form-text text-danger" style="display:none;"></small>
+                            </div>
 
-        <!-- Shift Name (Auto-filled, Read-only) -->
-        <div class="form-group col-md-4">
-          <label>Shift Name</label>
-          <input asp-for="ShiftId" type="hidden" id="ShiftId" />
-          <input id="ShiftNameDisplay" class="form-control" readonly placeholder="Auto-assigned from employee" />
-        </div>
+                            <!-- Shift Name (Auto-filled, Read-only) -->
+                            <div class="form-group">
+                                <label>Shift Name</label>
+                                <input asp-for="ShiftId" type="hidden" id="ShiftId" />
+                                <input id="ShiftNameDisplay" class="form-control" readonly placeholder="Auto-assigned from employee" />
+                            </div>
 
-        <!-- Shift Timing (Auto-filled, Read-only) -->
-        <div class="form-group col-md-4">
-          <label>Shift Timing</label>
-          <input id="ShiftTimingDisplay" class="form-control" readonly placeholder="Select employee first" />
-        </div>
+                            <!-- Shift Timing (Auto-filled, Read-only) -->
+                            <div class="form-group">
+                                <label>Shift Timing</label>
+                                <input id="ShiftTimingDisplay" class="form-control" readonly placeholder="Select employee first" />
+                            </div>
 
-        <!-- Total Shift Hours (Auto-filled, Read-only) -->
-        <div class="form-group col-md-4">
-          <label>Total Shift Hours</label>
-          <input id="TotalShiftHoursDisplay" class="form-control" readonly placeholder="-" />
-        </div>
+                            <!-- Total Shift Hours (Auto-filled, Read-only) -->
+                            <div class="form-group mb-0">
+                                <label>Total Shift Hours</label>
+                                <input id="TotalShiftHoursDisplay" class="form-control" readonly placeholder="-" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- In Time -->
-        <div class="form-group col-md-4">
-          <label asp-for="InTime">In Time</label>
-          <input asp-for="InTime" type="time" class="form-control" id="InTime" />
-          <span asp-validation-for="InTime" class="text-danger"></span>
-          <small class="form-text text-muted">Leave empty for Absent</small>
-        </div>
+                <!-- RIGHT COLUMN: Time & Attendance Information -->
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Time & Attendance Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- In Time -->
+                            <div class="form-group">
+                                <label asp-for="InTime">In Time</label>
+                                <input asp-for="InTime" type="time" class="form-control" id="InTime" />
+                                <span asp-validation-for="InTime" class="text-danger"></span>
+                                <small class="form-text text-muted">Leave empty for Absent</small>
+                            </div>
 
-        <!-- Out Time -->
-        <div class="form-group col-md-4">
-          <label asp-for="OutTime">Out Time</label>
-          <input asp-for="OutTime" type="time" class="form-control" id="OutTime" />
-          <span asp-validation-for="OutTime" class="text-danger"></span>
-          <small class="form-text text-muted">Leave empty for Absent</small>
-        </div>
+                            <!-- Out Time -->
+                            <div class="form-group">
+                                <label asp-for="OutTime">Out Time</label>
+                                <input asp-for="OutTime" type="time" class="form-control" id="OutTime" />
+                                <span asp-validation-for="OutTime" class="text-danger"></span>
+                                <small class="form-text text-muted">Leave empty for Absent</small>
+                            </div>
 
-        <!-- Working Hours (Auto-calculated, Read-only) -->
-        <div class="form-group col-md-3">
-          <label>Working Hours</label>
-          <input id="WorkingHoursDisplay" class="form-control" readonly placeholder="0.00 hrs" />
-        </div>
+                            <!-- Working Hours (Auto-calculated, Read-only) -->
+                            <div class="form-group">
+                                <label>Working Hours</label>
+                                <input id="WorkingHoursDisplay" class="form-control" readonly placeholder="0.00 hrs" />
+                            </div>
 
-        <!-- Late Entry (Auto-calculated, Read-only) -->
-        <div class="form-group col-md-3">
-          <label>Late Entry</label>
-          <input id="LateEntryDisplay" class="form-control" readonly placeholder="-" />
-        </div>
+                            <!-- Late Entry (Auto-calculated, Read-only) -->
+                            <div class="form-group">
+                                <label>Late Entry</label>
+                                <input id="LateEntryDisplay" class="form-control" readonly placeholder="-" />
+                            </div>
 
-        <!-- Early Leave (Auto-calculated, Read-only) -->
-        <div class="form-group col-md-3">
-          <label>Early Leave</label>
-          <input id="EarlyLeaveDisplay" class="form-control" readonly placeholder="-" />
-        </div>
+                            <!-- Early Leave (Auto-calculated, Read-only) -->
+                            <div class="form-group">
+                                <label>Early Leave</label>
+                                <input id="EarlyLeaveDisplay" class="form-control" readonly placeholder="-" />
+                            </div>
 
-        <!-- Attendance Status (Auto-calculated) -->
-        <div class="form-group col-md-3">
-          <label>Status</label>
-          <input id="StatusDisplay" class="form-control" readonly placeholder="-" />
-        </div>
-      </div>
+                            <!-- Attendance Status (Auto-calculated) -->
+                            <div class="form-group mb-0">
+                                <label>Status</label>
+                                <input id="StatusDisplay" class="form-control" readonly placeholder="-" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-      <div class="text-right mt-3">
-        <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save</button>
-        <a class="btn btn-secondary" href="@Url.Action("Index", "Attendance")">
-          <i class="fas fa-times mr-1"></i> Cancel
-        </a>
-      </div>
-    </form>
-  </div>
+            <div class="text-right mt-3">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save</button>
+                <a class="btn btn-secondary" href="@Url.Action("Index", "Attendance")">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
 
 @section Scripts {
-  <script>
-    // Initialize Select2 for employee dropdown
-    CommonAjax.initSelect2('.select2');
+    <script>
+        // Initialize Select2 for employee dropdown
+        CommonAjax.initSelect2('.select2');
 
-    // DOM elements
-    const empIdEl = $('#EmployeeId');
-    const empNameDisplay = document.getElementById('EmployeeNameDisplay');
-    const shiftIdInput = document.getElementById('ShiftId');
-    const shiftNameDisplay = document.getElementById('ShiftNameDisplay');
-    const shiftTimingDisplay = document.getElementById('ShiftTimingDisplay');
-    const totalShiftHoursDisplay = document.getElementById('TotalShiftHoursDisplay');
-    const attendanceDateEl = document.getElementById('AttendanceDate');
-    const inTimeEl = document.getElementById('InTime');
-    const outTimeEl = document.getElementById('OutTime');
-    const workingHoursDisplay = document.getElementById('WorkingHoursDisplay');
-    const lateEntryDisplay = document.getElementById('LateEntryDisplay');
-    const earlyLeaveDisplay = document.getElementById('EarlyLeaveDisplay');
-    const statusDisplay = document.getElementById('StatusDisplay');
-    const dateWarning = document.getElementById('DateWarning');
+        // DOM elements
+        const empIdEl = $('#EmployeeId');
+        const empNameDisplay = document.getElementById('EmployeeNameDisplay');
+        const shiftIdInput = document.getElementById('ShiftId');
+        const shiftNameDisplay = document.getElementById('ShiftNameDisplay');
+        const shiftTimingDisplay = document.getElementById('ShiftTimingDisplay');
+        const totalShiftHoursDisplay = document.getElementById('TotalShiftHoursDisplay');
+        const attendanceDateEl = document.getElementById('AttendanceDate');
+        const inTimeEl = document.getElementById('InTime');
+        const outTimeEl = document.getElementById('OutTime');
+        const workingHoursDisplay = document.getElementById('WorkingHoursDisplay');
+        const lateEntryDisplay = document.getElementById('LateEntryDisplay');
+        const earlyLeaveDisplay = document.getElementById('EarlyLeaveDisplay');
+        const statusDisplay = document.getElementById('StatusDisplay');
+        const dateWarning = document.getElementById('DateWarning');
 
-    // Shifts lookup data
-    const shiftsData = @Html.Raw(Json.Serialize(ViewBag.Shifts ?? new List<object>()));
-    const shiftsMap = new Map(shiftsData.map(s => [s.shiftId, s]));
+        // Shifts lookup data
+        const shiftsData = @Html.Raw(Json.Serialize(ViewBag.Shifts ?? new List<object>()));
+        const shiftsMap = new Map(shiftsData.map(s => [s.shiftId, s]));
 
-    // Handle Employee selection
-    empIdEl.on('select2:select', function (e) {
-      const selectedOption = e.params.data.element;
-      const empName = selectedOption.getAttribute('data-name') || '';
-      const shiftId = selectedOption.getAttribute('data-shift-id') || '';
-      const joiningDate = selectedOption.getAttribute('data-joining-date') || '';
+        // Handle Employee selection
+        empIdEl.on('select2:select', function (e) {
+          const selectedOption = e.params.data.element;
+          const empName = selectedOption.getAttribute('data-name') || '';
+          const shiftId = selectedOption.getAttribute('data-shift-id') || '';
+          const joiningDate = selectedOption.getAttribute('data-joining-date') || '';
 
-      // Display employee name
-      empNameDisplay.value = empName;
+          // Display employee name
+          empNameDisplay.value = empName;
 
-      // Validate joining date
-      validateJoiningDate(joiningDate);
-
-      // Auto-assign shift
-      if (shiftId && shiftId !== '00000000-0000-0000-0000-000000000000') {
-        shiftIdInput.value = shiftId;
-        loadShiftDetails(shiftId);
-      } else {
-        clearShiftDetails();
-      }
-
-      calculateAttendance();
-    });
-
-    empIdEl.on('select2:clear', function () {
-      empNameDisplay.value = '';
-      clearShiftDetails();
-      calculateAttendance();
-    });
-
-    // Load shift details from shifts map
-    function loadShiftDetails(shiftId) {
-      const shift = shiftsMap.get(shiftId);
-      if (shift) {
-        shiftNameDisplay.value = shift.shiftName || '';
-
-        const startTime = formatTime(shift.startTime);
-        const endTime = formatTime(shift.endTime);
-        shiftTimingDisplay.value = startTime && endTime ? `${startTime} - ${endTime}` : '';
-
-        // Calculate total shift hours
-        const totalHours = calculateShiftHours(shift.startTime, shift.endTime);
-        totalShiftHoursDisplay.value = totalHours > 0 ? `${totalHours.toFixed(2)} hrs` : '-';
-      }
-    }
-
-    function clearShiftDetails() {
-      shiftIdInput.value = '';
-      shiftNameDisplay.value = '';
-      shiftTimingDisplay.value = '';
-      totalShiftHoursDisplay.value = '-';
-    }
-
-    // Format TimeSpan to readable time (e.g., "09:00" to "09:00 AM")
-    function formatTime(timeSpan) {
-      if (!timeSpan) return '';
-      // TimeSpan comes as "HH:mm:ss"
-      const parts = timeSpan.split(':');
-      if (parts.length < 2) return timeSpan;
-
-      let hours = parseInt(parts[0]);
-      const minutes = parts[1];
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12;
-
-      return `${hours}:${minutes} ${ampm}`;
-    }
-
-    // Calculate shift hours from start and end time
-    function calculateShiftHours(startTime, endTime) {
-      if (!startTime || !endTime) return 0;
-
-      const startMinutes = timeSpanToMinutes(startTime);
-      const endMinutes = timeSpanToMinutes(endTime);
-
-      let diffMinutes = endMinutes - startMinutes;
-      // Handle overnight shifts
-      if (diffMinutes < 0) diffMinutes += 24 * 60;
-
-      return diffMinutes / 60;
-    }
-
-    // Convert TimeSpan string to minutes
-    function timeSpanToMinutes(timeSpan) {
-      if (!timeSpan) return 0;
-      const parts = timeSpan.split(':');
-      return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-    }
-
-    // Validate joining date
-    function validateJoiningDate(joiningDate) {
-      if (!joiningDate || !attendanceDateEl?.value) {
-        if (dateWarning) dateWarning.style.display = 'none';
-        return;
-      }
-
-      const jDate = new Date(joiningDate);
-      const aDate = new Date(attendanceDateEl.value);
-
-      if (aDate < jDate) {
-        if (dateWarning) {
-          dateWarning.textContent = `⚠ Date cannot be before joining date (${jDate.toLocaleDateString()})`;
-          dateWarning.style.display = 'block';
-        }
-      } else {
-        if (dateWarning) dateWarning.style.display = 'none';
-      }
-    }
-
-    // Attendance date change handler
-    if (attendanceDateEl) {
-      attendanceDateEl.addEventListener('change', function () {
-        const selectedEmp = empIdEl.find('option:selected');
-        if (selectedEmp.length && selectedEmp.val()) {
-          const joiningDate = selectedEmp.attr('data-joining-date') || '';
+          // Validate joining date
           validateJoiningDate(joiningDate);
-        }
 
-        // Reload employees based on selected date
-        reloadAvailableEmployees(this.value);
-      });
-    }
-
-    // Reload available employees based on attendance date
-    function reloadAvailableEmployees(attendanceDate) {
-      if (!attendanceDate) return;
-
-      $.ajax({
-        url: '@Url.Action("GetAvailableEmployees", "Attendance")',
-        type: 'GET',
-        data: { attendanceDate: attendanceDate },
-        success: function (response) {
-          if (response.success && response.employees) {
-            const currentEmployeeId = empIdEl.val();
-
-            // Clear and rebuild employee dropdown
-            empIdEl.empty();
-            empIdEl.append('<option value="">-- Select Employee --</option>');
-
-            let currentEmployeeFound = false;
-            response.employees.forEach(function (emp) {
-              const option = new Option(
-                emp.employeeCode + ' - ' + emp.fullName,
-                emp.employeeId,
-                false,
-                emp.employeeId === currentEmployeeId
-              );
-              $(option).attr('data-name', emp.fullName);
-              $(option).attr('data-shift-id', emp.shiftId || '');
-              $(option).attr('data-joining-date', emp.joiningDate);
-              $(option).attr('data-status', emp.status);
-              empIdEl.append(option);
-
-              if (emp.employeeId === currentEmployeeId) {
-                currentEmployeeFound = true;
-              }
-            });
-
-            // Refresh Select2
-            empIdEl.trigger('change.select2');
-
-            // If current employee is filtered out, clear the selection
-            if (currentEmployeeId && !currentEmployeeFound) {
-              empIdEl.val('').trigger('change');
-              empNameDisplay.value = '';
-              clearShiftDetails();
-              calculateAttendance();
-
-              // Show warning message
-              CommonAjax.toastError('Selected employee is on approved leave for this date');
-            }
+          // Auto-assign shift
+          if (shiftId && shiftId !== '00000000-0000-0000-0000-000000000000') {
+            shiftIdInput.value = shiftId;
+            loadShiftDetails(shiftId);
+          } else {
+            clearShiftDetails();
           }
-        },
-        error: function (xhr) {
-          console.error('Error loading employees:', xhr.responseText);
-          CommonAjax.toastError('Failed to load available employees');
-        }
-      });
-    }
 
-    // Calculate attendance details
-    function calculateAttendance() {
-      const inTime = inTimeEl?.value;
-      const outTime = outTimeEl?.value;
-      const shiftId = shiftIdInput?.value;
+          calculateAttendance();
+        });
 
-      // Reset displays
-      workingHoursDisplay.value = '0.00 hrs';
-      lateEntryDisplay.value = '-';
-      earlyLeaveDisplay.value = '-';
+        empIdEl.on('select2:clear', function () {
+          empNameDisplay.value = '';
+          clearShiftDetails();
+          calculateAttendance();
+        });
 
-      // Determine status: Present if either InTime or OutTime exists, else Absent
-      if (!inTime && !outTime) {
-        statusDisplay.value = 'Absent';
-        statusDisplay.className = 'form-control text-danger font-weight-bold';
-        return;
-      }
-
-      statusDisplay.value = 'Present';
-      statusDisplay.className = 'form-control text-success font-weight-bold';
-
-      // Calculate working hours if both times are provided
-      if (inTime && outTime) {
-        const inMinutes = timeToMinutes(inTime);
-        const outMinutes = timeToMinutes(outTime);
-        let workingMinutes = outMinutes - inMinutes;
-
-        // Handle overnight shifts
-        if (workingMinutes < 0) workingMinutes += 24 * 60;
-
-        const workingHours = workingMinutes / 60;
-        workingHoursDisplay.value = workingHours.toFixed(2) + ' hrs';
-
-        // Calculate late entry and early leave if shift is assigned
-        if (shiftId) {
+        // Load shift details from shifts map
+        function loadShiftDetails(shiftId) {
           const shift = shiftsMap.get(shiftId);
-          if (shift && shift.startTime && shift.endTime) {
-            const shiftStartMinutes = timeSpanToMinutes(shift.startTime);
-            const shiftEndMinutes = timeSpanToMinutes(shift.endTime);
+          if (shift) {
+            shiftNameDisplay.value = shift.shiftName || '';
 
-            // Calculate late entry
-            if (inMinutes > shiftStartMinutes) {
-              const lateMinutes = inMinutes - shiftStartMinutes;
-              lateEntryDisplay.value = minutesToTimeString(lateMinutes);
-              lateEntryDisplay.className = 'form-control text-warning font-weight-bold';
-            } else {
-              lateEntryDisplay.className = 'form-control';
+            const startTime = formatTime(shift.startTime);
+            const endTime = formatTime(shift.endTime);
+            shiftTimingDisplay.value = startTime && endTime ? `${startTime} - ${endTime}` : '';
+
+            // Calculate total shift hours
+            const totalHours = calculateShiftHours(shift.startTime, shift.endTime);
+            totalShiftHoursDisplay.value = totalHours > 0 ? `${totalHours.toFixed(2)} hrs` : '-';
+          }
+        }
+
+        function clearShiftDetails() {
+          shiftIdInput.value = '';
+          shiftNameDisplay.value = '';
+          shiftTimingDisplay.value = '';
+          totalShiftHoursDisplay.value = '-';
+        }
+
+        // Format TimeSpan to readable time (e.g., "09:00" to "09:00 AM")
+        function formatTime(timeSpan) {
+          if (!timeSpan) return '';
+          // TimeSpan comes as "HH:mm:ss"
+          const parts = timeSpan.split(':');
+          if (parts.length < 2) return timeSpan;
+
+          let hours = parseInt(parts[0]);
+          const minutes = parts[1];
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          hours = hours % 12 || 12;
+
+          return `${hours}:${minutes} ${ampm}`;
+        }
+
+        // Calculate shift hours from start and end time
+        function calculateShiftHours(startTime, endTime) {
+          if (!startTime || !endTime) return 0;
+
+          const startMinutes = timeSpanToMinutes(startTime);
+          const endMinutes = timeSpanToMinutes(endTime);
+
+          let diffMinutes = endMinutes - startMinutes;
+          // Handle overnight shifts
+          if (diffMinutes < 0) diffMinutes += 24 * 60;
+
+          return diffMinutes / 60;
+        }
+
+        // Convert TimeSpan string to minutes
+        function timeSpanToMinutes(timeSpan) {
+          if (!timeSpan) return 0;
+          const parts = timeSpan.split(':');
+          return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
+
+        // Validate joining date
+        function validateJoiningDate(joiningDate) {
+          if (!joiningDate || !attendanceDateEl?.value) {
+            if (dateWarning) dateWarning.style.display = 'none';
+            return;
+          }
+
+          const jDate = new Date(joiningDate);
+          const aDate = new Date(attendanceDateEl.value);
+
+          if (aDate < jDate) {
+            if (dateWarning) {
+              dateWarning.textContent = `⚠ Date cannot be before joining date (${jDate.toLocaleDateString()})`;
+              dateWarning.style.display = 'block';
+            }
+          } else {
+            if (dateWarning) dateWarning.style.display = 'none';
+          }
+        }
+
+        // Attendance date change handler
+        if (attendanceDateEl) {
+          attendanceDateEl.addEventListener('change', function () {
+            const selectedEmp = empIdEl.find('option:selected');
+            if (selectedEmp.length && selectedEmp.val()) {
+              const joiningDate = selectedEmp.attr('data-joining-date') || '';
+              validateJoiningDate(joiningDate);
             }
 
-            // Calculate early leave (handle overnight shifts)
-            let actualOutMinutes = outMinutes;
-            let expectedEndMinutes = shiftEndMinutes;
+            // Reload employees based on selected date
+            reloadAvailableEmployees(this.value);
+          });
+        }
 
-            if (shiftEndMinutes < shiftStartMinutes) {
-              if (actualOutMinutes < shiftStartMinutes) {
-                actualOutMinutes += 24 * 60;
+        // Reload available employees based on attendance date
+        function reloadAvailableEmployees(attendanceDate) {
+          if (!attendanceDate) return;
+
+          $.ajax({
+            url: '@Url.Action("GetAvailableEmployees", "Attendance")',
+            type: 'GET',
+            data: { attendanceDate: attendanceDate },
+            success: function (response) {
+              if (response.success && response.employees) {
+                const currentEmployeeId = empIdEl.val();
+
+                // Clear and rebuild employee dropdown
+                empIdEl.empty();
+                empIdEl.append('<option value="">-- Select Employee --</option>');
+
+                let currentEmployeeFound = false;
+                response.employees.forEach(function (emp) {
+                  const option = new Option(
+                    emp.employeeCode + ' - ' + emp.fullName,
+                    emp.employeeId,
+                    false,
+                    emp.employeeId === currentEmployeeId
+                  );
+                  $(option).attr('data-name', emp.fullName);
+                  $(option).attr('data-shift-id', emp.shiftId || '');
+                  $(option).attr('data-joining-date', emp.joiningDate);
+                  $(option).attr('data-status', emp.status);
+                  empIdEl.append(option);
+
+                  if (emp.employeeId === currentEmployeeId) {
+                    currentEmployeeFound = true;
+                  }
+                });
+
+                // Refresh Select2
+                empIdEl.trigger('change.select2');
+
+                // If current employee is filtered out, clear the selection
+                if (currentEmployeeId && !currentEmployeeFound) {
+                  empIdEl.val('').trigger('change');
+                  empNameDisplay.value = '';
+                  clearShiftDetails();
+                  calculateAttendance();
+
+                  // Show warning message
+                  CommonAjax.toastError('Selected employee is on approved leave for this date');
+                }
               }
-              expectedEndMinutes += 24 * 60;
+            },
+            error: function (xhr) {
+              console.error('Error loading employees:', xhr.responseText);
+              CommonAjax.toastError('Failed to load available employees');
             }
+          });
+        }
 
-            if (actualOutMinutes < expectedEndMinutes) {
-              const earlyMinutes = expectedEndMinutes - actualOutMinutes;
-              earlyLeaveDisplay.value = minutesToTimeString(earlyMinutes);
-              earlyLeaveDisplay.className = 'form-control text-warning font-weight-bold';
-            } else {
-              earlyLeaveDisplay.className = 'form-control';
+        // Calculate attendance details
+        function calculateAttendance() {
+          const inTime = inTimeEl?.value;
+          const outTime = outTimeEl?.value;
+          const shiftId = shiftIdInput?.value;
+
+          // Reset displays
+          workingHoursDisplay.value = '0.00 hrs';
+          lateEntryDisplay.value = '-';
+          earlyLeaveDisplay.value = '-';
+
+          // Determine status: Present if either InTime or OutTime exists, else Absent
+          if (!inTime && !outTime) {
+            statusDisplay.value = 'Absent';
+            statusDisplay.className = 'form-control text-danger font-weight-bold';
+            return;
+          }
+
+          statusDisplay.value = 'Present';
+          statusDisplay.className = 'form-control text-success font-weight-bold';
+
+          // Calculate working hours if both times are provided
+          if (inTime && outTime) {
+            const inMinutes = timeToMinutes(inTime);
+            const outMinutes = timeToMinutes(outTime);
+            let workingMinutes = outMinutes - inMinutes;
+
+            // Handle overnight shifts
+            if (workingMinutes < 0) workingMinutes += 24 * 60;
+
+            const workingHours = workingMinutes / 60;
+            workingHoursDisplay.value = workingHours.toFixed(2) + ' hrs';
+
+            // Calculate late entry and early leave if shift is assigned
+            if (shiftId) {
+              const shift = shiftsMap.get(shiftId);
+              if (shift && shift.startTime && shift.endTime) {
+                const shiftStartMinutes = timeSpanToMinutes(shift.startTime);
+                const shiftEndMinutes = timeSpanToMinutes(shift.endTime);
+
+                // Calculate late entry
+                if (inMinutes > shiftStartMinutes) {
+                  const lateMinutes = inMinutes - shiftStartMinutes;
+                  lateEntryDisplay.value = minutesToTimeString(lateMinutes);
+                  lateEntryDisplay.className = 'form-control text-warning font-weight-bold';
+                } else {
+                  lateEntryDisplay.className = 'form-control';
+                }
+
+                // Calculate early leave (handle overnight shifts)
+                let actualOutMinutes = outMinutes;
+                let expectedEndMinutes = shiftEndMinutes;
+
+                if (shiftEndMinutes < shiftStartMinutes) {
+                  if (actualOutMinutes < shiftStartMinutes) {
+                    actualOutMinutes += 24 * 60;
+                  }
+                  expectedEndMinutes += 24 * 60;
+                }
+
+                if (actualOutMinutes < expectedEndMinutes) {
+                  const earlyMinutes = expectedEndMinutes - actualOutMinutes;
+                  earlyLeaveDisplay.value = minutesToTimeString(earlyMinutes);
+                  earlyLeaveDisplay.className = 'form-control text-warning font-weight-bold';
+                } else {
+                  earlyLeaveDisplay.className = 'form-control';
+                }
+              }
             }
           }
         }
-      }
-    }
 
-    // Helper: Convert time string (HH:mm) to minutes
-    function timeToMinutes(timeStr) {
-      if (!timeStr) return 0;
-      const parts = timeStr.split(':');
-      return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-    }
-
-    // Helper: Convert minutes to time string (HH:mm)
-    function minutesToTimeString(minutes) {
-      const hours = Math.floor(minutes / 60);
-      const mins = minutes % 60;
-      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-    }
-
-    // Event listeners for time inputs
-    if (inTimeEl) inTimeEl.addEventListener('change', calculateAttendance);
-    if (outTimeEl) outTimeEl.addEventListener('change', calculateAttendance);
-
-    // Form submission handler
-    CommonAjax.submitForm(document.getElementById('attendanceForm'), {
-      successTitle: 'Success',
-      errorTitle: 'Validation Error',
-      beforeSubmit: function () {
-        calculateAttendance();
-      },
-      onSuccess: function (data) {
-        window.location.href = '@Url.Action("Index", "Attendance")';
-      }
-    });
-
-    // Initialize on page load (for edit mode)
-    (function init() {
-      const selectedEmp = empIdEl.find('option:selected');
-      if (selectedEmp.length && selectedEmp.val()) {
-        const empName = selectedEmp.attr('data-name') || '';
-        const shiftId = selectedEmp.attr('data-shift-id') || '';
-        const joiningDate = selectedEmp.attr('data-joining-date') || '';
-
-        empNameDisplay.value = empName;
-        validateJoiningDate(joiningDate);
-
-        if (shiftId && shiftId !== '00000000-0000-0000-0000-000000000000') {
-          shiftIdInput.value = shiftId;
-          loadShiftDetails(shiftId);
+        // Helper: Convert time string (HH:mm) to minutes
+        function timeToMinutes(timeStr) {
+          if (!timeStr) return 0;
+          const parts = timeStr.split(':');
+          return parseInt(parts[0]) * 60 + parseInt(parts[1]);
         }
-      }
 
-      calculateAttendance();
-    })();
-  </script>
+        // Helper: Convert minutes to time string (HH:mm)
+        function minutesToTimeString(minutes) {
+          const hours = Math.floor(minutes / 60);
+          const mins = minutes % 60;
+          return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+        }
+
+        // Event listeners for time inputs
+        if (inTimeEl) inTimeEl.addEventListener('change', calculateAttendance);
+        if (outTimeEl) outTimeEl.addEventListener('change', calculateAttendance);
+
+        // Form submission handler
+        CommonAjax.submitForm(document.getElementById('attendanceForm'), {
+          successTitle: 'Success',
+          errorTitle: 'Validation Error',
+          beforeSubmit: function () {
+            calculateAttendance();
+          },
+          onSuccess: function (data) {
+            window.location.href = '@Url.Action("Index", "Attendance")';
+          }
+        });
+
+        // Initialize on page load (for edit mode)
+        (function init() {
+          const selectedEmp = empIdEl.find('option:selected');
+          if (selectedEmp.length && selectedEmp.val()) {
+            const empName = selectedEmp.attr('data-name') || '';
+            const shiftId = selectedEmp.attr('data-shift-id') || '';
+            const joiningDate = selectedEmp.attr('data-joining-date') || '';
+
+            empNameDisplay.value = empName;
+            validateJoiningDate(joiningDate);
+
+            if (shiftId && shiftId !== '00000000-0000-0000-0000-000000000000') {
+              shiftIdInput.value = shiftId;
+              loadShiftDetails(shiftId);
+            }
+          }
+
+          calculateAttendance();
+        })();
+    </script>
 }
